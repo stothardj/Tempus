@@ -1,5 +1,5 @@
 (function() {
-  var BAD_COLOR, BOMB_SPEED, Bomb, ENEMY_RAND, Enemy, GOOD_COLOR, LASER_LENGTH, LASER_SPEED, Laser, Ship, Shrapnal, bombs, canvas, crashed, ctx, enemies, every, gameloop, lasers, mouseX, mouseY, paused, randInt, ship, shrapnals, timeHandle;
+  var BAD_COLOR, BOMB_SPEED, Bomb, ENEMY_RAND, Enemy, GOOD_COLOR, LASER_LENGTH, LASER_SPEED, Laser, Ship, Shrapnal, Suicider, bombs, canvas, crashed, ctx, currentState, enemies, every, gameState, gameloop, init, lasers, mouseX, mouseY, randInt, setTitleFont, ship, shrapnals, timeHandle;
   canvas = document.getElementById("c");
   ctx = canvas.getContext("2d");
   if (!ctx) {
@@ -18,8 +18,14 @@
   mouseX = 250;
   mouseY = 200;
   crashed = false;
-  paused = false;
   timeHandle = void 0;
+  gameState = {
+    title: "Title",
+    playing: "Playing",
+    paused: "Paused",
+    crashed: "Crashed"
+  };
+  currentState = gameState.title;
   Ship = (function() {
     function Ship(x, y) {
       this.x = x;
@@ -72,14 +78,30 @@
       return lasers.push(new Laser(this.x, this.y, LASER_SPEED, BAD_COLOR));
     };
     Enemy.prototype.alive = function() {
-      var laser, _i, _len;
+      var bomb, laser, shrap, _i, _j, _k, _len, _len2, _len3;
       if (this.y > canvas.height) {
+        return false;
+      }
+      if (Math.abs(ship.x - this.x) < 35 && Math.abs(ship.y - this.y) < 35) {
         return false;
       }
       for (_i = 0, _len = lasers.length; _i < _len; _i++) {
         laser = lasers[_i];
-        if (laser.color === GOOD_COLOR && Math.abs(this.x - laser.x) <= 7 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10) {
+        if (laser.color !== BAD_COLOR && Math.abs(this.x - laser.x) <= 12 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10) {
           laser.killedSomething = true;
+          return false;
+        }
+      }
+      for (_j = 0, _len2 = bombs.length; _j < _len2; _j++) {
+        bomb = bombs[_j];
+        if (bomb.color !== BAD_COLOR && Math.abs(this.x - bomb.x) <= 12 && Math.abs(this.y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 12) {
+          bomb.cooldown = 0;
+          return false;
+        }
+      }
+      for (_k = 0, _len3 = shrapnals.length; _k < _len3; _k++) {
+        shrap = shrapnals[_k];
+        if (shrap.color !== BAD_COLOR && Math.abs(this.x - shrap.x) <= 11 && Math.abs(this.y - shrap.y) <= 11) {
           return false;
         }
       }
@@ -94,6 +116,47 @@
       return this.draw();
     };
     return Enemy;
+  })();
+  Suicider = (function() {
+    function Suicider(x, y) {
+      this.x = x;
+      this.y = y;
+      this.angle = 0;
+      this.shootCooldown = 0;
+    }
+    Suicider.prototype.move = function() {
+      if (Math.abs(this.x - ship.x) < 150 && Math.abs(this.y - ship.y) < 150) {
+        if (this.y > ship.y) {
+          this.angle = Math.PI - Math.atan((this.x - ship.x) / (this.y - ship.y));
+        } else {
+          this.angle = -Math.atan((this.x - ship.x) / (this.y - ship.y));
+        }
+        this.x += (ship.x - this.x) / 4;
+        return this.y += (ship.y - this.y) / 4;
+      } else {
+        this.angle = 0;
+        return this.y += 1;
+      }
+    };
+    Suicider.prototype.draw = function() {
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.angle);
+      ctx.beginPath();
+      ctx.moveTo(-10, -10);
+      ctx.lineTo(10, -10);
+      ctx.lineTo(10, 4);
+      ctx.lineTo(0, 10);
+      ctx.lineTo(-10, 4);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.rotate(-this.angle);
+      return ctx.translate(-this.x, -this.y);
+    };
+    Suicider.prototype.update = function() {
+      this.move();
+      return this.draw();
+    };
+    return Suicider;
   })();
   Laser = (function() {
     function Laser(x, y, speed, color) {
@@ -179,6 +242,12 @@
   randInt = function(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
+  setTitleFont = function() {
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 20px Lucidia Console";
+    ctx.textAlign = "center";
+    return ctx.textBaseline = "middle";
+  };
   ctx.fillStyle = "#000000";
   ctx.strokeStyle = "#FFFFFF";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -188,21 +257,33 @@
     console.log(event.which);
     switch (event.which) {
       case 80:
-        if (paused) {
-          timeHandle = every(32, gameloop);
-        } else {
-          clearInterval(timeHandle);
+        switch (currentState) {
+          case gameState.paused:
+            currentState = gameState.playing;
+            return timeHandle = every(32, gameloop);
+          case gameState.playing:
+            currentState = gameState.paused;
+            clearInterval(timeHandle);
+            setTitleFont();
+            return ctx.fillText("[Paused]", canvas.width / 2, canvas.height / 2);
         }
-        return paused = !paused;
     }
   });
   $("#c").mousemove(function(e) {
     mouseX = e.pageX - this.offsetLeft;
     return mouseY = e.pageY - this.offsetTop;
   }).click(function(e) {
-    return lasers.push(new Laser(ship.x, ship.y, -LASER_SPEED, GOOD_COLOR));
+    switch (currentState) {
+      case gameState.playing:
+        return lasers.push(new Laser(ship.x, ship.y, -LASER_SPEED, GOOD_COLOR));
+      case gameState.title:
+        currentState = gameState.playing;
+        return timeHandle = every(32, gameloop);
+    }
   }).bind("contextmenu", function(e) {
-    bombs.push(new Bomb(ship.x, ship.y, -BOMB_SPEED, GOOD_COLOR));
+    if (currentState === gameState.playing) {
+      bombs.push(new Bomb(ship.x, ship.y, -BOMB_SPEED, GOOD_COLOR));
+    }
     return false;
   });
   every = function(ms, cb) {
@@ -211,35 +292,23 @@
   gameloop = function() {
     var bomb, enemy, laser, shrapnal, _i, _j, _k, _l, _len, _len2, _len3, _len4;
     if (crashed) {
+      currentState = gameState.crashed;
+    }
+    if (!gameState.playing) {
       return clearInterval(timeHandle);
     }
     crashed = true;
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    for (_i = 0, _len = lasers.length; _i < _len; _i++) {
-      laser = lasers[_i];
-      laser.update();
-    }
-    lasers = (function() {
-      var _j, _len2, _ref, _results;
-      _results = [];
-      for (_j = 0, _len2 = lasers.length; _j < _len2; _j++) {
-        laser = lasers[_j];
-        if ((0 < (_ref = laser.y) && _ref < canvas.height) && !laser.killedSomething) {
-          _results.push(laser);
-        }
-      }
-      return _results;
-    })();
-    for (_j = 0, _len2 = enemies.length; _j < _len2; _j++) {
-      enemy = enemies[_j];
+    for (_i = 0, _len = enemies.length; _i < _len; _i++) {
+      enemy = enemies[_i];
       enemy.update();
     }
     enemies = (function() {
-      var _k, _len3, _results;
+      var _j, _len2, _results;
       _results = [];
-      for (_k = 0, _len3 = enemies.length; _k < _len3; _k++) {
-        enemy = enemies[_k];
+      for (_j = 0, _len2 = enemies.length; _j < _len2; _j++) {
+        enemy = enemies[_j];
         if (enemy.alive()) {
           _results.push(enemy);
         }
@@ -249,6 +318,22 @@
     if (Math.random() < ENEMY_RAND) {
       enemies.push(new Enemy(randInt(0, canvas.width), -10));
     }
+    ship.update();
+    for (_j = 0, _len2 = lasers.length; _j < _len2; _j++) {
+      laser = lasers[_j];
+      laser.update();
+    }
+    lasers = (function() {
+      var _k, _len3, _ref, _results;
+      _results = [];
+      for (_k = 0, _len3 = lasers.length; _k < _len3; _k++) {
+        laser = lasers[_k];
+        if ((0 < (_ref = laser.y) && _ref < canvas.height) && !laser.killedSomething) {
+          _results.push(laser);
+        }
+      }
+      return _results;
+    })();
     for (_k = 0, _len3 = bombs.length; _k < _len3; _k++) {
       bomb = bombs[_k];
       bomb.update();
@@ -258,7 +343,7 @@
       _results = [];
       for (_l = 0, _len4 = bombs.length; _l < _len4; _l++) {
         bomb = bombs[_l];
-        if (bomb.cooldown !== 0) {
+        if (bomb.cooldown > 0) {
           _results.push(bomb);
         }
       }
@@ -279,8 +364,18 @@
       }
       return _results;
     })();
-    ship.update();
     return crashed = false;
   };
-  timeHandle = every(32, gameloop);
+  init = function() {
+    switch (currentState) {
+      case gameState.playing:
+        return timeHandle = every(32, gameloop);
+      case gameState.title:
+        setTitleFont();
+        ctx.fillText("Tempus [Dev]", canvas.width / 2, canvas.height / 2 - 24);
+        ctx.fillText("by Jake Stothard", canvas.width / 2, canvas.height / 2);
+        return ctx.fillText("Click", canvas.width / 2, canvas.height / 2 + 24);
+    }
+  };
+  init();
 }).call(this);

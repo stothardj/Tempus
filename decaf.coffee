@@ -4,7 +4,10 @@ ctx = canvas.getContext("2d")
 if not ctx
   throw "Loading context failed"
 
-#Color determines what color does not kill you
+# Color determines what color does not kill you
+# Also used to determine player accurracy
+# AKA: bad things happen if GOOD_COLOR === BAD_COLOR
+# Could attach separate team marker, but not worth it
 GOOD_COLOR = "#0044FF"
 BAD_COLOR = "#FF0000"
 
@@ -20,8 +23,15 @@ shrapnals = []
 mouseX = 250
 mouseY = 200
 crashed = false
-paused = false
 timeHandle = undefined
+
+gameState =
+  title: "Title"
+  playing: "Playing"
+  paused: "Paused"
+  crashed: "Crashed"
+
+currentState = gameState.title
 
 class Ship
   constructor: (@x, @y) ->
@@ -70,16 +80,62 @@ class Enemy
 
   alive: ->
     return false if @y > canvas.height
+    if Math.abs( ship.x - @x ) < 35 and Math.abs( ship.y - @y ) < 35
+      return false
     for laser in lasers
       #Takes into account color, laser length, laser speed, and ship size
-      if laser.color is GOOD_COLOR and Math.abs(@x - laser.x) <= 7 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10
+      if laser.color isnt BAD_COLOR and Math.abs(@x - laser.x) <= 12 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10
         laser.killedSomething = true
+        return false
+    for bomb in bombs
+      #Takes into account color, bomb size, bomb speed, and ship size
+      if bomb.color isnt BAD_COLOR and Math.abs(@x - bomb.x) <= 12 and Math.abs(@y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 12
+        bomb.cooldown = 0
+        return false
+    for shrap in shrapnals
+      #Takes into account color, shrap size, and ship size
+      if shrap.color isnt BAD_COLOR and Math.abs(@x - shrap.x) <= 11 and Math.abs(@y - shrap.y) <= 11
         return false
     true
 
   update: ->
     @shoot() if @shootCooldown is 0
     @shootCooldown -= 1
+    @move()
+    @draw()
+
+class Suicider
+  constructor: (@x, @y) ->
+    @angle = 0
+    @shootCooldown = 0
+
+  move: ->
+    if Math.abs(@x - ship.x) < 150 and Math.abs(@y - ship.y) < 150
+      if @y > ship.y
+        @angle = Math.PI - Math.atan( (@x - ship.x) / (@y - ship.y) )
+      else
+        @angle = - Math.atan( (@x - ship.x) / (@y - ship.y) )
+      @x += (ship.x - @x) / 4
+      @y += (ship.y - @y) / 4
+    else
+      @angle = 0
+      @y += 1
+
+  draw: ->
+    ctx.translate( @x, @y )
+    ctx.rotate( @angle )
+    ctx.beginPath()
+    ctx.moveTo( -10, -10 )
+    ctx.lineTo( 10, -10 )
+    ctx.lineTo( 10, 4 )
+    ctx.lineTo( 0, 10 )
+    ctx.lineTo( -10, 4 )
+    ctx.closePath()
+    ctx.stroke()
+    ctx.rotate( -@angle )
+    ctx.translate( -@x, -@y )
+
+  update: ->
     @move()
     @draw()
 
@@ -138,22 +194,34 @@ class Bomb
 randInt = (min, max) ->
   Math.floor( Math.random() * (max - min + 1) ) + min
 
+setTitleFont = ->
+  ctx.fillStyle = "#FFFFFF"
+  ctx.font = "bold 20px Lucidia Console"
+  ctx.textAlign = "center"
+  ctx.textBaseline = "middle"
+
 ctx.fillStyle = "#000000"
 ctx.strokeStyle = "#FFFFFF"
-
 ctx.fillRect( 0, 0, canvas.width, canvas.height )
-
 ctx.lineWidth = 4
 
 ship = new Ship(mouseX, mouseY)
+# su = new Suicider(400, 0)
 
 $(document)
   .keyup( (e) ->
     console.log event.which
     switch event.which
       when 80 # P key
-        if paused then timeHandle = every 32, gameloop else clearInterval( timeHandle )
-        paused = not paused
+        switch currentState
+          when gameState.paused
+            currentState = gameState.playing
+            timeHandle = every 32, gameloop
+          when gameState.playing
+            currentState = gameState.paused
+            clearInterval( timeHandle )
+            setTitleFont()
+            ctx.fillText( "[Paused]", canvas.width / 2, canvas.height / 2)
   )
 
 $("#c")
@@ -163,38 +231,55 @@ $("#c")
   )
 
   .click( (e) ->
-    lasers.push( new Laser( ship.x, ship.y, -LASER_SPEED, GOOD_COLOR) )
+    switch currentState
+      when gameState.playing
+        lasers.push( new Laser( ship.x, ship.y, -LASER_SPEED, GOOD_COLOR) )
+      when gameState.title
+        currentState = gameState.playing
+        timeHandle = every 32, gameloop
   )
 
   .bind("contextmenu", (e) ->
-    bombs.push( new Bomb( ship.x, ship.y, -BOMB_SPEED, GOOD_COLOR) )
+    bombs.push( new Bomb( ship.x, ship.y, -BOMB_SPEED, GOOD_COLOR) ) if currentState is gameState.playing
     false
   );
 
 every = (ms, cb) -> setInterval cb, ms
 
 gameloop = ->
-  return clearInterval( timeHandle ) if crashed
+  currentState = gameState.crashed if crashed
+  return clearInterval( timeHandle ) if not gameState.playing
 
   crashed = true
 
   ctx.fillStyle = "#000000"
   ctx.fillRect( 0, 0, canvas.width, canvas.height )
 
-  laser.update() for laser in lasers
-  lasers = (laser for laser in lasers when 0 < laser.y < canvas.height and not laser.killedSomething)
 
   enemy.update() for enemy in enemies
   enemies = (enemy for enemy in enemies when enemy.alive())
   enemies.push( new Enemy( randInt(0, canvas.width), -10 ) ) if Math.random() < ENEMY_RAND
+  # su.update()
+  ship.update()
 
+  laser.update() for laser in lasers
+  lasers = (laser for laser in lasers when 0 < laser.y < canvas.height and not laser.killedSomething)
   bomb.update() for bomb in bombs
-  bombs = (bomb for bomb in bombs when bomb.cooldown isnt 0)
+  bombs = (bomb for bomb in bombs when bomb.cooldown > 0)
   shrapnal.update() for shrapnal in shrapnals
   shrapnals = (shrapnal for shrapnal in shrapnals when shrapnal.cooldown > 0)
 
-  ship.update()
-
   crashed = false
 
-timeHandle = every 32, gameloop
+
+init = ->
+  switch currentState
+    when gameState.playing
+      timeHandle = every 32, gameloop
+    when gameState.title
+      setTitleFont()
+      ctx.fillText( "Tempus [Dev]", canvas.width / 2, canvas.height / 2 - 24 )
+      ctx.fillText( "by Jake Stothard", canvas.width / 2, canvas.height / 2)
+      ctx.fillText( "Click", canvas.width / 2, canvas.height / 2 + 24)
+
+init()
