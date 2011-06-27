@@ -4,6 +4,12 @@ ctx = canvas.getContext("2d")
 if not ctx
   throw "Loading context failed"
 
+#General functions
+randInt = (min, max) ->
+  Math.floor( Math.random() * (max - min + 1) ) + min
+
+every = (ms, cb) -> setInterval cb, ms
+
 # Color determines what color does not kill you
 # Also used to determine player accurracy
 # AKA: bad things happen if GOOD_COLOR === BAD_COLOR
@@ -11,34 +17,43 @@ if not ctx
 GOOD_COLOR = "#0044FF"
 BAD_COLOR = "#FF0000"
 
-LASER_SPEED = 30
+LASER_SPEED = 20
 LASER_LENGTH = 16
 BOMB_SPEED = 12
 ENEMY_RAND = 0.05
 
-lasers = []
-enemies = []
-bombs = []
-shrapnals = []
+#Here for scope
+game = {}
 mouseX = 250
 mouseY = 200
-crashed = false
 timeHandle = undefined
+
+initGame = ->
+  game =
+    lasers: []
+    enemies: []
+    bombs: []
+    shrapnals: []
+    crashed: false
+    #TODO: Make separator (or contained) player object?
+    health: 100
 
 gameState =
   title: "Title"
+  gameover: "GameOver"
   playing: "Playing"
   paused: "Paused"
   crashed: "Crashed"
 
 currentState = gameState.title
 
+# Should it really be a class if it seems I really only ever make one of them?
 class Ship
   constructor: (@x, @y) ->
 
   move: ->
-    ship.x = (ship.x + mouseX) / 2
-    ship.y = (ship.y + mouseY) / 2
+    @x = (@x + mouseX) / 2
+    @y = (@y + mouseY) / 2
 
   draw: ->
     ctx.strokeStyle = "#FFFFFF"
@@ -76,23 +91,24 @@ class Enemy
 
   shoot: ->
     @shootCooldown = 35
-    lasers.push( new Laser( @x, @y, LASER_SPEED, BAD_COLOR ) )
+    game.lasers.push( new Laser( @x, @y, LASER_SPEED, BAD_COLOR ) )
 
   alive: ->
     return false if @y > canvas.height
     if Math.abs( ship.x - @x ) < 35 and Math.abs( ship.y - @y ) < 35
+      game.health -= 24
       return false
-    for laser in lasers
+    for laser in game.lasers
       #Takes into account color, laser length, laser speed, and ship size
       if laser.color isnt BAD_COLOR and Math.abs(@x - laser.x) <= 12 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10
         laser.killedSomething = true
         return false
-    for bomb in bombs
+    for bomb in game.bombs
       #Takes into account color, bomb size, bomb speed, and ship size
       if bomb.color isnt BAD_COLOR and Math.abs(@x - bomb.x) <= 12 and Math.abs(@y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 12
         bomb.cooldown = 0
         return false
-    for shrap in shrapnals
+    for shrap in game.shrapnals
       #Takes into account color, shrap size, and ship size
       if shrap.color isnt BAD_COLOR and Math.abs(@x - shrap.x) <= 11 and Math.abs(@y - shrap.y) <= 11
         return false
@@ -104,7 +120,8 @@ class Enemy
     @move()
     @draw()
 
-class Suicider
+#Do not yet generate these, a work in progress
+class Kamikaze
   constructor: (@x, @y) ->
     @angle = 0
     @shootCooldown = 0
@@ -179,7 +196,7 @@ class Bomb
     @y += @speed
 
   explode: ->
-    shrapnals = shrapnals.concat( (new Shrapnal(@x, @y, ang * 36 * Math.PI / 180, @speed, @color) for ang in [0..9]) )
+    game.shrapnals = game.shrapnals.concat( (new Shrapnal(@x, @y, ang * 36 * Math.PI / 180, @speed, @color) for ang in [0..9]) )
 
   draw: ->
     ctx.fillStyle = @color
@@ -191,14 +208,34 @@ class Bomb
     @move()
     @draw()
 
-randInt = (min, max) ->
-  Math.floor( Math.random() * (max - min + 1) ) + min
-
 setTitleFont = ->
   ctx.fillStyle = "#FFFFFF"
   ctx.font = "bold 20px Lucidia Console"
   ctx.textAlign = "center"
   ctx.textBaseline = "middle"
+
+setLowerLeftFont = ->
+  ctx.fillStyle = "#FFFFFF"
+  ctx.font = "normal 18px Lucidia Console"
+  ctx.textAlign = "left"
+  ctx.textBaseline = "bottom"
+
+clearScreen = ->
+  ctx.fillStyle = "#000000"
+  ctx.fillRect( 0, 0, canvas.width, canvas.height)
+
+drawTitleScreen = ->
+  clearScreen()
+  setTitleFont()
+  ctx.fillText( "Tempus [Dev]", canvas.width / 2, canvas.height / 2 - 12 )
+  ctx.fillText( "Click to play", canvas.width / 2, canvas.height / 2 + 12)
+  setLowerLeftFont()
+  ctx.fillText( "by Jake Stothard", 10, canvas.height - 10)
+
+drawGameOver = ->
+  clearScreen()
+  setTitleFont()
+  ctx.fillText( "Game Over", canvas.width / 2, canvas.height / 2 )
 
 ctx.fillStyle = "#000000"
 ctx.strokeStyle = "#FFFFFF"
@@ -206,11 +243,10 @@ ctx.fillRect( 0, 0, canvas.width, canvas.height )
 ctx.lineWidth = 4
 
 ship = new Ship(mouseX, mouseY)
-# su = new Suicider(400, 0)
 
 $(document)
   .keyup( (e) ->
-    console.log event.which
+    # console.log event.which
     switch event.which
       when 80 # P key
         switch currentState
@@ -233,53 +269,67 @@ $("#c")
   .click( (e) ->
     switch currentState
       when gameState.playing
-        lasers.push( new Laser( ship.x, ship.y, -LASER_SPEED, GOOD_COLOR) )
+        game.lasers.push( new Laser( ship.x, ship.y, -LASER_SPEED, GOOD_COLOR) )
       when gameState.title
         currentState = gameState.playing
+        initGame()
         timeHandle = every 32, gameloop
+      when gameState.gameOver
+        currentState = gameState.title
+        drawTitleScreen()
   )
 
   .bind("contextmenu", (e) ->
-    bombs.push( new Bomb( ship.x, ship.y, -BOMB_SPEED, GOOD_COLOR) ) if currentState is gameState.playing
+    game.bombs.push( new Bomb( ship.x, ship.y, -BOMB_SPEED, GOOD_COLOR) ) if currentState is gameState.playing
     false
   );
 
-every = (ms, cb) -> setInterval cb, ms
-
 gameloop = ->
-  currentState = gameState.crashed if crashed
-  return clearInterval( timeHandle ) if not gameState.playing
+  # console.log( "In game loop with state", currentState )
 
-  crashed = true
+  if game.crashed
+    currentState = gameState.crashed
+    clearInterval( timeHandle )
+    return
 
-  ctx.fillStyle = "#000000"
-  ctx.fillRect( 0, 0, canvas.width, canvas.height )
+  game.crashed = true
 
+  if game.health <= 0
+    currentState = gameState.gameOver
+    clearInterval( timeHandle )
+    drawGameOver()
+    return
 
-  enemy.update() for enemy in enemies
-  enemies = (enemy for enemy in enemies when enemy.alive())
-  enemies.push( new Enemy( randInt(0, canvas.width), -10 ) ) if Math.random() < ENEMY_RAND
-  # su.update()
+  clearScreen()
+
+  enemy.update() for enemy in game.enemies
+  game.enemies = (enemy for enemy in game.enemies when enemy.alive())
+  game.enemies.push( new Enemy( randInt(0, canvas.width), -10 ) ) if Math.random() < ENEMY_RAND
+
   ship.update()
 
-  laser.update() for laser in lasers
-  lasers = (laser for laser in lasers when 0 < laser.y < canvas.height and not laser.killedSomething)
-  bomb.update() for bomb in bombs
-  bombs = (bomb for bomb in bombs when bomb.cooldown > 0)
-  shrapnal.update() for shrapnal in shrapnals
-  shrapnals = (shrapnal for shrapnal in shrapnals when shrapnal.cooldown > 0)
+  laser.update() for laser in game.lasers
+  for laser in game.lasers
+    #Takes into account color, laser length, laser speed, and ship size
+    if laser.color isnt GOOD_COLOR and Math.abs(ship.x - laser.x) <= 12 and Math.abs(ship.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10
+      laser.killedSomething = true
+      game.health -= 8
+  game.lasers = (laser for laser in game.lasers when 0 < laser.y < canvas.height and not laser.killedSomething)
+  bomb.update() for bomb in game.bombs
+  game.bombs = (bomb for bomb in game.bombs when bomb.cooldown > 0)
+  shrapnal.update() for shrapnal in game.shrapnals
+  game.shrapnals = (shrapnal for shrapnal in game.shrapnals when shrapnal.cooldown > 0)
 
-  crashed = false
+  setLowerLeftFont()
+  ctx.fillText("Health: " + game.health, 10, canvas.height - 10);
 
+  game.crashed = false
 
-init = ->
-  switch currentState
-    when gameState.playing
-      timeHandle = every 32, gameloop
-    when gameState.title
-      setTitleFont()
-      ctx.fillText( "Tempus [Dev]", canvas.width / 2, canvas.height / 2 - 24 )
-      ctx.fillText( "by Jake Stothard", canvas.width / 2, canvas.height / 2)
-      ctx.fillText( "Click", canvas.width / 2, canvas.height / 2 + 24)
+#Can change how game begins based on what you start the state as
+switch currentState
+  when gameState.playing
+    initGame()
+    timeHandle = every 32, gameloop
+  when gameState.title
+    drawTitleScreen()
 
-init()
