@@ -10,10 +10,6 @@ randInt = (min, max) ->
 
 every = (ms, cb) -> setInterval cb, ms
 
-# Color determines what color does not kill you
-# Also used to determine player accurracy
-# AKA: bad things happen if GOOD_COLOR === BAD_COLOR
-# Could attach separate team marker, but not worth it
 GOOD_COLOR = "#0044FF"
 BAD_COLOR = "#FF0000"
 
@@ -22,21 +18,13 @@ LASER_LENGTH = 16
 BOMB_SPEED = 12
 ENEMY_RAND = 0.05
 
-#Here for scope
+# Here for scope
 game = {}
+
 mouseX = 250
 mouseY = 200
 timeHandle = undefined
 
-initGame = ->
-  game =
-    lasers: []
-    enemies: []
-    bombs: []
-    shrapnals: []
-    crashed: false
-    #TODO: Make separator (or contained) player object?
-    health: 100
 
 gameState =
   title: "Title"
@@ -91,26 +79,27 @@ class Enemy
 
   shoot: ->
     @shootCooldown = 35
-    game.lasers.push( new Laser( @x, @y, LASER_SPEED, BAD_COLOR ) )
+    game.owners.enemies.lasers.push( new Laser( @x, @y, LASER_SPEED, game.owners.enemies ) )
 
   alive: ->
     return false if @y > canvas.height
     if Math.abs( ship.x - @x ) < 35 and Math.abs( ship.y - @y ) < 35
-      game.health -= 24
+      game.owners.player.health -= 24
       return false
-    for laser in game.lasers
+    for laser in game.owners.player.lasers
       #Takes into account color, laser length, laser speed, and ship size
-      if laser.color isnt BAD_COLOR and Math.abs(@x - laser.x) <= 12 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10
+      if Math.abs(@x - laser.x) <= 12 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10
         laser.killedSomething = true
         return false
-    for bomb in game.bombs
+    for bomb in game.owners.player.bombs
       #Takes into account color, bomb size, bomb speed, and ship size
-      if bomb.color isnt BAD_COLOR and Math.abs(@x - bomb.x) <= 12 and Math.abs(@y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 12
+      if Math.abs(@x - bomb.x) <= 12 and Math.abs(@y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 12
         bomb.cooldown = 0
         return false
-    for shrap in game.shrapnals
+    # for shrap in game.shrapnals
+    for shrap in game.owners.player.shrapnals
       #Takes into account color, shrap size, and ship size
-      if shrap.color isnt BAD_COLOR and Math.abs(@x - shrap.x) <= 11 and Math.abs(@y - shrap.y) <= 11
+      if Math.abs(@x - shrap.x) <= 11 and Math.abs(@y - shrap.y) <= 11
         return false
     true
 
@@ -120,48 +109,48 @@ class Enemy
     @move()
     @draw()
 
-#Do not yet generate these, a work in progress
-class Kamikaze
-  constructor: (@x, @y) ->
-    @angle = 0
-    @shootCooldown = 0
+#Do not yet generate these, a work in progress. Switch to new structure when uncomment
+# class Kamikaze
+#   constructor: (@x, @y) ->
+#     @angle = 0
+#     @shootCooldown = 0
 
-  move: ->
-    if Math.abs(@x - ship.x) < 150 and Math.abs(@y - ship.y) < 150
-      if @y > ship.y
-        @angle = Math.PI - Math.atan( (@x - ship.x) / (@y - ship.y) )
-      else
-        @angle = - Math.atan( (@x - ship.x) / (@y - ship.y) )
-      @x += (ship.x - @x) / 4
-      @y += (ship.y - @y) / 4
-    else
-      @angle = 0
-      @y += 1
+#   move: ->
+#     if Math.abs(@x - ship.x) < 150 and Math.abs(@y - ship.y) < 150
+#       if @y > ship.y
+#         @angle = Math.PI - Math.atan( (@x - ship.x) / (@y - ship.y) )
+#       else
+#         @angle = - Math.atan( (@x - ship.x) / (@y - ship.y) )
+#       @x += (ship.x - @x) / 4
+#       @y += (ship.y - @y) / 4
+#     else
+#       @angle = 0
+#       @y += 1
 
-  draw: ->
-    ctx.translate( @x, @y )
-    ctx.rotate( @angle )
-    ctx.beginPath()
-    ctx.moveTo( -10, -10 )
-    ctx.lineTo( 10, -10 )
-    ctx.lineTo( 10, 4 )
-    ctx.lineTo( 0, 10 )
-    ctx.lineTo( -10, 4 )
-    ctx.closePath()
-    ctx.stroke()
-    ctx.rotate( -@angle )
-    ctx.translate( -@x, -@y )
+#   draw: ->
+#     ctx.translate( @x, @y )
+#     ctx.rotate( @angle )
+#     ctx.beginPath()
+#     ctx.moveTo( -10, -10 )
+#     ctx.lineTo( 10, -10 )
+#     ctx.lineTo( 10, 4 )
+#     ctx.lineTo( 0, 10 )
+#     ctx.lineTo( -10, 4 )
+#     ctx.closePath()
+#     ctx.stroke()
+#     ctx.rotate( -@angle )
+#     ctx.translate( -@x, -@y )
 
-  update: ->
-    @move()
-    @draw()
+#   update: ->
+#     @move()
+#     @draw()
 
 class Laser
-  constructor: (@x, @y, @speed, @color) ->
+  constructor: (@x, @y, @speed, @owner) ->
     @killedSomething = false
 
   draw: ->
-    ctx.fillStyle = @color
+    ctx.fillStyle = @owner.color
     ctx.fillRect( @x - 1, @y - LASER_LENGTH / 2, 2, LASER_LENGTH )
 
   move: ->
@@ -172,7 +161,7 @@ class Laser
     @draw()
 
 class Shrapnal
-  constructor: (@x, @y, @angle, @speed, @color) ->
+  constructor: (@x, @y, @angle, @speed, @owner) ->
     @cooldown = 10
 
   move: ->
@@ -180,7 +169,7 @@ class Shrapnal
     @y += (@speed * Math.sin(@angle))
 
   draw: ->
-    ctx.fillStyle = @color
+    ctx.fillStyle = @owner.color
     ctx.fillRect( @x - 1, @y - 1, 2, 2 )
 
   update: ->
@@ -189,17 +178,17 @@ class Shrapnal
     @draw()
 
 class Bomb
-  constructor: (@x, @y, @speed, @color) ->
+  constructor: (@x, @y, @speed, @owner) ->
     @cooldown = 20
 
   move: ->
     @y += @speed
 
   explode: ->
-    game.shrapnals = game.shrapnals.concat( (new Shrapnal(@x, @y, ang * 36 * Math.PI / 180, @speed, @color) for ang in [0..9]) )
+    @owner.shrapnals = @owner.shrapnals.concat( (new Shrapnal(@x, @y, ang * 36 * Math.PI / 180, @speed, @owner) for ang in [0..9]) )
 
   draw: ->
-    ctx.fillStyle = @color
+    ctx.fillStyle = @owner.color
     ctx.fillRect( @x - 2, @y - 2, 4, 4 )
 
   update: ->
@@ -237,12 +226,30 @@ drawGameOver = ->
   setTitleFont()
   ctx.fillText( "Game Over", canvas.width / 2, canvas.height / 2 )
 
-ctx.fillStyle = "#000000"
 ctx.strokeStyle = "#FFFFFF"
-ctx.fillRect( 0, 0, canvas.width, canvas.height )
 ctx.lineWidth = 4
 
 ship = new Ship(mouseX, mouseY)
+
+initGame = ->
+  game =
+    owners:
+      player:
+        lasers: []
+        bombs: []
+        shrapnals: []
+        units: ship
+        color: GOOD_COLOR
+        health: 100
+
+      enemies:
+        lasers: []
+        bombs: []
+        shrapnals: []
+        units: []
+        color: BAD_COLOR
+
+    crashed: false
 
 $(document)
   .keyup( (e) ->
@@ -269,7 +276,7 @@ $("#c")
   .click( (e) ->
     switch currentState
       when gameState.playing
-        game.lasers.push( new Laser( ship.x, ship.y, -LASER_SPEED, GOOD_COLOR) )
+        game.owners.player.lasers.push( new Laser( ship.x, ship.y, -LASER_SPEED, game.owners.player) )
       when gameState.title
         currentState = gameState.playing
         initGame()
@@ -280,12 +287,11 @@ $("#c")
   )
 
   .bind("contextmenu", (e) ->
-    game.bombs.push( new Bomb( ship.x, ship.y, -BOMB_SPEED, GOOD_COLOR) ) if currentState is gameState.playing
+    game.owners.player.bombs.push( new Bomb( ship.x, ship.y, -BOMB_SPEED, game.owners.player) ) if currentState is gameState.playing
     false
   );
 
 gameloop = ->
-  # console.log( "In game loop with state", currentState )
 
   if game.crashed
     currentState = gameState.crashed
@@ -294,7 +300,7 @@ gameloop = ->
 
   game.crashed = true
 
-  if game.health <= 0
+  if game.owners.player.health <= 0
     currentState = gameState.gameOver
     clearInterval( timeHandle )
     drawGameOver()
@@ -302,26 +308,38 @@ gameloop = ->
 
   clearScreen()
 
-  enemy.update() for enemy in game.enemies
-  game.enemies = (enemy for enemy in game.enemies when enemy.alive())
-  game.enemies.push( new Enemy( randInt(0, canvas.width), -10 ) ) if Math.random() < ENEMY_RAND
+  enemy.update() for enemy in game.owners.enemies.units
+  game.owners.enemies.units = (enemy for enemy in game.owners.enemies.units when enemy.alive())
+  game.owners.enemies.units.push( new Enemy( randInt(0, canvas.width), -10 ) ) if Math.random() < ENEMY_RAND
 
   ship.update()
 
-  laser.update() for laser in game.lasers
-  for laser in game.lasers
-    #Takes into account color, laser length, laser speed, and ship size
-    if laser.color isnt GOOD_COLOR and Math.abs(ship.x - laser.x) <= 12 and Math.abs(ship.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10
+  for ownerName, owner of game.owners
+      laser.update() for laser in owner.lasers
+
+  #Takes into account color, laser length, laser speed, and ship size
+  for laser in game.owners.enemies.lasers
+    if Math.abs(ship.x - laser.x) <= 12 and Math.abs(ship.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10
       laser.killedSomething = true
-      game.health -= 8
-  game.lasers = (laser for laser in game.lasers when 0 < laser.y < canvas.height and not laser.killedSomething)
-  bomb.update() for bomb in game.bombs
-  game.bombs = (bomb for bomb in game.bombs when bomb.cooldown > 0)
-  shrapnal.update() for shrapnal in game.shrapnals
-  game.shrapnals = (shrapnal for shrapnal in game.shrapnals when shrapnal.cooldown > 0)
+      game.owners.player.health -= 8
+
+  for ownerName, owner of game.owners
+    owner.lasers = (laser for laser in owner.lasers when 0 < laser.y < canvas.height and not laser.killedSomething)
+
+  for ownerName, owner of game.owners
+    bomb.update() for bomb in owner.bombs
+
+  for ownerName, owner of game.owners
+    owner.bombs = (bomb for bomb in owner.bombs when bomb.cooldown > 0)
+
+  for ownerName, owner of game.owners
+    shrapnal.update() for shrapnal in owner.shrapnals
+
+  for ownerName, owner of game.owners
+    owner.shrapnals = (shrapnal for shrapnal in owner.shrapnals when shrapnal.cooldown > 0)
 
   setLowerLeftFont()
-  ctx.fillText("Health: " + game.health, 10, canvas.height - 10);
+  ctx.fillText("Health: " + game.owners.player.health, 10, canvas.height - 10);
 
   game.crashed = false
 
