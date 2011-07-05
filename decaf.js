@@ -335,7 +335,11 @@
   drawGameOver = function() {
     clearScreen();
     setTitleFont();
-    return ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2);
+    ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 20);
+    ctx.font = "normal 18px Lucidia Console";
+    ctx.fillText("Kills - " + game.owners.player.kills, canvas.width / 2, canvas.height / 2);
+    ctx.fillText("Lasers Fired - " + game.owners.player.lasers_fired, canvas.width / 2, canvas.height / 2 + 20);
+    return ctx.fillText("Bombs Used - " + game.owners.player.bombs_fired, canvas.width / 2, canvas.height / 2 + 40);
   };
   ctx.strokeStyle = "#FFFFFF";
   ctx.lineWidth = 4;
@@ -350,7 +354,9 @@
           units: ship,
           color: "#0044FF",
           health: 100,
-          kills: 0
+          kills: 0,
+          lasers_fired: 0,
+          bombs_fired: 0
         },
         enemies: {
           lasers: [],
@@ -533,6 +539,7 @@
       })();
     }
     if (mouse.leftDown && ship.laserCooldown <= 0) {
+      game.owners.player.lasers_fired += 1;
       game.owners.player.lasers.push(new Laser(ship.x, ship.y, -20, game.owners.player));
       if (ship.heat > 80) {
         ship.laserCooldown = 10;
@@ -544,6 +551,7 @@
       ship.heat += 7;
     }
     if (mouse.rightDown && ship.bombCooldown <= 0) {
+      game.owners.player.bombs_fired += 1;
       if (currentState === gameState.playing) {
         game.owners.player.bombs.push(new Bomb(ship.x, ship.y, -12, game.owners.player));
       }

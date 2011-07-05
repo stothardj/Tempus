@@ -261,8 +261,6 @@ setLowerLeftFont = ->
   ctx.textAlign = "left"
   ctx.textBaseline = "bottom"
 
-
-
 clearScreen = ->
   ctx.fillStyle = "#000000"
   ctx.fillRect( 0, 0, canvas.width, canvas.height)
@@ -278,7 +276,11 @@ drawTitleScreen = ->
 drawGameOver = ->
   clearScreen()
   setTitleFont()
-  ctx.fillText( "Game Over", canvas.width / 2, canvas.height / 2 )
+  ctx.fillText( "Game Over", canvas.width / 2, canvas.height / 2 - 20 )
+  ctx.font = "normal 18px Lucidia Console"
+  ctx.fillText( "Kills - " + game.owners.player.kills, canvas.width / 2, canvas.height / 2)
+  ctx.fillText( "Lasers Fired - " + game.owners.player.lasers_fired, canvas.width / 2, canvas.height / 2 + 20 )
+  ctx.fillText( "Bombs Used - " + game.owners.player.bombs_fired, canvas.width / 2, canvas.height / 2 + 40 )
 
 ctx.strokeStyle = "#FFFFFF"
 ctx.lineWidth = 4
@@ -296,6 +298,8 @@ initGame = ->
         color: GOOD_COLOR
         health: 100
         kills: 0
+        lasers_fired: 0
+        bombs_fired: 0
 
       enemies:
         lasers: []
@@ -413,6 +417,7 @@ gameloop = ->
     owner.shrapnals = (shrapnal for shrapnal in owner.shrapnals when shrapnal.cooldown > 0)
 
   if mouse.leftDown and ship.laserCooldown <= 0
+    game.owners.player.lasers_fired += 1
     game.owners.player.lasers.push( new Laser( ship.x, ship.y, -LASER_SPEED, game.owners.player) )
     if ship.heat > 80
       ship.laserCooldown = 10
@@ -423,6 +428,7 @@ gameloop = ->
     ship.heat += 7
 
   if mouse.rightDown and ship.bombCooldown <= 0
+    game.owners.player.bombs_fired += 1
     game.owners.player.bombs.push( new Bomb( ship.x, ship.y, -BOMB_SPEED, game.owners.player) ) if currentState is gameState.playing
     if ship.heat > 80
       ship.bombCooldown = 20
