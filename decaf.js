@@ -1,5 +1,5 @@
 (function() {
-  var BAD_COLOR, BOMB_SPEED, Bomb, ENEMY_RAND, Enemy, GOOD_COLOR, LASER_LENGTH, LASER_SPEED, Laser, Ship, Shrapnal, canvas, clearScreen, ctx, currentState, drawGameOver, drawTitleScreen, every, game, gameState, gameloop, initGame, mouseX, mouseY, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle;
+  var Bomb, Fighter, Kamikaze, Laser, Ship, Shrapnal, canvas, clearScreen, ctx, currentState, drawGameOver, drawTitleScreen, every, game, gameState, gameloop, initGame, mouse, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle;
   canvas = document.getElementById("c");
   ctx = canvas.getContext("2d");
   if (!ctx) {
@@ -11,15 +11,14 @@
   every = function(ms, cb) {
     return setInterval(cb, ms);
   };
-  GOOD_COLOR = "#0044FF";
-  BAD_COLOR = "#FF0000";
-  LASER_SPEED = 20;
-  LASER_LENGTH = 16;
-  BOMB_SPEED = 12;
-  ENEMY_RAND = 0.05;
-  game = {};
-  mouseX = 250;
-  mouseY = 200;
+  game = void 0;
+  ship = void 0;
+  mouse = {
+    x: 250,
+    y: 200,
+    leftDown: false,
+    rightDown: false
+  };
   timeHandle = void 0;
   gameState = {
     title: "Title",
@@ -33,10 +32,13 @@
     function Ship(x, y) {
       this.x = x;
       this.y = y;
+      this.laserCooldown = 0;
+      this.bombCooldown = 0;
+      this.heat = 0;
     }
     Ship.prototype.move = function() {
-      this.x = (this.x + mouseX) / 2;
-      return this.y = (this.y + mouseY) / 2;
+      this.x = (this.x + mouse.x) / 2;
+      return this.y = (this.y + mouse.y) / 2;
     };
     Ship.prototype.draw = function() {
       ctx.strokeStyle = "#FFFFFF";
@@ -55,13 +57,13 @@
     };
     return Ship;
   })();
-  Enemy = (function() {
-    function Enemy(x, y) {
+  Fighter = (function() {
+    function Fighter(x, y) {
       this.x = x;
       this.y = y;
       this.shootCooldown = 0;
     }
-    Enemy.prototype.draw = function() {
+    Fighter.prototype.draw = function() {
       ctx.strokeStyle = "#FFFFFF";
       ctx.beginPath();
       ctx.moveTo(this.x - 10, this.y - 10);
@@ -70,30 +72,32 @@
       ctx.closePath();
       return ctx.stroke();
     };
-    Enemy.prototype.move = function() {
+    Fighter.prototype.move = function() {
       var mv;
       this.y += 3;
       mv = (ship.x - this.x) / 12;
       return this.x += Math.abs(mv) < 5 ? mv : 5 * mv / Math.abs(mv);
     };
-    Enemy.prototype.shoot = function() {
+    Fighter.prototype.shoot = function() {
       this.shootCooldown = 35;
-      return game.owners.enemies.lasers.push(new Laser(this.x, this.y, LASER_SPEED, game.owners.enemies));
+      return game.owners.enemies.lasers.push(new Laser(this.x, this.y, 20, game.owners.enemies));
     };
-    Enemy.prototype.alive = function() {
+    Fighter.prototype.alive = function() {
       var bomb, laser, shrap, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
       if (this.y > canvas.height) {
         return false;
       }
       if (Math.abs(ship.x - this.x) < 35 && Math.abs(ship.y - this.y) < 35) {
         game.owners.player.health -= 24;
+        game.owners.player.kills += 1;
         return false;
       }
       _ref = game.owners.player.lasers;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         laser = _ref[_i];
-        if (Math.abs(this.x - laser.x) <= 12 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10) {
+        if (Math.abs(this.x - laser.x) <= 12 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10) {
           laser.killedSomething = true;
+          game.owners.player.kills += 1;
           return false;
         }
       }
@@ -102,6 +106,7 @@
         bomb = _ref2[_j];
         if (Math.abs(this.x - bomb.x) <= 12 && Math.abs(this.y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 12) {
           bomb.cooldown = 0;
+          game.owners.player.kills += 1;
           return false;
         }
       }
@@ -109,12 +114,13 @@
       for (_k = 0, _len3 = _ref3.length; _k < _len3; _k++) {
         shrap = _ref3[_k];
         if (Math.abs(this.x - shrap.x) <= 11 && Math.abs(this.y - shrap.y) <= 11) {
+          game.owners.player.kills += 1;
           return false;
         }
       }
       return true;
     };
-    Enemy.prototype.update = function() {
+    Fighter.prototype.update = function() {
       if (this.shootCooldown === 0) {
         this.shoot();
       }
@@ -122,7 +128,104 @@
       this.move();
       return this.draw();
     };
-    return Enemy;
+    return Fighter;
+  })();
+  Kamikaze = (function() {
+    function Kamikaze(x, y) {
+      this.x = x;
+      this.y = y;
+      this.angle = 0;
+      this.shootCooldown = 0;
+      this.moveState = 0;
+    }
+    Kamikaze.prototype.move = function() {
+      var desired_angle;
+      switch (this.moveState) {
+        case 0:
+          if (Math.abs(this.x - ship.x) < 150 && Math.abs(this.y - ship.y) < 150) {
+            return this.moveState = 1;
+          } else {
+            this.angle = 0;
+            return this.y += 1;
+          }
+          break;
+        case 1:
+          if (this.y > ship.y) {
+            desired_angle = Math.PI - Math.atan((this.x - ship.x) / (this.y - ship.y));
+          } else {
+            desired_angle = -Math.atan((this.x - ship.x) / (this.y - ship.y));
+          }
+          if (Math.abs(desired_angle - this.angle) < (Math.PI / 24) || Math.abs(desired_angle - this.angle) > Math.PI * 2 - (Math.PI / 24)) {
+            this.angle = desired_angle;
+            return this.moveState = 2;
+          } else if ((this.angle < desired_angle && this.angle - desired_angle < Math.PI) || (Math.PI * 2 - this.angle) - desired_angle < Math.PI) {
+            return this.angle += Math.PI / 24;
+          } else {
+            return this.angle -= Math.PI / 24;
+          }
+          break;
+        case 2:
+          this.x += 30 * Math.cos(this.angle + Math.PI / 2);
+          return this.y += 30 * Math.sin(this.angle + Math.PI / 2);
+      }
+    };
+    Kamikaze.prototype.draw = function() {
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.angle);
+      ctx.beginPath();
+      ctx.moveTo(-10, -10);
+      ctx.lineTo(10, -10);
+      ctx.lineTo(10, 4);
+      ctx.lineTo(0, 10);
+      ctx.lineTo(-10, 4);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.rotate(-this.angle);
+      return ctx.translate(-this.x, -this.y);
+    };
+    Kamikaze.prototype.alive = function() {
+      var bomb, laser, shrap, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
+      if (this.y > canvas.height || this.moveState && (this.x < 0 || this.x > canvas.width || this.y < 0)) {
+        return false;
+      }
+      if (Math.abs(ship.x - this.x) < 35 && Math.abs(ship.y - this.y) < 35) {
+        game.owners.player.kills += 1;
+        game.owners.player.health -= 35;
+        return false;
+      }
+      _ref = game.owners.player.lasers;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        laser = _ref[_i];
+        if (Math.abs(this.x - laser.x) <= 12 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10) {
+          laser.killedSomething = true;
+          game.owners.player.kills += 1;
+          return false;
+        }
+      }
+      _ref2 = game.owners.player.bombs;
+      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+        bomb = _ref2[_j];
+        if (Math.abs(this.x - bomb.x) <= 12 && Math.abs(this.y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 12) {
+          bomb.cooldown = 0;
+          game.owners.player.kills += 1;
+          return false;
+        }
+      }
+      _ref3 = game.owners.player.shrapnals;
+      for (_k = 0, _len3 = _ref3.length; _k < _len3; _k++) {
+        shrap = _ref3[_k];
+        if (Math.abs(this.x - shrap.x) <= 11 && Math.abs(this.y - shrap.y) <= 11) {
+          game.owners.player.kills += 1;
+          return false;
+        }
+      }
+      return true;
+    };
+    Kamikaze.prototype.update = function() {
+      this.move();
+      return this.draw();
+    };
+    return Kamikaze;
   })();
   Laser = (function() {
     function Laser(x, y, speed, owner) {
@@ -134,7 +237,7 @@
     }
     Laser.prototype.draw = function() {
       ctx.fillStyle = this.owner.color;
-      return ctx.fillRect(this.x - 1, this.y - LASER_LENGTH / 2, 2, LASER_LENGTH);
+      return ctx.fillRect(this.x - 1, this.y - 16 / 2, 2, 16);
     };
     Laser.prototype.move = function() {
       return this.y += this.speed;
@@ -236,8 +339,8 @@
   };
   ctx.strokeStyle = "#FFFFFF";
   ctx.lineWidth = 4;
-  ship = new Ship(mouseX, mouseY);
   initGame = function() {
+    ship = new Ship(mouse.x, mouse.y);
     return game = {
       owners: {
         player: {
@@ -245,15 +348,16 @@
           bombs: [],
           shrapnals: [],
           units: ship,
-          color: GOOD_COLOR,
-          health: 100
+          color: "#0044FF",
+          health: 100,
+          kills: 0
         },
         enemies: {
           lasers: [],
           bombs: [],
           shrapnals: [],
           units: [],
-          color: BAD_COLOR
+          color: "#FF0000"
         }
       },
       crashed: false
@@ -275,12 +379,26 @@
     }
   });
   $("#c").mousemove(function(e) {
-    mouseX = e.pageX - this.offsetLeft;
-    return mouseY = e.pageY - this.offsetTop;
+    mouse.x = e.pageX - this.offsetLeft;
+    return mouse.y = e.pageY - this.offsetTop;
+  }).mousedown(function(e) {
+    console.log(e.which);
+    switch (e.which) {
+      case 1:
+        return mouse.leftDown = true;
+      case 3:
+        return mouse.rightDown = true;
+    }
+  }).mouseup(function(e) {
+    console.log(e.which);
+    switch (e.which) {
+      case 1:
+        return mouse.leftDown = false;
+      case 3:
+        return mouse.rightDown = false;
+    }
   }).click(function(e) {
     switch (currentState) {
-      case gameState.playing:
-        return game.owners.player.lasers.push(new Laser(ship.x, ship.y, -LASER_SPEED, game.owners.player));
       case gameState.title:
         currentState = gameState.playing;
         initGame();
@@ -290,9 +408,6 @@
         return drawTitleScreen();
     }
   }).bind("contextmenu", function(e) {
-    if (currentState === gameState.playing) {
-      game.owners.player.bombs.push(new Bomb(ship.x, ship.y, -BOMB_SPEED, game.owners.player));
-    }
     return false;
   });
   gameloop = function() {
@@ -327,8 +442,11 @@
       }
       return _results;
     })();
-    if (Math.random() < ENEMY_RAND) {
-      game.owners.enemies.units.push(new Enemy(randInt(0, canvas.width), -10));
+    if (Math.random() < 0.05) {
+      game.owners.enemies.units.push(new Fighter(randInt(0, canvas.width), -10));
+    }
+    if (Math.random() < 0.02 && game.owners.player.kills > 15) {
+      game.owners.enemies.units.push(new Kamikaze(randInt(0, canvas.width), -10));
     }
     ship.update();
     _ref2 = game.owners;
@@ -343,7 +461,7 @@
     _ref4 = game.owners.enemies.lasers;
     for (_k = 0, _len3 = _ref4.length; _k < _len3; _k++) {
       laser = _ref4[_k];
-      if (Math.abs(ship.x - laser.x) <= 12 && Math.abs(ship.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10) {
+      if (Math.abs(ship.x - laser.x) <= 12 && Math.abs(ship.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10) {
         laser.killedSomething = true;
         game.owners.player.health -= 8;
       }
@@ -414,8 +532,50 @@
         return _results;
       })();
     }
+    if (mouse.leftDown && ship.laserCooldown <= 0) {
+      game.owners.player.lasers.push(new Laser(ship.x, ship.y, -20, game.owners.player));
+      if (ship.heat > 80) {
+        ship.laserCooldown = 10;
+      } else if (ship.heat > 40) {
+        ship.laserCooldown = 5;
+      } else {
+        ship.laserCooldown = 2;
+      }
+      ship.heat += 7;
+    }
+    if (mouse.rightDown && ship.bombCooldown <= 0) {
+      if (currentState === gameState.playing) {
+        game.owners.player.bombs.push(new Bomb(ship.x, ship.y, -12, game.owners.player));
+      }
+      if (ship.heat > 80) {
+        ship.bombCooldown = 20;
+      } else if (ship.heat > 40) {
+        ship.bombCooldown = 10;
+      } else {
+        ship.bombCooldown = 5;
+      }
+      ship.heat += 10;
+    }
+    if (ship.laserCooldown > 0) {
+      ship.laserCooldown -= 1;
+    }
+    if (ship.bombCooldown > 0) {
+      ship.bombCooldown -= 1;
+    }
+    if (ship.heat > 0) {
+      ship.heat -= 1;
+    }
     setLowerLeftFont();
     ctx.fillText("Health: " + game.owners.player.health, 10, canvas.height - 10);
+    ctx.textAlign = "right";
+    if (ship.heat > 80) {
+      ctx.fillStyle = "#FF0000";
+    } else if (ship.heat > 40) {
+      ctx.fillStyle = "#FFFF00";
+    } else {
+      ctx.fillStyle = "#00FF00";
+    }
+    ctx.fillText("Heat: " + ship.heat, canvas.width - 10, canvas.height - 10);
     return game.crashed = false;
   };
   switch (currentState) {

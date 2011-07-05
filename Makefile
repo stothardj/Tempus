@@ -1,7 +1,7 @@
 .PHONY: clean
 
-decaf-compiled.js: decaf.js
-	java -jar compiler.jar --js decaf.js --js_output_file decaf-compiled.js
+# decaf-compiled.js: decaf.js
+# 	java -jar compiler.jar --js decaf.js --js_output_file decaf-compiled.js
 
 decaf.js: decaf.coffee
 	coffee -c decaf.coffee

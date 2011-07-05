@@ -21,10 +21,16 @@ randInt = (min, max) ->
 every = (ms, cb) -> setInterval cb, ms
 
 # Here for scope
-game = {}
+game = undefined
+ship = undefined
 
-mouseX = 250
-mouseY = 200
+mouse = {
+  x: 250
+  y: 200
+  leftDown: false
+  rightDown: false
+}
+
 timeHandle = undefined
 
 
@@ -40,10 +46,13 @@ currentState = gameState.title
 # Should it really be a class if it seems I really only ever make one of them?
 class Ship
   constructor: (@x, @y) ->
+    @laserCooldown = 0
+    @bombCooldown = 0
+    @heat = 0
 
   move: ->
-    @x = (@x + mouseX) / 2
-    @y = (@y + mouseY) / 2
+    @x = (@x + mouse.x) / 2
+    @y = (@y + mouse.y) / 2
 
   draw: ->
     ctx.strokeStyle = "#FFFFFF"
@@ -252,6 +261,8 @@ setLowerLeftFont = ->
   ctx.textAlign = "left"
   ctx.textBaseline = "bottom"
 
+
+
 clearScreen = ->
   ctx.fillStyle = "#000000"
   ctx.fillRect( 0, 0, canvas.width, canvas.height)
@@ -272,9 +283,9 @@ drawGameOver = ->
 ctx.strokeStyle = "#FFFFFF"
 ctx.lineWidth = 4
 
-ship = new Ship(mouseX, mouseY)
-
 initGame = ->
+  ship = new Ship(mouse.x, mouse.y)
+
   game =
     owners:
       player:
@@ -313,14 +324,32 @@ $(document)
 
 $("#c")
   .mousemove( (e) ->
-    mouseX = e.pageX - @offsetLeft
-    mouseY = e.pageY - @offsetTop
+    mouse.x = e.pageX - @offsetLeft
+    mouse.y = e.pageY - @offsetTop
+  )
+
+  .mousedown( (e) ->
+    console.log e.which
+    switch (e.which)
+      when 1
+        mouse.leftDown = true
+      when 3
+        mouse.rightDown = true
+  )
+
+  .mouseup( (e) ->
+    console.log e.which
+    switch (e.which)
+      when 1
+        mouse.leftDown = false
+      when 3
+        mouse.rightDown = false
   )
 
   .click( (e) ->
     switch currentState
-      when gameState.playing
-        game.owners.player.lasers.push( new Laser( ship.x, ship.y, -LASER_SPEED, game.owners.player) )
+      # when gameState.playing
+      #   game.owners.player.lasers.push( new Laser( ship.x, ship.y, -LASER_SPEED, game.owners.player) )
       when gameState.title
         currentState = gameState.playing
         initGame()
@@ -331,7 +360,7 @@ $("#c")
   )
 
   .bind("contextmenu", (e) ->
-    game.owners.player.bombs.push( new Bomb( ship.x, ship.y, -BOMB_SPEED, game.owners.player) ) if currentState is gameState.playing
+    # game.owners.player.bombs.push( new Bomb( ship.x, ship.y, -BOMB_SPEED, game.owners.player) ) if currentState is gameState.playing
     false
   );
 
@@ -383,8 +412,41 @@ gameloop = ->
   for ownerName, owner of game.owners
     owner.shrapnals = (shrapnal for shrapnal in owner.shrapnals when shrapnal.cooldown > 0)
 
+  if mouse.leftDown and ship.laserCooldown <= 0
+    game.owners.player.lasers.push( new Laser( ship.x, ship.y, -LASER_SPEED, game.owners.player) )
+    if ship.heat > 80
+      ship.laserCooldown = 10
+    else if ship.heat > 40
+      ship.laserCooldown = 5
+    else
+      ship.laserCooldown = 2
+    ship.heat += 7
+
+  if mouse.rightDown and ship.bombCooldown <= 0
+    game.owners.player.bombs.push( new Bomb( ship.x, ship.y, -BOMB_SPEED, game.owners.player) ) if currentState is gameState.playing
+    if ship.heat > 80
+      ship.bombCooldown = 20
+    else if ship.heat > 40
+      ship.bombCooldown = 10
+    else
+      ship.bombCooldown = 5
+    ship.heat += 10
+
+  ship.laserCooldown -= 1 if ship.laserCooldown > 0
+  ship.bombCooldown -= 1 if ship.bombCooldown > 0
+  ship.heat -= 1 if ship.heat > 0
+
   setLowerLeftFont()
   ctx.fillText("Health: " + game.owners.player.health, 10, canvas.height - 10);
+
+  ctx.textAlign = "right"
+  if ship.heat > 80
+    ctx.fillStyle = "#FF0000"
+  else if ship.heat > 40
+    ctx.fillStyle = "#FFFF00"
+  else
+    ctx.fillStyle = "#00FF00"
+  ctx.fillText("Heat: " + ship.heat, canvas.width - 10, canvas.height - 10)
 
   game.crashed = false
 
