@@ -1,5 +1,5 @@
 (function() {
-  var Bomb, Fighter, Kamikaze, Laser, Ship, Shrapnal, canvas, clearScreen, ctx, currentState, drawGameOver, drawTitleScreen, every, game, gameState, gameloop, initGame, mouse, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle;
+  var Bomb, Fighter, Kamikaze, Laser, Ship, Shrapnal, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, game, gameState, gameloop, initGame, mouse, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause;
   canvas = document.getElementById("c");
   ctx = canvas.getContext("2d");
   if (!ctx) {
@@ -90,6 +90,7 @@
       if (Math.abs(ship.x - this.x) < 35 && Math.abs(ship.y - this.y) < 35) {
         game.owners.player.health -= 24;
         game.owners.player.kills += 1;
+        game.timers.dispHealth = 255;
         return false;
       }
       _ref = game.owners.player.lasers;
@@ -191,6 +192,7 @@
       if (Math.abs(ship.x - this.x) < 35 && Math.abs(ship.y - this.y) < 35) {
         game.owners.player.kills += 1;
         game.owners.player.health -= 35;
+        game.timers.dispHealth = 255;
         return false;
       }
       _ref = game.owners.player.lasers;
@@ -366,27 +368,46 @@
           color: "#FF0000"
         }
       },
+      timers: {
+        dispHealth: 0
+      },
       crashed: false
     };
+  };
+  dispHealth = function() {
+    ctx.beginPath();
+    ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 20, 0, Math.max(game.owners.player.health, 0) * Math.PI / 50, false);
+    return ctx.stroke();
+  };
+  pause = function() {
+    currentState = gameState.paused;
+    clearInterval(timeHandle);
+    dispHealth();
+    setTitleFont();
+    return ctx.fillText("[Paused]", canvas.width / 2, canvas.height / 2);
+  };
+  unpause = function() {
+    currentState = gameState.playing;
+    return timeHandle = every(32, gameloop);
   };
   $(document).keyup(function(e) {
     switch (event.which) {
       case 80:
         switch (currentState) {
           case gameState.paused:
-            currentState = gameState.playing;
-            return timeHandle = every(32, gameloop);
+            return unpause();
           case gameState.playing:
-            currentState = gameState.paused;
-            clearInterval(timeHandle);
-            setTitleFont();
-            return ctx.fillText("[Paused]", canvas.width / 2, canvas.height / 2);
+            return pause();
         }
     }
   });
   $("#c").mousemove(function(e) {
     mouse.x = e.pageX - this.offsetLeft;
     return mouse.y = e.pageY - this.offsetTop;
+  }).mouseout(function(e) {
+    if (currentState === gameState.playing) {
+      return pause();
+    }
   }).mousedown(function(e) {
     console.log(e.which);
     switch (e.which) {
@@ -405,6 +426,8 @@
     }
   }).click(function(e) {
     switch (currentState) {
+      case gameState.paused:
+        return unpause();
       case gameState.title:
         currentState = gameState.playing;
         initGame();
@@ -470,6 +493,7 @@
       if (Math.abs(ship.x - laser.x) <= 12 && Math.abs(ship.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10) {
         laser.killedSomething = true;
         game.owners.player.health -= 8;
+        game.timers.dispHealth = 255;
       }
     }
     _ref5 = game.owners;
@@ -573,8 +597,6 @@
     if (ship.heat > 0) {
       ship.heat -= 1;
     }
-    setLowerLeftFont();
-    ctx.fillText("Health: " + game.owners.player.health, 10, canvas.height - 10);
     ctx.textAlign = "right";
     if (ship.heat > 80) {
       ctx.fillStyle = "#FF0000";
@@ -584,6 +606,12 @@
       ctx.fillStyle = "#00FF00";
     }
     ctx.fillText("Heat: " + ship.heat, canvas.width - 10, canvas.height - 10);
+    if (game.timers.dispHealth > 0) {
+      ctx.strokeStyle = "rgb(".concat(game.timers.dispHealth, ",", game.timers.dispHealth, ",", game.timers.dispHealth, ")");
+      dispHealth();
+      ctx.strokeStyle = "#FFFFFF";
+      game.timers.dispHealth -= 10;
+    }
     return game.crashed = false;
   };
   switch (currentState) {

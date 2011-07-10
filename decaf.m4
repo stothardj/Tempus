@@ -97,6 +97,7 @@ class Fighter
     if Math.abs( ship.x - @x ) < 35 and Math.abs( ship.y - @y ) < 35
       game.owners.player.health -= 24
       game.owners.player.kills += 1
+      game.timers.dispHealth = 255
       return false
     for laser in game.owners.player.lasers
       # Takes into account color, laser length, laser speed, and ship size
@@ -173,6 +174,7 @@ class Kamikaze
     if Math.abs( ship.x - @x ) < 35 and Math.abs( ship.y - @y ) < 35
       game.owners.player.kills += 1
       game.owners.player.health -= 35
+      game.timers.dispHealth = 255
       return false
     for laser in game.owners.player.lasers
       # Takes into account color, laser length, laser speed, and ship size
@@ -308,7 +310,26 @@ initGame = ->
         units: []
         color: BAD_COLOR
 
+    timers:
+      dispHealth: 0
+
     crashed: false
+
+dispHealth = ->
+  ctx.beginPath()
+  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 20, 0, Math.max(game.owners.player.health, 0) * Math.PI / 50, false)
+  ctx.stroke()
+
+pause = ->
+  currentState = gameState.paused
+  clearInterval( timeHandle )
+  dispHealth()
+  setTitleFont()
+  ctx.fillText( "[Paused]", canvas.width / 2, canvas.height / 2)
+
+unpause = ->
+  currentState = gameState.playing
+  timeHandle = every 32, gameloop
 
 $(document)
   .keyup( (e) ->
@@ -317,19 +338,19 @@ $(document)
       when 80 # P key
         switch currentState
           when gameState.paused
-            currentState = gameState.playing
-            timeHandle = every 32, gameloop
+            unpause()
           when gameState.playing
-            currentState = gameState.paused
-            clearInterval( timeHandle )
-            setTitleFont()
-            ctx.fillText( "[Paused]", canvas.width / 2, canvas.height / 2)
+            pause()
   )
 
 $("#c")
   .mousemove( (e) ->
     mouse.x = e.pageX - @offsetLeft
     mouse.y = e.pageY - @offsetTop
+  )
+
+  .mouseout( (e) ->
+    pause() if currentState is gameState.playing
   )
 
   .mousedown( (e) ->
@@ -352,8 +373,8 @@ $("#c")
 
   .click( (e) ->
     switch currentState
-      # when gameState.playing
-      #   game.owners.player.lasers.push( new Laser( ship.x, ship.y, -LASER_SPEED, game.owners.player) )
+      when gameState.paused
+        unpause()
       when gameState.title
         currentState = gameState.playing
         initGame()
@@ -364,7 +385,6 @@ $("#c")
   )
 
   .bind("contextmenu", (e) ->
-    # game.owners.player.bombs.push( new Bomb( ship.x, ship.y, -BOMB_SPEED, game.owners.player) ) if currentState is gameState.playing
     false
   );
 
@@ -400,6 +420,7 @@ gameloop = ->
     if Math.abs(ship.x - laser.x) <= 12 and Math.abs(ship.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10
       laser.killedSomething = true
       game.owners.player.health -= 8
+      game.timers.dispHealth = 255
 
   for ownerName, owner of game.owners
     owner.lasers = (laser for laser in owner.lasers when 0 < laser.y < canvas.height and not laser.killedSomething)
@@ -442,9 +463,6 @@ gameloop = ->
   ship.bombCooldown -= 1 if ship.bombCooldown > 0
   ship.heat -= 1 if ship.heat > 0
 
-  setLowerLeftFont()
-  ctx.fillText("Health: " + game.owners.player.health, 10, canvas.height - 10);
-
   ctx.textAlign = "right"
   if ship.heat > 80
     ctx.fillStyle = "#FF0000"
@@ -453,6 +471,13 @@ gameloop = ->
   else
     ctx.fillStyle = "#00FF00"
   ctx.fillText("Heat: " + ship.heat, canvas.width - 10, canvas.height - 10)
+
+  # TODO: only show just hit
+  if game.timers.dispHealth > 0
+    ctx.strokeStyle = "rgb(".concat( game.timers.dispHealth , "," , game.timers.dispHealth , "," , game.timers.dispHealth , ")" )
+    dispHealth()
+    ctx.strokeStyle = "#FFFFFF"
+    game.timers.dispHealth -= 10
 
   game.crashed = false
 
