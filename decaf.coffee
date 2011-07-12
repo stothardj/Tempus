@@ -1,13 +1,4 @@
-
-
-
-
-
-
-
-
-
-
+#'
 canvas = document.getElementById("c")
 ctx = canvas.getContext("2d")
 
@@ -32,7 +23,6 @@ mouse = {
 }
 
 timeHandle = undefined
-
 
 gameState =
   title: "Title"
@@ -59,7 +49,7 @@ class Ship
     ctx.beginPath()
     ctx.moveTo( @x, @y - 20 )
     ctx.quadraticCurveTo( @x + 20, @y, @x + 20, @y + 20 )
-    ctx.quadraticCurveTo( @x + 5, @y + 10, @x, @y + 10)
+    ctx.quadraticCurveTo( @x + 5, @y + 10, @x, @y + 10 )
     ctx.quadraticCurveTo( @x - 5, @y + 10, @x - 20, @y + 20 )
     ctx.quadraticCurveTo( @x - 20, @y, @x, @y - 20 )
     ctx.closePath()
@@ -79,7 +69,7 @@ class Fighter
     ctx.moveTo( @x - 10, @y - 10 )
     ctx.lineTo( @x + 10, @y - 10 )
     ctx.lineTo( @x, @y + 10 )
-    # ctx.lineTo( @x - 10, @y - 10 ) Default behavior when closing path anyway
+
     ctx.closePath()
     ctx.stroke()
 
@@ -124,7 +114,6 @@ class Fighter
     @move()
     @draw()
 
-# Do not yet generate these, a work in progress. Switch to new structure when uncomment
 class Kamikaze
   constructor: (@x, @y) ->
     @angle = 0
@@ -170,7 +159,7 @@ class Kamikaze
     ctx.translate( -@x, -@y )
 
   alive: ->
-    return false if @y > canvas.height or @moveState and (@x < 0 or @x > canvas.width or @y < 0)
+    return false if @y > canvas.height or @moveState and (@x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height)
     if Math.abs( ship.x - @x ) < 35 and Math.abs( ship.y - @y ) < 35
       game.owners.player.kills += 1
       game.owners.player.health -= 35
@@ -198,6 +187,43 @@ class Kamikaze
   update: ->
     @move()
     @draw()
+
+class Bomber
+  constructor: (@x, @y) ->
+    @angle = 0
+    @bombCooldown = 0
+    @turnVel = (Math.random() - 0.5) / 30;
+
+  move: ->
+    @x += 2 * Math.cos(@angle + Math.PI / 2)
+    @y += 2 * Math.sin(@angle + Math.PI / 2)
+    @angle += @turnVel
+    @goneOnScreen = 0
+
+  draw: ->
+    ctx.translate( @x, @y )
+    ctx.rotate( @angle )
+    ctx.beginPath()
+    ctx.moveTo( 0, 14 )
+    ctx.lineTo( 5, 0 )
+    ctx.lineTo( 0, -14 )
+    ctx.lineTo( -5, 0 )
+    ctx.closePath()
+    ctx.stroke()
+    ctx.rotate( -@angle )
+    ctx.translate( -@x, -@y )
+
+  update: ->
+    @move()
+    @draw()
+
+  alive: ->
+    if (@x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height)
+      return false if @goneOnScreen
+    else
+      @goneOnScreen = 1
+
+    true
 
 class Laser
   constructor: (@x, @y, @speed, @owner) ->
@@ -251,6 +277,7 @@ class Bomb
     @move()
     @draw()
 
+#'
 setTitleFont = ->
   ctx.fillStyle = "#FFFFFF"
   ctx.font = "bold 20px Lucidia Console"
@@ -414,8 +441,9 @@ gameloop = ->
 
   enemy.update() for enemy in game.owners.enemies.units
   game.owners.enemies.units = (enemy for enemy in game.owners.enemies.units when enemy.alive())
-  game.owners.enemies.units.push( new Fighter( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.05
-  game.owners.enemies.units.push( new Kamikaze( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.02 and game.owners.player.kills > 15
+  game.owners.enemies.units.push( new Fighter( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.04 and game.owners.player.kills >= 0
+  game.owners.enemies.units.push( new Kamikaze( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.01 and game.owners.player.kills >= 15
+  game.owners.enemies.units.push( new Bomber( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.02 and game.owners.player.kills >= 0
 
   ship.update()
 

@@ -1,5 +1,5 @@
 (function() {
-  var Bomb, Fighter, Kamikaze, Laser, Ship, Shrapnal, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, game, gameState, gameloop, initGame, mouse, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause;
+  var Bomb, Bomber, Fighter, Kamikaze, Laser, Ship, Shrapnal, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, game, gameState, gameloop, initGame, mouse, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause;
   canvas = document.getElementById("c");
   ctx = canvas.getContext("2d");
   if (!ctx) {
@@ -186,7 +186,7 @@
     };
     Kamikaze.prototype.alive = function() {
       var bomb, laser, shrap, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
-      if (this.y > canvas.height || this.moveState && (this.x < 0 || this.x > canvas.width || this.y < 0)) {
+      if (this.y > canvas.height || this.moveState && (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height)) {
         return false;
       }
       if (Math.abs(ship.x - this.x) < 35 && Math.abs(ship.y - this.y) < 35) {
@@ -228,6 +228,49 @@
       return this.draw();
     };
     return Kamikaze;
+  })();
+  Bomber = (function() {
+    function Bomber(x, y) {
+      this.x = x;
+      this.y = y;
+      this.angle = 0;
+      this.bombCooldown = 0;
+      this.turnVel = (Math.random() - 0.5) / 30;
+    }
+    Bomber.prototype.move = function() {
+      this.x += 2 * Math.cos(this.angle + Math.PI / 2);
+      this.y += 2 * Math.sin(this.angle + Math.PI / 2);
+      this.angle += this.turnVel;
+      return this.goneOnScreen = 0;
+    };
+    Bomber.prototype.draw = function() {
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.angle);
+      ctx.beginPath();
+      ctx.moveTo(0, 14);
+      ctx.lineTo(5, 0);
+      ctx.lineTo(0, -14);
+      ctx.lineTo(-5, 0);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.rotate(-this.angle);
+      return ctx.translate(-this.x, -this.y);
+    };
+    Bomber.prototype.update = function() {
+      this.move();
+      return this.draw();
+    };
+    Bomber.prototype.alive = function() {
+      if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+        if (this.goneOnScreen) {
+          return false;
+        }
+      } else {
+        this.goneOnScreen = 1;
+      }
+      return true;
+    };
+    return Bomber;
   })();
   Laser = (function() {
     function Laser(x, y, speed, owner) {
@@ -479,11 +522,14 @@
       }
       return _results;
     })();
-    if (Math.random() < 0.05) {
+    if (Math.random() < 0.04 && game.owners.player.kills >= 0) {
       game.owners.enemies.units.push(new Fighter(randInt(0, canvas.width), -10));
     }
-    if (Math.random() < 0.02 && game.owners.player.kills > 15) {
+    if (Math.random() < 0.01 && game.owners.player.kills >= 15) {
       game.owners.enemies.units.push(new Kamikaze(randInt(0, canvas.width), -10));
+    }
+    if (Math.random() < 0.02 && game.owners.player.kills >= 0) {
+      game.owners.enemies.units.push(new Bomber(randInt(0, canvas.width), -10));
     }
     ship.update();
     _ref2 = game.owners;
