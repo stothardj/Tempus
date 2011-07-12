@@ -369,7 +369,9 @@
         }
       },
       timers: {
-        dispHealth: 0
+        dispHealth: 0,
+        colorCycle: 0,
+        colorCycleDir: 10
       },
       crashed: false
     };
@@ -447,6 +449,12 @@
       return;
     }
     game.crashed = true;
+    game.timers.colorCycle += game.timers.colorCycleDir;
+    game.timers.colorCycle = Math.min(game.timers.colorCycle, 255);
+    game.timers.colorCycle = Math.max(game.timers.colorCycle, 0);
+    if (game.timers.colorCycle === 0 || game.timers.colorCycle === 255) {
+      game.timers.colorCycleDir *= -1;
+    }
     if (game.owners.player.health <= 0) {
       currentState = gameState.gameOver;
       clearInterval(timeHandle);
@@ -566,7 +574,7 @@
       game.owners.player.lasers_fired += 1;
       game.owners.player.lasers.push(new Laser(ship.x, ship.y, -20, game.owners.player));
       if (ship.heat > 80) {
-        ship.laserCooldown = 10;
+        ship.laserCooldown = 7;
       } else if (ship.heat > 40) {
         ship.laserCooldown = 5;
       } else {
@@ -597,15 +605,19 @@
     if (ship.heat > 0) {
       ship.heat -= 1;
     }
-    ctx.textAlign = "right";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
     if (ship.heat > 80) {
-      ctx.fillStyle = "#FF0000";
+      ctx.fillStyle = "rgb(".concat(game.timers.colorCycle, ",0,0)");
+      ctx.font = "bold 20px Lucidia Console";
+      ctx.fillText("[ Heat Critical ]", canvas.width / 2, canvas.height - 30);
     } else if (ship.heat > 40) {
-      ctx.fillStyle = "#FFFF00";
+      ctx.fillStyle = "rgb(".concat(game.timers.colorCycle, ",", game.timers.colorCycle, ",0)");
+      ctx.font = "normal 18px Lucidia Console";
+      ctx.fillText("[ Heat Warning ]", canvas.width / 2, canvas.height - 30);
     } else {
       ctx.fillStyle = "#00FF00";
     }
-    ctx.fillText("Heat: " + ship.heat, canvas.width - 10, canvas.height - 10);
     if (game.timers.dispHealth > 0) {
       ctx.strokeStyle = "rgb(".concat(game.timers.dispHealth, ",", game.timers.dispHealth, ",", game.timers.dispHealth, ")");
       dispHealth();
