@@ -1,3 +1,19 @@
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
 #'
 canvas = document.getElementById("c")
 ctx = canvas.getContext("2d")
@@ -33,6 +49,22 @@ gameState =
 
 currentState = gameState.title
 
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
 # Should it really be a class if it seems I really only ever make one of them?
 class Ship
   constructor: (@x, @y) ->
@@ -59,6 +91,22 @@ class Ship
     @move()
     @draw()
 
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
 class Fighter
   constructor: (@x, @y) ->
     @shootCooldown = 0
@@ -114,6 +162,22 @@ class Fighter
     @move()
     @draw()
 
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
 class Kamikaze
   constructor: (@x, @y) ->
     @angle = 0
@@ -188,6 +252,22 @@ class Kamikaze
     @move()
     @draw()
 
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
 class Bomber
   constructor: (@x, @y) ->
     @angle = 0
@@ -253,6 +333,22 @@ class Bomber
 
     true
 
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
 class Laser
   constructor: (@x, @y, @speed, @owner) ->
     @killedSomething = false
@@ -268,6 +364,22 @@ class Laser
     @move()
     @draw()
 
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
 class Shrapnal
   constructor: (@x, @y, @angle, @speed, @owner) ->
     @cooldown = 10
@@ -285,6 +397,22 @@ class Shrapnal
     @move()
     @draw()
 
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
 class Bomb
   constructor: (@x, @y, @speed, @cooldown, @owner) ->
 
