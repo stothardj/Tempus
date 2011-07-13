@@ -213,7 +213,13 @@ class Bomber
     ctx.rotate( -@angle )
     ctx.translate( -@x, -@y )
 
+  bomb: ->
+    @bombCooldown = 40
+    game.owners.enemies.bombs.push( new Bomb( @x, @y, 4, 35, game.owners.enemies ) )
+
   update: ->
+    @bomb() if @bombCooldown is 0
+    @bombCooldown -= 1
     @move()
     @draw()
 
@@ -222,6 +228,28 @@ class Bomber
       return false if @goneOnScreen
     else
       @goneOnScreen = 1
+    if Math.abs( ship.x - @x ) < 35 and Math.abs( ship.y - @y ) < 35
+      game.owners.player.health -= 24
+      game.owners.player.kills += 1
+      game.timers.dispHealth = 255
+      return false
+    for laser in game.owners.player.lasers
+      # Takes into account color, laser length, laser speed, and ship size
+      if Math.abs(@x - laser.x) <= 12 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10
+        laser.killedSomething = true
+        game.owners.player.kills += 1
+        return false
+    for bomb in game.owners.player.bombs
+      # Takes into account color, bomb size, bomb speed, and ship size
+      if Math.abs(@x - bomb.x) <= 12 and Math.abs(@y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 12
+        bomb.cooldown = 0
+        game.owners.player.kills += 1
+        return false
+    for shrap in game.owners.player.shrapnals
+      # Takes into account color, shrap size, and ship size
+      if Math.abs(@x - shrap.x) <= 11 and Math.abs(@y - shrap.y) <= 11
+        game.owners.player.kills += 1
+        return false
 
     true
 
@@ -258,22 +286,23 @@ class Shrapnal
     @draw()
 
 class Bomb
-  constructor: (@x, @y, @speed, @owner) ->
-    @cooldown = 20
+  constructor: (@x, @y, @speed, @cooldown, @owner) ->
 
   move: ->
     @y += @speed
 
   explode: ->
-    @owner.shrapnals = @owner.shrapnals.concat( (new Shrapnal(@x, @y, ang * 36 * Math.PI / 180, @speed, @owner) for ang in [0..9]) )
+    @owner.shrapnals = @owner.shrapnals.concat( (new Shrapnal(@x, @y, ang * 36 * Math.PI / 180, 10, @owner) for ang in [0..9]) )
 
   draw: ->
     ctx.fillStyle = @owner.color
     ctx.fillRect( @x - 2, @y - 2, 4, 4 )
 
   update: ->
+    console.log( "Begin cooldown ".concat( @cooldown ) )
     @cooldown -= 1
     @explode() if @cooldown <= 0
+    console.log( "End cooldown ".concat( @cooldown ) )
     @move()
     @draw()
 
@@ -383,7 +412,7 @@ $("#c")
   )
 
   .mousedown( (e) ->
-    console.log e.which
+    # console.log e.which
     switch (e.which)
       when 1
         mouse.leftDown = true
@@ -392,7 +421,7 @@ $("#c")
   )
 
   .mouseup( (e) ->
-    console.log e.which
+    # console.log e.which
     switch (e.which)
       when 1
         mouse.leftDown = false
@@ -441,20 +470,34 @@ gameloop = ->
 
   enemy.update() for enemy in game.owners.enemies.units
   game.owners.enemies.units = (enemy for enemy in game.owners.enemies.units when enemy.alive())
-  game.owners.enemies.units.push( new Fighter( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.04 and game.owners.player.kills >= 0
-  game.owners.enemies.units.push( new Kamikaze( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.01 and game.owners.player.kills >= 15
-  game.owners.enemies.units.push( new Bomber( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.02 and game.owners.player.kills >= 0
+  game.owners.enemies.units.push( new Fighter( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.03 and game.owners.player.kills >= 0
+  game.owners.enemies.units.push( new Kamikaze( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.02 and game.owners.player.kills >= 15
+  game.owners.enemies.units.push( new Bomber( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.01 and game.owners.player.kills >= 30
 
   ship.update()
 
   for ownerName, owner of game.owners
       laser.update() for laser in owner.lasers
 
-  # Takes into account color, laser length, laser speed, and ship size
+  # Takes into account owner, laser length, laser speed, and ship size
   for laser in game.owners.enemies.lasers
     if Math.abs(ship.x - laser.x) <= 12 and Math.abs(ship.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10
       laser.killedSomething = true
       game.owners.player.health -= 8
+      game.timers.dispHealth = 255
+
+  # Takes into account owner, bomb speed, and ship size
+  for bomb in game.owners.enemies.bombs
+    if Math.abs(ship.x - bomb.x) <= 12 and Math.abs(ship.y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 10
+      bomb.cooldown = 0
+      game.owners.player.health -= 2
+      game.timers.dispHealth = 255
+
+  # Takes into account owner, shrapnal speed, and ship size
+  for shrapnal in game.owners.enemies.shrapnals
+    if Math.abs(ship.x - shrapnal.x) <= 12 and Math.abs(ship.y - shrapnal.y + shrapnal.speed / 2) <= Math.abs(shrapnal.speed) / 2 + 10
+      shrapnal.cooldown = 0
+      game.owners.player.health -= 2
       game.timers.dispHealth = 255
 
   for ownerName, owner of game.owners
@@ -485,7 +528,7 @@ gameloop = ->
 
   if mouse.rightDown and ship.bombCooldown <= 0
     game.owners.player.bombs_fired += 1
-    game.owners.player.bombs.push( new Bomb( ship.x, ship.y, -12, game.owners.player) ) if currentState is gameState.playing
+    game.owners.player.bombs.push( new Bomb( ship.x, ship.y, -12, 20, game.owners.player) ) if currentState is gameState.playing
     if ship.heat > 80
       ship.bombCooldown = 20
     else if ship.heat > 40
@@ -512,8 +555,6 @@ gameloop = ->
   else
     ctx.fillStyle = "#00FF00"
 
-
-  # TODO: only show just hit
   if game.timers.dispHealth > 0
     ctx.strokeStyle = "rgb(".concat( game.timers.dispHealth , "," , game.timers.dispHealth , "," , game.timers.dispHealth , ")" )
     dispHealth()

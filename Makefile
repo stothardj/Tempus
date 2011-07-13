@@ -6,7 +6,7 @@
 decaf.js: decaf.coffee
 	coffee -c decaf.coffee
 
-decaf.coffee: decaf.m4
+decaf.coffee: *.m4
 	m4 decaf.m4 > decaf.coffee
 
 clean:

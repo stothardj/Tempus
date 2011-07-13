@@ -1,4 +1,4 @@
-define(KAMIKAZE_RAND,0.01)dnl
+define(KAMIKAZE_RAND,0.02)dnl
 define(KAMIKAZE_THRESHOLD,15)dnl
 define(KAMIKAZE_WIDTH,20)dnl
 define(KAMIKAZE_HEIGHT,20)dnl

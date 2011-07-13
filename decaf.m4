@@ -4,6 +4,7 @@ dnl
 define(LASER_SPEED,20)dnl
 define(LASER_LENGTH,16)dnl
 define(BOMB_SPEED,12)dnl
+define(SHRAPNAL_SPEED,10)dnl
 dnl
 define(`offscreen', `(@x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height)')dnl
 define(`upcase', `translit(`$*', `a-z', `A-Z')')dnl
@@ -157,7 +158,7 @@ $("#c")
   )
 
   .mousedown( (e) ->
-    console.log e.which
+    # console.log e.which
     switch (e.which)
       when 1
         mouse.leftDown = true
@@ -166,7 +167,7 @@ $("#c")
   )
 
   .mouseup( (e) ->
-    console.log e.which
+    # console.log e.which
     switch (e.which)
       when 1
         mouse.leftDown = false
@@ -224,11 +225,25 @@ gameloop = ->
   for ownerName, owner of game.owners
       laser.update() for laser in owner.lasers
 
-  # Takes into account color, laser length, laser speed, and ship size
+  # Takes into account owner, laser length, laser speed, and ship size
   for laser in game.owners.enemies.lasers
     if Math.abs(ship.x - laser.x) <= 12 and Math.abs(ship.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10
       laser.killedSomething = true
       game.owners.player.health -= 8
+      game.timers.dispHealth = 255
+
+  # Takes into account owner, bomb speed, and ship size
+  for bomb in game.owners.enemies.bombs
+    if Math.abs(ship.x - bomb.x) <= 12 and Math.abs(ship.y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 10
+      bomb.cooldown = 0
+      game.owners.player.health -= 2
+      game.timers.dispHealth = 255
+
+  # Takes into account owner, shrapnal speed, and ship size
+  for shrapnal in game.owners.enemies.shrapnals
+    if Math.abs(ship.x - shrapnal.x) <= 12 and Math.abs(ship.y - shrapnal.y + shrapnal.speed / 2) <= Math.abs(shrapnal.speed) / 2 + 10
+      shrapnal.cooldown = 0
+      game.owners.player.health -= 2
       game.timers.dispHealth = 255
 
   for ownerName, owner of game.owners
@@ -259,7 +274,7 @@ gameloop = ->
 
   if mouse.rightDown and ship.bombCooldown <= 0
     game.owners.player.bombs_fired += 1
-    game.owners.player.bombs.push( new Bomb( ship.x, ship.y, -BOMB_SPEED, game.owners.player) ) if currentState is gameState.playing
+    game.owners.player.bombs.push( new Bomb( ship.x, ship.y, -BOMB_SPEED, 20, game.owners.player) ) if currentState is gameState.playing
     if ship.heat > 80
       ship.bombCooldown = 20
     else if ship.heat > 40
@@ -286,8 +301,6 @@ gameloop = ->
   else
     ctx.fillStyle = "#00FF00"
 
-
-  # TODO: only show just hit
   if game.timers.dispHealth > 0
     ctx.strokeStyle = "rgb(".concat( game.timers.dispHealth , "," , game.timers.dispHealth , "," , game.timers.dispHealth , ")" )
     dispHealth()

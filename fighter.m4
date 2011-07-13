@@ -1,4 +1,4 @@
-define(FIGHTER_RAND,0.04)dnl
+define(FIGHTER_RAND,0.03)dnl
 define(FIGHTER_THRESHOLD,0)dnl
 define(FIGHTER_WIDTH,20)dnl
 define(FIGHTER_HEIGHT,20)dnl
