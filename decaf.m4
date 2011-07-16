@@ -29,6 +29,11 @@ dnl
 #'
 canvas = document.getElementById("c")
 ctx = canvas.getContext("2d")
+audio = $('<audio></audio>')
+  .attr({ 'loop' : 'loop'})
+  .append($('<source><source>')
+  .attr({ 'src' : 'media/tonight_full.ogg'})
+  ).appendTo('body')[0];
 
 if not ctx
   throw "Loading context failed"
@@ -42,6 +47,8 @@ every = (ms, cb) -> setInterval cb, ms
 # Here for scope
 game = undefined
 ship = undefined
+firstTime = true
+musicPlaying = false
 
 mouse = {
   x: 250
@@ -105,7 +112,14 @@ drawGameOver = ->
 ctx.strokeStyle = "#FFFFFF"
 ctx.lineWidth = 4
 
+firstInit = ->
+  if $("#enableMusic")[0].checked
+    audio.play()
+    musicPlaying = true
+  firstTime = false
+
 initGame = ->
+  firstInit() if firstTime
   ship = new Ship(mouse.x, mouse.y)
 
   game =
@@ -207,6 +221,18 @@ $("#c")
   .bind("contextmenu", (e) ->
     false
   );
+
+$("#enableMusic")
+  .change( (e) ->
+    if not firstTime
+      if $("#enableMusic")[0].checked
+        audio.play()
+        musicPlaying = true
+      else
+        audio.pause()
+        musicPlaying = false
+  )
+
 
 gameloop = ->
 

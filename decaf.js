@@ -1,7 +1,12 @@
 (function() {
-  var Bomb, Bomber, Fighter, Kamikaze, Laser, Ship, Shrapnal, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, game, gameState, gameloop, initGame, mouse, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause;
+  var Bomb, Bomber, Fighter, Kamikaze, Laser, Ship, Shrapnal, audio, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, firstInit, firstTime, game, gameState, gameloop, initGame, mouse, musicPlaying, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause;
   canvas = document.getElementById("c");
   ctx = canvas.getContext("2d");
+  audio = $('<audio></audio>').attr({
+    'loop': 'loop'
+  }).append($('<source><source>').attr({
+    'src': 'media/tonight_full.ogg'
+  })).appendTo('body')[0];
   if (!ctx) {
     throw "Loading context failed";
   }
@@ -13,6 +18,8 @@
   };
   game = void 0;
   ship = void 0;
+  firstTime = true;
+  musicPlaying = false;
   mouse = {
     x: 250,
     y: 200,
@@ -385,12 +392,10 @@
       return ctx.fillRect(this.x - 2, this.y - 2, 4, 4);
     };
     Bomb.prototype.update = function() {
-      console.log("Begin cooldown ".concat(this.cooldown));
       this.cooldown -= 1;
       if (this.cooldown <= 0) {
         this.explode();
       }
-      console.log("End cooldown ".concat(this.cooldown));
       this.move();
       return this.draw();
     };
@@ -431,7 +436,17 @@
   };
   ctx.strokeStyle = "#FFFFFF";
   ctx.lineWidth = 4;
+  firstInit = function() {
+    if ($("#enableMusic")[0].checked) {
+      audio.play();
+      musicPlaying = true;
+    }
+    return firstTime = false;
+  };
   initGame = function() {
+    if (firstTime) {
+      firstInit();
+    }
     ship = new Ship(mouse.x, mouse.y);
     return game = {
       owners: {
@@ -524,6 +539,17 @@
     }
   }).bind("contextmenu", function(e) {
     return false;
+  });
+  $("#enableMusic").change(function(e) {
+    if (!firstTime) {
+      if ($("#enableMusic")[0].checked) {
+        audio.play();
+        return musicPlaying = true;
+      } else {
+        audio.pause();
+        return musicPlaying = false;
+      }
+    }
   });
   gameloop = function() {
     var bomb, enemy, laser, owner, ownerName, shrapnal, _i, _j, _k, _l, _len, _len2, _len3, _len4, _len5, _len6, _len7, _m, _n, _o, _ref, _ref10, _ref11, _ref12, _ref13, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;

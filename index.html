@@ -7,35 +7,48 @@
       #c {
       cursor: none;
       }
-      p {
-      text-align: left;
-      }
-      pre {
-      text-align: left;
+      #rights {
+      display: none;
       }
     </style>
   </head>
   <body>
+    <script>
+      <!-- Make it impossible to focus text, since this grabs mouse focus from game -->
+      if (typeof document.body.onselectstart!="undefined") //IE route
+      document.body.onselectstart=function(){return false}
+      else if (typeof document.body.style.MozUserSelect!="undefined") //Firefox route
+      document.body.style.MozUserSelect="none"
+      else //All other route (ie: Opera)
+      document.body.onmousedown=function(){return false}
+    </script>
     <center>
-      <canvas id="c" width="800" height="600"></canvas>
-      <p>
-	Contributions are very welcome.
-	<a href="https://bitbucket.org/stothardj/tempus">https://bitbucket.org/stothardj/tempus</a>
-      </p>
-      <pre>
-	Tempus is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	Tempus is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-      </pre>
-
-	
+      <canvas id="c" width="800" height="600" tabindex="1">
+	Failed to load canvas
+      </canvas>
     </center>
+
+    <input type="checkbox" id="enableMusic" checked="checked">Enable Music</input>
+
+    <p>
+      Contributions are very welcome.
+      <a href="https://bitbucket.org/stothardj/tempus">https://bitbucket.org/stothardj/tempus</a>
+    </p>
+
+    <button onClick="$('#rights').toggle();">License Rights</button>
+    
+    <pre id="rights">
+      Tempus is free software: you can redistribute it and/or modify
+      it under the terms of the GNU General Public License as published by
+      the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+
+      Tempus is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU General Public License for more details.
+    </pre>
+
     <script src="decaf.js"></script>
   </body>
 </html>

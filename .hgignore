@@ -3,5 +3,6 @@ syntax: glob
 *~
 compiler-latest.zip
 compiler.jar
+media
 .*
 ^.hgignore

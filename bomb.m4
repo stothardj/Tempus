@@ -28,9 +28,7 @@ class Bomb
     ctx.fillRect( @x - 2, @y - 2, 4, 4 )
 
   update: ->
-    console.log( "Begin cooldown ".concat( @cooldown ) )
     @cooldown -= 1
     @explode() if @cooldown <= 0
-    console.log( "End cooldown ".concat( @cooldown ) )
     @move()
     @draw()
