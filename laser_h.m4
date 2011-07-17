@@ -14,16 +14,6 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-class Laser
-  constructor: (@x, @y, @speed, @owner) ->
-    @killedSomething = false
-
-  draw: ->
-    drawAsBox(Laser)
-
-  move: ->
-    @y += @speed
-
-  update: ->
-    @move()
-    @draw()
+define(LASER_SPEED,20)dnl
+define(LASER_WIDTH,2)dnl
+define(LASER_HEIGHT,16)dnl

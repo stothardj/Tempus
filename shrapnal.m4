@@ -23,8 +23,7 @@ class Shrapnal
     @y += (@speed * Math.sin(@angle))
 
   draw: ->
-    ctx.fillStyle = @owner.color
-    ctx.fillRect( @x - 1, @y - 1, 2, 2 )
+    drawAsBox(Shrapnal)
 
   update: ->
     @cooldown -= 1

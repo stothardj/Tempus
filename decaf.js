@@ -35,34 +35,125 @@
     crashed: "Crashed"
   };
   currentState = gameState.title;
-  Ship = (function() {
-    function Ship(x, y) {
+  Bomb = (function() {
+    function Bomb(x, y, speed, cooldown, owner) {
       this.x = x;
       this.y = y;
-      this.laserCooldown = 0;
-      this.bombCooldown = 0;
-      this.heat = 0;
+      this.speed = speed;
+      this.cooldown = cooldown;
+      this.owner = owner;
     }
-    Ship.prototype.move = function() {
-      this.x = (this.x + mouse.x) / 2;
-      return this.y = (this.y + mouse.y) / 2;
+    Bomb.prototype.move = function() {
+      return this.y += this.speed;
     };
-    Ship.prototype.draw = function() {
-      ctx.strokeStyle = "#FFFFFF";
-      ctx.beginPath();
-      ctx.moveTo(this.x, this.y - 20);
-      ctx.quadraticCurveTo(this.x + 20, this.y, this.x + 20, this.y + 20);
-      ctx.quadraticCurveTo(this.x + 5, this.y + 10, this.x, this.y + 10);
-      ctx.quadraticCurveTo(this.x - 5, this.y + 10, this.x - 20, this.y + 20);
-      ctx.quadraticCurveTo(this.x - 20, this.y, this.x, this.y - 20);
-      ctx.closePath();
-      return ctx.stroke();
+    Bomb.prototype.explode = function() {
+      var ang;
+      return this.owner.shrapnals = this.owner.shrapnals.concat((function() {
+        var _results;
+        _results = [];
+        for (ang = 0; ang <= 9; ang++) {
+          _results.push(new Shrapnal(this.x, this.y, ang * 36 * Math.PI / 180, 10, this.owner));
+        }
+        return _results;
+      }).call(this));
     };
-    Ship.prototype.update = function() {
+    Bomb.prototype.draw = function() {
+      ctx.fillStyle = this.owner.color;
+      return ctx.fillRect(this.x - 2, this.y - 2, 4, 4);
+    };
+    Bomb.prototype.update = function() {
+      this.cooldown -= 1;
+      if (this.cooldown <= 0) {
+        this.explode();
+      }
       this.move();
       return this.draw();
     };
-    return Ship;
+    return Bomb;
+  })();
+  Bomber = (function() {
+    function Bomber(x, y) {
+      this.x = x;
+      this.y = y;
+      this.angle = 0;
+      this.bombCooldown = 0;
+      this.turnVel = (Math.random() - 0.5) / 30;
+    }
+    Bomber.prototype.move = function() {
+      this.x += 2 * Math.cos(this.angle + Math.PI / 2);
+      this.y += 2 * Math.sin(this.angle + Math.PI / 2);
+      this.angle += this.turnVel;
+      return this.goneOnScreen = 0;
+    };
+    Bomber.prototype.draw = function() {
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.angle);
+      ctx.beginPath();
+      ctx.moveTo(0, 14);
+      ctx.lineTo(5, 0);
+      ctx.lineTo(0, -14);
+      ctx.lineTo(-5, 0);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.rotate(-this.angle);
+      return ctx.translate(-this.x, -this.y);
+    };
+    Bomber.prototype.bomb = function() {
+      this.bombCooldown = 40;
+      return game.owners.enemies.bombs.push(new Bomb(this.x, this.y, 4, 35, game.owners.enemies));
+    };
+    Bomber.prototype.update = function() {
+      if (this.bombCooldown === 0) {
+        this.bomb();
+      }
+      this.bombCooldown -= 1;
+      this.move();
+      return this.draw();
+    };
+    Bomber.prototype.alive = function() {
+      var bomb, laser, shrapnal, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
+      if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+        if (this.goneOnScreen) {
+          return false;
+        }
+      } else {
+        this.goneOnScreen = 1;
+      }
+      if (Math.abs(ship.x - this.x) < 25 && Math.abs(ship.y - this.y) < 34) {
+        game.owners.player.health -= 24;
+        game.owners.player.kills += 1;
+        game.timers.dispHealth = 255;
+        return false;
+      }
+      _ref = game.owners.player.lasers;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        laser = _ref[_i];
+        if (Math.abs(this.x - laser.x) <= 5 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 14) {
+          laser.killedSomething = true;
+          game.owners.player.kills += 1;
+          return false;
+        }
+      }
+      _ref2 = game.owners.player.bombs;
+      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+        bomb = _ref2[_j];
+        if (Math.abs(bomb.x - this.x) < 7 && Math.abs(bomb.y - this.y) < 16) {
+          bomb.cooldown = 0;
+          game.owners.player.kills += 1;
+          return false;
+        }
+      }
+      _ref3 = game.owners.player.shrapnals;
+      for (_k = 0, _len3 = _ref3.length; _k < _len3; _k++) {
+        shrapnal = _ref3[_k];
+        if (Math.abs(shrapnal.x - this.x) < 6 && Math.abs(shrapnal.y - this.y) < 15) {
+          game.owners.player.kills += 1;
+          return false;
+        }
+      }
+      return true;
+    };
+    return Bomber;
   })();
   Fighter = (function() {
     function Fighter(x, y) {
@@ -90,11 +181,11 @@
       return game.owners.enemies.lasers.push(new Laser(this.x, this.y, 20, game.owners.enemies));
     };
     Fighter.prototype.alive = function() {
-      var bomb, laser, shrap, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
+      var bomb, laser, shrapnal, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
       if (this.y > canvas.height) {
         return false;
       }
-      if (Math.abs(ship.x - this.x) < 35 && Math.abs(ship.y - this.y) < 35) {
+      if (Math.abs(ship.x - this.x) < 30 && Math.abs(ship.y - this.y) < 30) {
         game.owners.player.health -= 24;
         game.owners.player.kills += 1;
         game.timers.dispHealth = 255;
@@ -103,7 +194,7 @@
       _ref = game.owners.player.lasers;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         laser = _ref[_i];
-        if (Math.abs(this.x - laser.x) <= 12 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10) {
+        if (Math.abs(this.x - laser.x) <= 10 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10) {
           laser.killedSomething = true;
           game.owners.player.kills += 1;
           return false;
@@ -112,7 +203,7 @@
       _ref2 = game.owners.player.bombs;
       for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
         bomb = _ref2[_j];
-        if (Math.abs(this.x - bomb.x) <= 12 && Math.abs(this.y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 12) {
+        if (Math.abs(bomb.x - this.x) < 12 && Math.abs(bomb.y - this.y) < 12) {
           bomb.cooldown = 0;
           game.owners.player.kills += 1;
           return false;
@@ -120,8 +211,8 @@
       }
       _ref3 = game.owners.player.shrapnals;
       for (_k = 0, _len3 = _ref3.length; _k < _len3; _k++) {
-        shrap = _ref3[_k];
-        if (Math.abs(this.x - shrap.x) <= 11 && Math.abs(this.y - shrap.y) <= 11) {
+        shrapnal = _ref3[_k];
+        if (Math.abs(shrapnal.x - this.x) < 11 && Math.abs(shrapnal.y - this.y) < 11) {
           game.owners.player.kills += 1;
           return false;
         }
@@ -192,11 +283,11 @@
       return ctx.translate(-this.x, -this.y);
     };
     Kamikaze.prototype.alive = function() {
-      var bomb, laser, shrap, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
+      var bomb, laser, shrapnal, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
       if (this.y > canvas.height || this.moveState && (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height)) {
         return false;
       }
-      if (Math.abs(ship.x - this.x) < 35 && Math.abs(ship.y - this.y) < 35) {
+      if (Math.abs(ship.x - this.x) < 30 && Math.abs(ship.y - this.y) < 30) {
         game.owners.player.kills += 1;
         game.owners.player.health -= 35;
         game.timers.dispHealth = 255;
@@ -205,7 +296,7 @@
       _ref = game.owners.player.lasers;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         laser = _ref[_i];
-        if (Math.abs(this.x - laser.x) <= 12 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10) {
+        if (Math.abs(this.x - laser.x) <= 10 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10) {
           laser.killedSomething = true;
           game.owners.player.kills += 1;
           return false;
@@ -214,7 +305,7 @@
       _ref2 = game.owners.player.bombs;
       for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
         bomb = _ref2[_j];
-        if (Math.abs(this.x - bomb.x) <= 12 && Math.abs(this.y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 12) {
+        if (Math.abs(bomb.x - this.x) < 12 && Math.abs(bomb.y - this.y) < 12) {
           bomb.cooldown = 0;
           game.owners.player.kills += 1;
           return false;
@@ -222,8 +313,8 @@
       }
       _ref3 = game.owners.player.shrapnals;
       for (_k = 0, _len3 = _ref3.length; _k < _len3; _k++) {
-        shrap = _ref3[_k];
-        if (Math.abs(this.x - shrap.x) <= 11 && Math.abs(this.y - shrap.y) <= 11) {
+        shrapnal = _ref3[_k];
+        if (Math.abs(shrapnal.x - this.x) < 11 && Math.abs(shrapnal.y - this.y) < 11) {
           game.owners.player.kills += 1;
           return false;
         }
@@ -236,90 +327,6 @@
     };
     return Kamikaze;
   })();
-  Bomber = (function() {
-    function Bomber(x, y) {
-      this.x = x;
-      this.y = y;
-      this.angle = 0;
-      this.bombCooldown = 0;
-      this.turnVel = (Math.random() - 0.5) / 30;
-    }
-    Bomber.prototype.move = function() {
-      this.x += 2 * Math.cos(this.angle + Math.PI / 2);
-      this.y += 2 * Math.sin(this.angle + Math.PI / 2);
-      this.angle += this.turnVel;
-      return this.goneOnScreen = 0;
-    };
-    Bomber.prototype.draw = function() {
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.angle);
-      ctx.beginPath();
-      ctx.moveTo(0, 14);
-      ctx.lineTo(5, 0);
-      ctx.lineTo(0, -14);
-      ctx.lineTo(-5, 0);
-      ctx.closePath();
-      ctx.stroke();
-      ctx.rotate(-this.angle);
-      return ctx.translate(-this.x, -this.y);
-    };
-    Bomber.prototype.bomb = function() {
-      this.bombCooldown = 40;
-      return game.owners.enemies.bombs.push(new Bomb(this.x, this.y, 4, 35, game.owners.enemies));
-    };
-    Bomber.prototype.update = function() {
-      if (this.bombCooldown === 0) {
-        this.bomb();
-      }
-      this.bombCooldown -= 1;
-      this.move();
-      return this.draw();
-    };
-    Bomber.prototype.alive = function() {
-      var bomb, laser, shrap, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
-      if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
-        if (this.goneOnScreen) {
-          return false;
-        }
-      } else {
-        this.goneOnScreen = 1;
-      }
-      if (Math.abs(ship.x - this.x) < 35 && Math.abs(ship.y - this.y) < 35) {
-        game.owners.player.health -= 24;
-        game.owners.player.kills += 1;
-        game.timers.dispHealth = 255;
-        return false;
-      }
-      _ref = game.owners.player.lasers;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        laser = _ref[_i];
-        if (Math.abs(this.x - laser.x) <= 12 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10) {
-          laser.killedSomething = true;
-          game.owners.player.kills += 1;
-          return false;
-        }
-      }
-      _ref2 = game.owners.player.bombs;
-      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
-        bomb = _ref2[_j];
-        if (Math.abs(this.x - bomb.x) <= 12 && Math.abs(this.y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 12) {
-          bomb.cooldown = 0;
-          game.owners.player.kills += 1;
-          return false;
-        }
-      }
-      _ref3 = game.owners.player.shrapnals;
-      for (_k = 0, _len3 = _ref3.length; _k < _len3; _k++) {
-        shrap = _ref3[_k];
-        if (Math.abs(this.x - shrap.x) <= 11 && Math.abs(this.y - shrap.y) <= 11) {
-          game.owners.player.kills += 1;
-          return false;
-        }
-      }
-      return true;
-    };
-    return Bomber;
-  })();
   Laser = (function() {
     function Laser(x, y, speed, owner) {
       this.x = x;
@@ -330,7 +337,7 @@
     }
     Laser.prototype.draw = function() {
       ctx.fillStyle = this.owner.color;
-      return ctx.fillRect(this.x - 1, this.y - 16 / 2, 2, 16);
+      return ctx.fillRect(this.x - 1, this.y - 8, 2, 16);
     };
     Laser.prototype.move = function() {
       return this.y += this.speed;
@@ -340,6 +347,35 @@
       return this.draw();
     };
     return Laser;
+  })();
+  Ship = (function() {
+    function Ship(x, y) {
+      this.x = x;
+      this.y = y;
+      this.laserCooldown = 0;
+      this.bombCooldown = 0;
+      this.heat = 0;
+    }
+    Ship.prototype.move = function() {
+      this.x = (this.x + mouse.x) / 2;
+      return this.y = (this.y + mouse.y) / 2;
+    };
+    Ship.prototype.draw = function() {
+      ctx.strokeStyle = "#FFFFFF";
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y - 20);
+      ctx.quadraticCurveTo(this.x + 20, this.y, this.x + 20, this.y + 20);
+      ctx.quadraticCurveTo(this.x + 5, this.y + 10, this.x, this.y + 10);
+      ctx.quadraticCurveTo(this.x - 5, this.y + 10, this.x - 20, this.y + 20);
+      ctx.quadraticCurveTo(this.x - 20, this.y, this.x, this.y - 20);
+      ctx.closePath();
+      return ctx.stroke();
+    };
+    Ship.prototype.update = function() {
+      this.move();
+      return this.draw();
+    };
+    return Ship;
   })();
   Shrapnal = (function() {
     function Shrapnal(x, y, angle, speed, owner) {
@@ -364,42 +400,6 @@
       return this.draw();
     };
     return Shrapnal;
-  })();
-  Bomb = (function() {
-    function Bomb(x, y, speed, cooldown, owner) {
-      this.x = x;
-      this.y = y;
-      this.speed = speed;
-      this.cooldown = cooldown;
-      this.owner = owner;
-    }
-    Bomb.prototype.move = function() {
-      return this.y += this.speed;
-    };
-    Bomb.prototype.explode = function() {
-      var ang;
-      return this.owner.shrapnals = this.owner.shrapnals.concat((function() {
-        var _results;
-        _results = [];
-        for (ang = 0; ang <= 9; ang++) {
-          _results.push(new Shrapnal(this.x, this.y, ang * 36 * Math.PI / 180, 10, this.owner));
-        }
-        return _results;
-      }).call(this));
-    };
-    Bomb.prototype.draw = function() {
-      ctx.fillStyle = this.owner.color;
-      return ctx.fillRect(this.x - 2, this.y - 2, 4, 4);
-    };
-    Bomb.prototype.update = function() {
-      this.cooldown -= 1;
-      if (this.cooldown <= 0) {
-        this.explode();
-      }
-      this.move();
-      return this.draw();
-    };
-    return Bomb;
   })();
   setTitleFont = function() {
     ctx.fillStyle = "#FFFFFF";

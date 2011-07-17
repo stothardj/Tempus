@@ -24,8 +24,7 @@ class Bomb
     @owner.shrapnals = @owner.shrapnals.concat( (new Shrapnal(@x, @y, ang * 36 * Math.PI / 180, SHRAPNAL_SPEED, @owner) for ang in [0..9]) )
 
   draw: ->
-    ctx.fillStyle = @owner.color
-    ctx.fillRect( @x - 2, @y - 2, 4, 4 )
+    drawAsBox(Bomb)
 
   update: ->
     @cooldown -= 1

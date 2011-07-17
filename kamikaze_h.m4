@@ -14,16 +14,7 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-class Laser
-  constructor: (@x, @y, @speed, @owner) ->
-    @killedSomething = false
-
-  draw: ->
-    drawAsBox(Laser)
-
-  move: ->
-    @y += @speed
-
-  update: ->
-    @move()
-    @draw()
+define(KAMIKAZE_RAND,0.02)dnl
+define(KAMIKAZE_THRESHOLD,15)dnl
+define(KAMIKAZE_WIDTH,20)dnl
+define(KAMIKAZE_HEIGHT,20)dnl

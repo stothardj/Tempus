@@ -14,10 +14,6 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-define(BOMBER_RAND,0.01)dnl
-define(BOMBER_THRESHOLD,30)dnl
-define(BOMBER_WIDTH,10)dnl
-define(BOMBER_HEIGHT,28)dnl
 class Bomber
   constructor: (@x, @y) ->
     @angle = 0
@@ -58,26 +54,23 @@ class Bomber
       return false if @goneOnScreen
     else
       @goneOnScreen = 1
-    if Math.abs( ship.x - @x ) < 35 and Math.abs( ship.y - @y ) < 35
+    if boxHit(ship,bomber)
       game.owners.player.health -= 24
       game.owners.player.kills += 1
       game.timers.dispHealth = 255
       return false
     for laser in game.owners.player.lasers
-      # Takes into account color, laser length, laser speed, and ship size
-      if Math.abs(@x - laser.x) <= 12 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10
+      if Math.abs(@x - laser.x) <= eval(BOMBER_WIDTH / 2) and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_HEIGHT) / 2 + eval(BOMBER_HEIGHT / 2)
         laser.killedSomething = true
         game.owners.player.kills += 1
         return false
     for bomb in game.owners.player.bombs
-      # Takes into account color, bomb size, bomb speed, and ship size
-      if Math.abs(@x - bomb.x) <= 12 and Math.abs(@y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 12
+      if boxHit(bomb,bomber)
         bomb.cooldown = 0
         game.owners.player.kills += 1
         return false
-    for shrap in game.owners.player.shrapnals
-      # Takes into account color, shrap size, and ship size
-      if Math.abs(@x - shrap.x) <= 11 and Math.abs(@y - shrap.y) <= 11
+    for shrapnal in game.owners.player.shrapnals
+      if boxHit(shrapnal,bomber)
         game.owners.player.kills += 1
         return false
 

@@ -2,58 +2,58 @@
 <html>
   <head>
     <title>Tempus</title>
+    <link type="text/css" rel="stylesheet" href="main.css" />
+    <link type="text/css" href="ui/css/custom-theme/jquery-ui-1.8.14.custom.css" rel="stylesheet" />	
     <script src="jquery-1.6.1.min.js"></script>
-    <style>
-      #c {
-      cursor: none;
-      }
-      #rights {
-      display: none;
-      }
-    </style>
+    <script src="ui/js/jquery-ui-1.8.14.custom.min.js"></script>
+    <script src="initui.js"></script>
   </head>
   <body>
-    <script>
-      <!-- Make it impossible to focus text, since this grabs mouse focus from game -->
-      if (typeof document.body.onselectstart!="undefined") //IE route
-      document.body.onselectstart=function(){return false}
-      else if (typeof document.body.style.MozUserSelect!="undefined") //Firefox route
-      document.body.style.MozUserSelect="none"
-      else //All other route (ie: Opera)
-      document.body.onmousedown=function(){return false}
-    </script>
-    <center>
-      <canvas id="c" width="800" height="600" tabindex="1">
-	Failed to load canvas
-      </canvas>
-    </center>
+    <script src="hacks.js"></script>
 
-    <input type="checkbox" id="enableMusic" checked="checked">Enable Music</input>
+    <div id="tabs">
+      <ul>
+	<li><a href="#game">Game</a></li>
+	<li><a href="#code">Code</a></li>
+	<li><a href="#thanks">Thanks to</a></li>
+	<li><a href="#license">License</a></li>
+      </ul>
+      <div id="game">
+	<canvas id="c" width="800" height="600" tabindex="1">
+	  Failed to load canvas
+	</canvas>
 
-    <p>
-      Contributions are very welcome.
-      <a href="https://bitbucket.org/stothardj/tempus">https://bitbucket.org/stothardj/tempus</a>
-    </p>
+	<input type="checkbox" id="enableMusic" checked="checked">Enable Music</input>
+      </div>
+      <div id="code">
+	<p>
+	  Contributions are very welcome. To see the code repository go to
+	  <a href="https://bitbucket.org/stothardj/tempus">https://bitbucket.org/stothardj/tempus</a>
+	</p>
+	<p>
+	  This is not written in pure javascript. Actually, it goes through the m4 preprocessor, then the coffee-script compiler, and finally the closure compiler. It's all so simple!
+	</p>
+      </div>
+      <div id="thanks">
+	<p>
+	  The background music was stolen from
+	  <a href="http://www.lukhash.com/">http://www.lukhash.com</a>
+	</p>
+      </div>
+      <div id="license">
+	<pre>
+	  Tempus is free software: you can redistribute it and/or modify
+	  it under the terms of the GNU General Public License as published by
+	  the Free Software Foundation, either version 3 of the License, or
+	  (at your option) any later version.
 
-    <p>
-      Music stolen from
-      <a href="http://www.lukhash.com/">http://www.lukhash.com</a>
-    </p>
-
-    <button onClick="$('#rights').toggle();">License Rights</button>
-    
-    <pre id="rights">
-      Tempus is free software: you can redistribute it and/or modify
-      it under the terms of the GNU General Public License as published by
-      the Free Software Foundation, either version 3 of the License, or
-      (at your option) any later version.
-
-      Tempus is distributed in the hope that it will be useful,
-      but WITHOUT ANY WARRANTY; without even the implied warranty of
-      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-      GNU General Public License for more details.
-    </pre>
-
+	  Tempus is distributed in the hope that it will be useful,
+	  but WITHOUT ANY WARRANTY; without even the implied warranty of
+	  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	  GNU General Public License for more details.
+	</pre>
+      </div>
+    </div>
     <script src="decaf.js"></script>
   </body>
 </html>

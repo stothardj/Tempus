@@ -4,5 +4,6 @@ syntax: glob
 compiler-latest.zip
 compiler.jar
 media
+ui
 .*
 ^.hgignore

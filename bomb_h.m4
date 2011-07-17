@@ -14,16 +14,7 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-class Laser
-  constructor: (@x, @y, @speed, @owner) ->
-    @killedSomething = false
-
-  draw: ->
-    drawAsBox(Laser)
-
-  move: ->
-    @y += @speed
-
-  update: ->
-    @move()
-    @draw()
+define(BOMB_WIDTH,4)dnl
+define(BOMB_HEIGHT,4)dnl
+# Note that bombs shot by the bomber units do not use BOMB_SPEED
+define(BOMB_SPEED,12)dnl

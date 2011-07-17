@@ -16,16 +16,21 @@
 # Copyright 2011 Jake Stothard
 define(GOOD_COLOR,`"#0044FF"')dnl
 define(BAD_COLOR,`"#FF0000"')dnl
-dnl
-define(LASER_SPEED,20)dnl
-define(LASER_LENGTH,16)dnl
-define(BOMB_SPEED,12)dnl
-define(SHRAPNAL_SPEED,10)dnl
-dnl
-define(`offscreen', `(@x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height)')dnl
+# Constants separated from classes so they can be included in any order
+include(`bomb_h.m4')dnl
+include(`bomber_h.m4')dnl
+include(`fighter_h.m4')dnl
+include(`kamikaze_h.m4')dnl
+include(`laser_h.m4')dnl
+include(`ship_h.m4')dnl
+include(`shrapnal_h.m4')dnl
+# Taken from GNU
 define(`upcase', `translit(`$*', `a-z', `A-Z')')dnl
+# Macro definitions to avoid repeated code
+define(`offscreen', `(@x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height)')dnl
+define(`drawAsBox', `ctx.fillStyle = @owner.color;ctx.fillRect( @x - eval(upcase($1)_WIDTH / 2), @y - eval(upcase($1)_HEIGHT / 2), upcase($1)_WIDTH, upcase($1)_HEIGHT )')dnl
+define(`boxHit', `(Math.abs( $1.x - @x ) < eval((upcase($1)_WIDTH + upcase($2)_WIDTH) / 2) and Math.abs( $1.y - @y ) < eval((upcase($1)_HEIGHT + upcase($2)_HEIGHT) / 2))')dnl
 define(`genship', `game.owners.enemies.units.push( new $1( randInt(0, canvas.width), -10 ) ) if Math.random() < upcase($1)_RAND and game.owners.player.kills >= upcase($1)_THRESHOLD')dnl
-dnl
 #'
 canvas = document.getElementById("c")
 ctx = canvas.getContext("2d")
@@ -68,14 +73,16 @@ gameState =
 
 currentState = gameState.title
 
-include(`ship.m4')
+# Included after globals are defined so they can refer to them
+include(`bomb.m4')
+include(`bomber.m4')
 include(`fighter.m4')
 include(`kamikaze.m4')
-include(`bomber.m4')
 include(`laser.m4')
+include(`ship.m4')
 include(`shrapnal.m4')
-include(`bomb.m4')
 #'
+
 setTitleFont = ->
   ctx.fillStyle = "#FFFFFF"
   ctx.font = "bold 20px Lucidia Console"
@@ -269,7 +276,7 @@ gameloop = ->
 
   # Takes into account owner, laser length, laser speed, and ship size
   for laser in game.owners.enemies.lasers
-    if Math.abs(ship.x - laser.x) <= 12 and Math.abs(ship.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10
+    if Math.abs(ship.x - laser.x) <= 12 and Math.abs(ship.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_HEIGHT) / 2 + 10
       laser.killedSomething = true
       game.owners.player.health -= 8
       game.timers.dispHealth = 255

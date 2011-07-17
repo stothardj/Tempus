@@ -14,8 +14,6 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-define(SHIP_WIDTH,40)dnl
-define(SHIP_HEIGHT,40)dnl
 # Should it really be a class if it seems I really only ever make one of them?
 class Ship
   constructor: (@x, @y) ->

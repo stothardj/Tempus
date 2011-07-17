@@ -14,10 +14,6 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-define(KAMIKAZE_RAND,0.02)dnl
-define(KAMIKAZE_THRESHOLD,15)dnl
-define(KAMIKAZE_WIDTH,20)dnl
-define(KAMIKAZE_HEIGHT,20)dnl
 class Kamikaze
   constructor: (@x, @y) ->
     @angle = 0
@@ -64,26 +60,23 @@ class Kamikaze
 
   alive: ->
     return false if @y > canvas.height or @moveState and offscreen
-    if Math.abs( ship.x - @x ) < 35 and Math.abs( ship.y - @y ) < 35
+    if boxHit(ship,kamikaze)
       game.owners.player.kills += 1
       game.owners.player.health -= 35
       game.timers.dispHealth = 255
       return false
     for laser in game.owners.player.lasers
-      # Takes into account color, laser length, laser speed, and ship size
-      if Math.abs(@x - laser.x) <= 12 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_LENGTH) / 2 + 10
+      if Math.abs(@x - laser.x) <= eval(KAMIKAZE_WIDTH / 2) and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_HEIGHT) / 2 + eval(KAMIKAZE_HEIGHT / 2)
         laser.killedSomething = true
         game.owners.player.kills += 1
         return false
     for bomb in game.owners.player.bombs
-      # Takes into account color, bomb size, bomb speed, and ship size
-      if Math.abs(@x - bomb.x) <= 12 and Math.abs(@y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 12
+      if boxHit(bomb,kamikaze)
         bomb.cooldown = 0
         game.owners.player.kills += 1
         return false
-    for shrap in game.owners.player.shrapnals
-      # Takes into account color, shrap size, and ship size
-      if Math.abs(@x - shrap.x) <= 11 and Math.abs(@y - shrap.y) <= 11
+    for shrapnal in game.owners.player.shrapnals
+      if boxHit(shrapnal,kamikaze)
         game.owners.player.kills += 1
         return false
     true
