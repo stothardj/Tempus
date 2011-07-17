@@ -24,6 +24,7 @@ include(`kamikaze_h.m4')dnl
 include(`laser_h.m4')dnl
 include(`ship_h.m4')dnl
 include(`shrapnal_h.m4')dnl
+include(`spinner_h.m4')dnl
 # Taken from GNU
 define(`upcase', `translit(`$*', `a-z', `A-Z')')dnl
 # Macro definitions to avoid repeated code
@@ -81,6 +82,7 @@ include(`kamikaze.m4')
 include(`laser.m4')
 include(`ship.m4')
 include(`shrapnal.m4')
+include(`spinner.m4')
 #'
 
 setTitleFont = ->
@@ -268,32 +270,14 @@ gameloop = ->
   genship(Fighter)
   genship(Kamikaze)
   genship(Bomber)
+  genship(Spinner)
 
   ship.update()
 
   for ownerName, owner of game.owners
       laser.update() for laser in owner.lasers
 
-  # Takes into account owner, laser length, laser speed, and ship size
-  for laser in game.owners.enemies.lasers
-    if Math.abs(ship.x - laser.x) <= 12 and Math.abs(ship.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_HEIGHT) / 2 + 10
-      laser.killedSomething = true
-      game.owners.player.health -= 8
-      game.timers.dispHealth = 255
-
-  # Takes into account owner, bomb speed, and ship size
-  for bomb in game.owners.enemies.bombs
-    if Math.abs(ship.x - bomb.x) <= 12 and Math.abs(ship.y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 10
-      bomb.cooldown = 0
-      game.owners.player.health -= 2
-      game.timers.dispHealth = 255
-
-  # Takes into account owner, shrapnal speed, and ship size
-  for shrapnal in game.owners.enemies.shrapnals
-    if Math.abs(ship.x - shrapnal.x) <= 12 and Math.abs(ship.y - shrapnal.y + shrapnal.speed / 2) <= Math.abs(shrapnal.speed) / 2 + 10
-      shrapnal.cooldown = 0
-      game.owners.player.health -= 2
-      game.timers.dispHealth = 255
+  ship.takeDamage()
 
   for ownerName, owner of game.owners
     owner.lasers = (laser for laser in owner.lasers when 0 < laser.y < canvas.height and not laser.killedSomething)

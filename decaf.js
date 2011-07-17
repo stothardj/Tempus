@@ -1,5 +1,5 @@
 (function() {
-  var Bomb, Bomber, Fighter, Kamikaze, Laser, Ship, Shrapnal, audio, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, firstInit, firstTime, game, gameState, gameloop, initGame, mouse, musicPlaying, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause;
+  var Bomb, Bomber, Fighter, Kamikaze, Laser, Ship, Shrapnal, Spinner, audio, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, firstInit, firstTime, game, gameState, gameloop, initGame, mouse, musicPlaying, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause;
   canvas = document.getElementById("c");
   ctx = canvas.getContext("2d");
   audio = $('<audio></audio>').attr({
@@ -371,6 +371,34 @@
       ctx.closePath();
       return ctx.stroke();
     };
+    Ship.prototype.takeDamage = function() {
+      var bomb, laser, shrapnal, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3, _results;
+      _ref = game.owners.enemies.lasers;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        laser = _ref[_i];
+        if (Math.abs(this.x - laser.x) <= 20 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 20) {
+          laser.killedSomething = true;
+          game.owners.player.health -= 8;
+          game.timers.dispHealth = 255;
+        }
+      }
+      _ref2 = game.owners.enemies.bombs;
+      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+        bomb = _ref2[_j];
+        if (Math.abs(bomb.x - this.x) < 22 && Math.abs(bomb.y - this.y) < 22) {
+          bomb.cooldown = 0;
+          game.owners.player.health -= 2;
+          game.timers.dispHealth = 255;
+        }
+      }
+      _ref3 = game.owners.enemies.shrapnals;
+      _results = [];
+      for (_k = 0, _len3 = _ref3.length; _k < _len3; _k++) {
+        shrapnal = _ref3[_k];
+        _results.push(Math.abs(shrapnal.x - this.x) < 21 && Math.abs(shrapnal.y - this.y) < 21 ? (shrapnal.cooldown = 0, game.owners.player.health -= 2, game.timers.dispHealth = 255) : void 0);
+      }
+      return _results;
+    };
     Ship.prototype.update = function() {
       this.move();
       return this.draw();
@@ -400,6 +428,89 @@
       return this.draw();
     };
     return Shrapnal;
+  })();
+  Spinner = (function() {
+    function Spinner(x, y) {
+      this.x = x;
+      this.y = y;
+      this.angle = 0;
+      this.shootCooldown = 0;
+      this.burst = 0;
+    }
+    Spinner.prototype.draw = function() {
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.angle);
+      ctx.beginPath();
+      ctx.moveTo(-10, -10);
+      ctx.lineTo(10, -10);
+      ctx.lineTo(10, 10);
+      ctx.lineTo(-10, 10);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.rotate(-this.angle);
+      return ctx.translate(-this.x, -this.y);
+    };
+    Spinner.prototype.move = function() {
+      this.angle += 0.1;
+      return this.y += 2;
+    };
+    Spinner.prototype.shoot = function() {
+      if (this.burst < 5) {
+        this.burst += 1;
+      } else {
+        this.shootCooldown = 55;
+        this.burst = 0;
+      }
+      return game.owners.enemies.lasers.push(new Laser(this.x, this.y, 20, game.owners.enemies));
+    };
+    Spinner.prototype.alive = function() {
+      var bomb, laser, shrapnal, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
+      if (this.y > canvas.height) {
+        return false;
+      }
+      if (Math.abs(ship.x - this.x) < 30 && Math.abs(ship.y - this.y) < 30) {
+        game.owners.player.health -= 24;
+        game.owners.player.kills += 1;
+        game.timers.dispHealth = 255;
+        return false;
+      }
+      _ref = game.owners.player.lasers;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        laser = _ref[_i];
+        if (Math.abs(this.x - laser.x) <= 10 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10) {
+          laser.killedSomething = true;
+          game.owners.player.kills += 1;
+          return false;
+        }
+      }
+      _ref2 = game.owners.player.bombs;
+      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+        bomb = _ref2[_j];
+        if (Math.abs(bomb.x - this.x) < 12 && Math.abs(bomb.y - this.y) < 12) {
+          bomb.cooldown = 0;
+          game.owners.player.kills += 1;
+          return false;
+        }
+      }
+      _ref3 = game.owners.player.shrapnals;
+      for (_k = 0, _len3 = _ref3.length; _k < _len3; _k++) {
+        shrapnal = _ref3[_k];
+        if (Math.abs(shrapnal.x - this.x) < 11 && Math.abs(shrapnal.y - this.y) < 11) {
+          game.owners.player.kills += 1;
+          return false;
+        }
+      }
+      return true;
+    };
+    Spinner.prototype.update = function() {
+      if (this.shootCooldown <= 0) {
+        this.shoot();
+      }
+      this.shootCooldown -= 1;
+      this.move();
+      return this.draw();
+    };
+    return Spinner;
   })();
   setTitleFont = function() {
     ctx.fillStyle = "#FFFFFF";
@@ -552,7 +663,7 @@
     }
   });
   gameloop = function() {
-    var bomb, enemy, laser, owner, ownerName, shrapnal, _i, _j, _k, _l, _len, _len2, _len3, _len4, _len5, _len6, _len7, _m, _n, _o, _ref, _ref10, _ref11, _ref12, _ref13, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+    var bomb, enemy, laser, owner, ownerName, shrapnal, _i, _j, _k, _l, _len, _len2, _len3, _len4, _ref, _ref10, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
     if (game.crashed) {
       currentState = gameState.crashed;
       clearInterval(timeHandle);
@@ -598,6 +709,9 @@
     if (Math.random() < 0.01 && game.owners.player.kills >= 30) {
       game.owners.enemies.units.push(new Bomber(randInt(0, canvas.width), -10));
     }
+    if (Math.random() < 0.005 && game.owners.player.kills >= 45) {
+      game.owners.enemies.units.push(new Spinner(randInt(0, canvas.width), -10));
+    }
     ship.update();
     _ref2 = game.owners;
     for (ownerName in _ref2) {
@@ -608,44 +722,43 @@
         laser.update();
       }
     }
-    _ref4 = game.owners.enemies.lasers;
-    for (_k = 0, _len3 = _ref4.length; _k < _len3; _k++) {
-      laser = _ref4[_k];
-      if (Math.abs(ship.x - laser.x) <= 12 && Math.abs(ship.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10) {
-        laser.killedSomething = true;
-        game.owners.player.health -= 8;
-        game.timers.dispHealth = 255;
-      }
+    ship.takeDamage();
+    _ref4 = game.owners;
+    for (ownerName in _ref4) {
+      owner = _ref4[ownerName];
+      owner.lasers = (function() {
+        var _k, _len3, _ref5, _ref6, _results;
+        _ref5 = owner.lasers;
+        _results = [];
+        for (_k = 0, _len3 = _ref5.length; _k < _len3; _k++) {
+          laser = _ref5[_k];
+          if ((0 < (_ref6 = laser.y) && _ref6 < canvas.height) && !laser.killedSomething) {
+            _results.push(laser);
+          }
+        }
+        return _results;
+      })();
     }
-    _ref5 = game.owners.enemies.bombs;
-    for (_l = 0, _len4 = _ref5.length; _l < _len4; _l++) {
-      bomb = _ref5[_l];
-      if (Math.abs(ship.x - bomb.x) <= 12 && Math.abs(ship.y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 10) {
-        bomb.cooldown = 0;
-        game.owners.player.health -= 2;
-        game.timers.dispHealth = 255;
-      }
-    }
-    _ref6 = game.owners.enemies.shrapnals;
-    for (_m = 0, _len5 = _ref6.length; _m < _len5; _m++) {
-      shrapnal = _ref6[_m];
-      if (Math.abs(ship.x - shrapnal.x) <= 12 && Math.abs(ship.y - shrapnal.y + shrapnal.speed / 2) <= Math.abs(shrapnal.speed) / 2 + 10) {
-        shrapnal.cooldown = 0;
-        game.owners.player.health -= 2;
-        game.timers.dispHealth = 255;
+    _ref5 = game.owners;
+    for (ownerName in _ref5) {
+      owner = _ref5[ownerName];
+      _ref6 = owner.bombs;
+      for (_k = 0, _len3 = _ref6.length; _k < _len3; _k++) {
+        bomb = _ref6[_k];
+        bomb.update();
       }
     }
     _ref7 = game.owners;
     for (ownerName in _ref7) {
       owner = _ref7[ownerName];
-      owner.lasers = (function() {
-        var _len6, _n, _ref8, _ref9, _results;
-        _ref8 = owner.lasers;
+      owner.bombs = (function() {
+        var _l, _len4, _ref8, _results;
+        _ref8 = owner.bombs;
         _results = [];
-        for (_n = 0, _len6 = _ref8.length; _n < _len6; _n++) {
-          laser = _ref8[_n];
-          if ((0 < (_ref9 = laser.y) && _ref9 < canvas.height) && !laser.killedSomething) {
-            _results.push(laser);
+        for (_l = 0, _len4 = _ref8.length; _l < _len4; _l++) {
+          bomb = _ref8[_l];
+          if (bomb.cooldown > 0) {
+            _results.push(bomb);
           }
         }
         return _results;
@@ -654,46 +767,21 @@
     _ref8 = game.owners;
     for (ownerName in _ref8) {
       owner = _ref8[ownerName];
-      _ref9 = owner.bombs;
-      for (_n = 0, _len6 = _ref9.length; _n < _len6; _n++) {
-        bomb = _ref9[_n];
-        bomb.update();
+      _ref9 = owner.shrapnals;
+      for (_l = 0, _len4 = _ref9.length; _l < _len4; _l++) {
+        shrapnal = _ref9[_l];
+        shrapnal.update();
       }
     }
     _ref10 = game.owners;
     for (ownerName in _ref10) {
       owner = _ref10[ownerName];
-      owner.bombs = (function() {
-        var _len7, _o, _ref11, _results;
-        _ref11 = owner.bombs;
-        _results = [];
-        for (_o = 0, _len7 = _ref11.length; _o < _len7; _o++) {
-          bomb = _ref11[_o];
-          if (bomb.cooldown > 0) {
-            _results.push(bomb);
-          }
-        }
-        return _results;
-      })();
-    }
-    _ref11 = game.owners;
-    for (ownerName in _ref11) {
-      owner = _ref11[ownerName];
-      _ref12 = owner.shrapnals;
-      for (_o = 0, _len7 = _ref12.length; _o < _len7; _o++) {
-        shrapnal = _ref12[_o];
-        shrapnal.update();
-      }
-    }
-    _ref13 = game.owners;
-    for (ownerName in _ref13) {
-      owner = _ref13[ownerName];
       owner.shrapnals = (function() {
-        var _len8, _p, _ref14, _results;
-        _ref14 = owner.shrapnals;
+        var _len5, _m, _ref11, _results;
+        _ref11 = owner.shrapnals;
         _results = [];
-        for (_p = 0, _len8 = _ref14.length; _p < _len8; _p++) {
-          shrapnal = _ref14[_p];
+        for (_m = 0, _len5 = _ref11.length; _m < _len5; _m++) {
+          shrapnal = _ref11[_m];
           if (shrapnal.cooldown > 0) {
             _results.push(shrapnal);
           }

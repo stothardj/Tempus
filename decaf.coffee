@@ -128,6 +128,22 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
 # Taken from GNU
 # Macro definitions to avoid repeated code
 #'
@@ -258,6 +274,7 @@ class Bomber
     @draw()
 
   alive: ->
+    # TODO: Make collision take into account rotating (bigger box?)
     if (@x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height)
       return false if @goneOnScreen
     else
@@ -483,7 +500,9 @@ class Laser
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-# Should it really be a class if it seems I really only ever make one of them?
+
+# Made a class even though there should be only one. Consistent so
+# even macros can be used across this and enemies
 class Ship
   constructor: (@x, @y) ->
     @laserCooldown = 0
@@ -504,6 +523,28 @@ class Ship
     ctx.quadraticCurveTo( @x - 20, @y, @x, @y - 20 )
     ctx.closePath()
     ctx.stroke()
+
+  takeDamage: ->
+    # Takes into account owner, laser length, laser speed, and ship size
+    for laser in game.owners.enemies.lasers
+      if Math.abs(@x - laser.x) <= 20 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 20
+        laser.killedSomething = true
+        game.owners.player.health -= 8
+        game.timers.dispHealth = 255
+    # Takes into account owner, bomb speed, and ship size
+    for bomb in game.owners.enemies.bombs
+      # if Math.abs(@x - bomb.x) <= 12 and Math.abs(@y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 10
+      if (Math.abs( bomb.x - @x ) < 22 and Math.abs( bomb.y - @y ) < 22)
+        bomb.cooldown = 0
+        game.owners.player.health -= 2
+        game.timers.dispHealth = 255
+    # Takes into account owner, shrapnal speed, and ship size
+    for shrapnal in game.owners.enemies.shrapnals
+      # if Math.abs(@x - shrapnal.x) <= 12 and Math.abs(@y - shrapnal.y + shrapnal.speed / 2) <= Math.abs(shrapnal.speed) / 2 + 10
+      if (Math.abs( shrapnal.x - @x ) < 21 and Math.abs( shrapnal.y - @y ) < 21)
+        shrapnal.cooldown = 0
+        game.owners.player.health -= 2
+        game.timers.dispHealth = 255
 
   update: ->
     @move()
@@ -541,6 +582,81 @@ class Shrapnal
     @move()
     @draw()
 
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
+class Spinner
+  constructor: (@x, @y) ->
+    @angle = 0
+    @shootCooldown = 0
+    @burst = 0
+
+  draw: ->
+    ctx.translate( @x, @y )
+    ctx.rotate( @angle )
+    ctx.beginPath()
+    ctx.moveTo( - 10, - 10 )
+    ctx.lineTo( 10, - 10 )
+    ctx.lineTo( 10, 10 )
+    ctx.lineTo( - 10, 10 )
+    ctx.closePath()
+    ctx.stroke()
+    ctx.rotate( -@angle )
+    ctx.translate( -@x, -@y )
+
+  move: ->
+    @angle += 0.1
+    @y += 2
+
+  shoot: ->
+    if @burst < 5
+      @burst += 1
+    else
+      @shootCooldown = 55
+      @burst = 0
+    game.owners.enemies.lasers.push( new Laser( @x, @y, 20, game.owners.enemies ) )
+
+  alive: ->
+    return false if @y > canvas.height
+    if (Math.abs( ship.x - @x ) < 30 and Math.abs( ship.y - @y ) < 30)
+      game.owners.player.health -= 24
+      game.owners.player.kills += 1
+      game.timers.dispHealth = 255
+      return false
+    for laser in game.owners.player.lasers
+      if Math.abs(@x - laser.x) <= 10 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10
+        laser.killedSomething = true
+        game.owners.player.kills += 1
+        return false
+    for bomb in game.owners.player.bombs
+      if (Math.abs( bomb.x - @x ) < 12 and Math.abs( bomb.y - @y ) < 12)
+        bomb.cooldown = 0
+        game.owners.player.kills += 1
+        return false
+    for shrapnal in game.owners.player.shrapnals
+      if (Math.abs( shrapnal.x - @x ) < 11 and Math.abs( shrapnal.y - @y ) < 11)
+        game.owners.player.kills += 1
+        return false
+    true
+
+  update: ->
+    @shoot() if @shootCooldown <= 0
+    @shootCooldown -= 1
+    @move()
+    @draw()
 #'
 
 setTitleFont = ->
@@ -728,32 +844,14 @@ gameloop = ->
   game.owners.enemies.units.push( new Fighter( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.03 and game.owners.player.kills >= 0
   game.owners.enemies.units.push( new Kamikaze( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.02 and game.owners.player.kills >= 15
   game.owners.enemies.units.push( new Bomber( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.01 and game.owners.player.kills >= 30
+  game.owners.enemies.units.push( new Spinner( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.005 and game.owners.player.kills >= 45
 
   ship.update()
 
   for ownerName, owner of game.owners
       laser.update() for laser in owner.lasers
 
-  # Takes into account owner, laser length, laser speed, and ship size
-  for laser in game.owners.enemies.lasers
-    if Math.abs(ship.x - laser.x) <= 12 and Math.abs(ship.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10
-      laser.killedSomething = true
-      game.owners.player.health -= 8
-      game.timers.dispHealth = 255
-
-  # Takes into account owner, bomb speed, and ship size
-  for bomb in game.owners.enemies.bombs
-    if Math.abs(ship.x - bomb.x) <= 12 and Math.abs(ship.y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 10
-      bomb.cooldown = 0
-      game.owners.player.health -= 2
-      game.timers.dispHealth = 255
-
-  # Takes into account owner, shrapnal speed, and ship size
-  for shrapnal in game.owners.enemies.shrapnals
-    if Math.abs(ship.x - shrapnal.x) <= 12 and Math.abs(ship.y - shrapnal.y + shrapnal.speed / 2) <= Math.abs(shrapnal.speed) / 2 + 10
-      shrapnal.cooldown = 0
-      game.owners.player.health -= 2
-      game.timers.dispHealth = 255
+  ship.takeDamage()
 
   for ownerName, owner of game.owners
     owner.lasers = (laser for laser in owner.lasers when 0 < laser.y < canvas.height and not laser.killedSomething)
