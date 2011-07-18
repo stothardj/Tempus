@@ -14,19 +14,27 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-class Shrapnal
-  constructor: (@x, @y, @angle, @speed, @owner) ->
-    @cooldown = 10
+class HealthUp
+  constructor: (@x, @y) ->
+    @used = 0
 
   move: ->
-    @x += (@speed * Math.cos(@angle))
-    @y += (@speed * Math.sin(@angle))
+    @y += HEALTHUP_SPEED
 
   draw: ->
-    ctx.fillStyle = @owner.color
-    drawAsBox(Shrapnal)
+    ctx.fillStyle = "#00FF00"
+    drawAsBox(HealthUp)
+
+  detectUse: ->
+    if boxHit(ship,healthup)
+      @used = 1
+      game.owners.player.health = Math.min( game.owners.player.health + 15, 100 )
+      game.timers.dispHealth = 255
+
+    @used = 1 if offscreen
+
 
   update: ->
-    @cooldown -= 1
     @move()
     @draw()
+    @detectUse()

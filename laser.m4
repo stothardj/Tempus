@@ -19,6 +19,7 @@ class Laser
     @killedSomething = false
 
   draw: ->
+    ctx.fillStyle = @owner.color;
     drawAsBox(Laser)
 
   move: ->

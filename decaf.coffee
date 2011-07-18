@@ -80,6 +80,23 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
+
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
 # This file is part of Tempus.
 #
 # Tempus is free software: you can redistribute it and/or modify
@@ -215,7 +232,8 @@ class Bomb
     @owner.shrapnals = @owner.shrapnals.concat( (new Shrapnal(@x, @y, ang * 36 * Math.PI / 180, 10, @owner) for ang in [0..9]) )
 
   draw: ->
-    ctx.fillStyle = @owner.color;ctx.fillRect( @x - 2, @y - 2, 4, 4 )
+    ctx.fillStyle = @owner.color
+    ctx.fillRect( @x - 2, @y - 2, 4, 4 )
 
   update: ->
     @cooldown -= 1
@@ -243,6 +261,7 @@ class Bomber
     @angle = 0
     @bombCooldown = 0
     @turnVel = (Math.random() - 0.5) / 30;
+    @health = 1
 
   move: ->
     @x += 2 * Math.cos(@angle + Math.PI / 2)
@@ -267,39 +286,39 @@ class Bomber
     @bombCooldown = 40
     game.owners.enemies.bombs.push( new Bomb( @x, @y, 4, 35, game.owners.enemies ) )
 
-  update: ->
-    @bomb() if @bombCooldown is 0
-    @bombCooldown -= 1
-    @move()
-    @draw()
-
-  alive: ->
+  takeDamage: ->
     # TODO: Make collision take into account rotating (bigger box?)
     if (@x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height)
-      return false if @goneOnScreen
+      return @health = 0 if @goneOnScreen
     else
       @goneOnScreen = 1
     if (Math.abs( ship.x - @x ) < 25 and Math.abs( ship.y - @y ) < 34)
       game.owners.player.health -= 24
       game.owners.player.kills += 1
       game.timers.dispHealth = 255
-      return false
+      return @health = 0
     for laser in game.owners.player.lasers
       if Math.abs(@x - laser.x) <= 5 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 14
         laser.killedSomething = true
         game.owners.player.kills += 1
-        return false
+        return @health = 0
     for bomb in game.owners.player.bombs
       if (Math.abs( bomb.x - @x ) < 7 and Math.abs( bomb.y - @y ) < 16)
         bomb.cooldown = 0
         game.owners.player.kills += 1
-        return false
+        return @health = 0
     for shrapnal in game.owners.player.shrapnals
       if (Math.abs( shrapnal.x - @x ) < 6 and Math.abs( shrapnal.y - @y ) < 15)
         game.owners.player.kills += 1
-        return false
+        return @health = 0
 
-    true
+  update: ->
+    @bomb() if @bombCooldown is 0
+    @bombCooldown -= 1
+    @move()
+    @draw()
+    @takeDamage()
+
 # This file is part of Tempus.
 #
 # Tempus is free software: you can redistribute it and/or modify
@@ -319,6 +338,7 @@ class Bomber
 class Fighter
   constructor: (@x, @y) ->
     @shootCooldown = 0
+    @health = 1
 
   draw: ->
     ctx.strokeStyle = "#FFFFFF"
@@ -339,34 +359,74 @@ class Fighter
     @shootCooldown = 35
     game.owners.enemies.lasers.push( new Laser( @x, @y, 20, game.owners.enemies ) )
 
-  alive: ->
-    return false if @y > canvas.height
+  takeDamage: ->
+    return @health = 0 if @y > canvas.height
     if (Math.abs( ship.x - @x ) < 30 and Math.abs( ship.y - @y ) < 30)
       game.owners.player.health -= 24
       game.owners.player.kills += 1
       game.timers.dispHealth = 255
-      return false
+      return @health = 0
     for laser in game.owners.player.lasers
       if Math.abs(@x - laser.x) <= 10 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10
         laser.killedSomething = true
         game.owners.player.kills += 1
-        return false
+        return @health = 0
     for bomb in game.owners.player.bombs
       if (Math.abs( bomb.x - @x ) < 12 and Math.abs( bomb.y - @y ) < 12)
         bomb.cooldown = 0
         game.owners.player.kills += 1
-        return false
+        return @health = 0
     for shrapnal in game.owners.player.shrapnals
       if (Math.abs( shrapnal.x - @x ) < 11 and Math.abs( shrapnal.y - @y ) < 11)
         game.owners.player.kills += 1
-        return false
-    true
+        return @health = 0
 
   update: ->
     @shoot() if @shootCooldown is 0
     @shootCooldown -= 1
     @move()
     @draw()
+    @takeDamage()
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
+class HealthUp
+  constructor: (@x, @y) ->
+    @used = 0
+
+  move: ->
+    @y += 5
+
+  draw: ->
+    ctx.fillStyle = "#00FF00"
+    ctx.fillRect( @x - 2, @y - 2, 4, 4 )
+
+  detectUse: ->
+    if (Math.abs( ship.x - @x ) < 22 and Math.abs( ship.y - @y ) < 22)
+      @used = 1
+      game.owners.player.health = Math.min( game.owners.player.health + 15, 100 )
+      game.timers.dispHealth = 255
+
+    @used = 1 if (@x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height)
+
+
+  update: ->
+    @move()
+    @draw()
+    @detectUse()
 # This file is part of Tempus.
 #
 # Tempus is free software: you can redistribute it and/or modify
@@ -388,6 +448,7 @@ class Kamikaze
     @angle = 0
     @shootCooldown = 0
     @moveState = 0
+    @health = 1
 
   move: ->
     switch @moveState
@@ -427,32 +488,32 @@ class Kamikaze
     ctx.rotate( -@angle )
     ctx.translate( -@x, -@y )
 
-  alive: ->
-    return false if @y > canvas.height or @moveState and (@x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height)
+  takeDamage: ->
+    return @health = 0 if @y > canvas.height or @moveState and (@x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height)
     if (Math.abs( ship.x - @x ) < 30 and Math.abs( ship.y - @y ) < 30)
       game.owners.player.kills += 1
       game.owners.player.health -= 35
       game.timers.dispHealth = 255
-      return false
+      return @health = 0
     for laser in game.owners.player.lasers
       if Math.abs(@x - laser.x) <= 10 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10
         laser.killedSomething = true
         game.owners.player.kills += 1
-        return false
+        return @health = 0
     for bomb in game.owners.player.bombs
       if (Math.abs( bomb.x - @x ) < 12 and Math.abs( bomb.y - @y ) < 12)
         bomb.cooldown = 0
         game.owners.player.kills += 1
-        return false
+        return @health = 0
     for shrapnal in game.owners.player.shrapnals
       if (Math.abs( shrapnal.x - @x ) < 11 and Math.abs( shrapnal.y - @y ) < 11)
         game.owners.player.kills += 1
-        return false
-    true
+        return @health = 0
 
   update: ->
     @move()
     @draw()
+    @takeDamage()
 
 # This file is part of Tempus.
 #
@@ -475,7 +536,8 @@ class Laser
     @killedSomething = false
 
   draw: ->
-    ctx.fillStyle = @owner.color;ctx.fillRect( @x - 1, @y - 8, 2, 16 )
+    ctx.fillStyle = @owner.color;
+    ctx.fillRect( @x - 1, @y - 8, 2, 16 )
 
   move: ->
     @y += @speed
@@ -525,22 +587,17 @@ class Ship
     ctx.stroke()
 
   takeDamage: ->
-    # Takes into account owner, laser length, laser speed, and ship size
     for laser in game.owners.enemies.lasers
       if Math.abs(@x - laser.x) <= 20 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 20
         laser.killedSomething = true
         game.owners.player.health -= 8
         game.timers.dispHealth = 255
-    # Takes into account owner, bomb speed, and ship size
     for bomb in game.owners.enemies.bombs
-      # if Math.abs(@x - bomb.x) <= 12 and Math.abs(@y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 10
       if (Math.abs( bomb.x - @x ) < 22 and Math.abs( bomb.y - @y ) < 22)
         bomb.cooldown = 0
         game.owners.player.health -= 2
         game.timers.dispHealth = 255
-    # Takes into account owner, shrapnal speed, and ship size
     for shrapnal in game.owners.enemies.shrapnals
-      # if Math.abs(@x - shrapnal.x) <= 12 and Math.abs(@y - shrapnal.y + shrapnal.speed / 2) <= Math.abs(shrapnal.speed) / 2 + 10
       if (Math.abs( shrapnal.x - @x ) < 21 and Math.abs( shrapnal.y - @y ) < 21)
         shrapnal.cooldown = 0
         game.owners.player.health -= 2
@@ -549,7 +606,7 @@ class Ship
   update: ->
     @move()
     @draw()
-
+    @takeDamage()
 # This file is part of Tempus.
 #
 # Tempus is free software: you can redistribute it and/or modify
@@ -575,7 +632,8 @@ class Shrapnal
     @y += (@speed * Math.sin(@angle))
 
   draw: ->
-    ctx.fillStyle = @owner.color;ctx.fillRect( @x - 1, @y - 1, 2, 2 )
+    ctx.fillStyle = @owner.color
+    ctx.fillRect( @x - 1, @y - 1, 2, 2 )
 
   update: ->
     @cooldown -= 1
@@ -603,6 +661,7 @@ class Spinner
     @angle = 0
     @shootCooldown = 0
     @burst = 0
+    @health = 1
 
   draw: ->
     ctx.translate( @x, @y )
@@ -629,34 +688,34 @@ class Spinner
       @burst = 0
     game.owners.enemies.lasers.push( new Laser( @x, @y, 20, game.owners.enemies ) )
 
-  alive: ->
-    return false if @y > canvas.height
+  takeDamage: ->
+    return @health = 0 if @y > canvas.height
     if (Math.abs( ship.x - @x ) < 30 and Math.abs( ship.y - @y ) < 30)
       game.owners.player.health -= 24
       game.owners.player.kills += 1
       game.timers.dispHealth = 255
-      return false
+      return @health = 0
     for laser in game.owners.player.lasers
       if Math.abs(@x - laser.x) <= 10 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10
         laser.killedSomething = true
         game.owners.player.kills += 1
-        return false
+        return @health = 0
     for bomb in game.owners.player.bombs
       if (Math.abs( bomb.x - @x ) < 12 and Math.abs( bomb.y - @y ) < 12)
         bomb.cooldown = 0
         game.owners.player.kills += 1
-        return false
+        return @health = 0
     for shrapnal in game.owners.player.shrapnals
       if (Math.abs( shrapnal.x - @x ) < 11 and Math.abs( shrapnal.y - @y ) < 11)
         game.owners.player.kills += 1
-        return false
-    true
+        return @health = 0
 
   update: ->
     @shoot() if @shootCooldown <= 0
     @shootCooldown -= 1
     @move()
     @draw()
+    @takeDamage()
 #'
 
 setTitleFont = ->
@@ -689,8 +748,8 @@ drawGameOver = ->
   ctx.fillText( "Game Over", canvas.width / 2, canvas.height / 2 - 20 )
   ctx.font = "normal 18px Lucidia Console"
   ctx.fillText( "Kills - " + game.owners.player.kills, canvas.width / 2, canvas.height / 2)
-  ctx.fillText( "Lasers Fired - " + game.owners.player.lasers_fired, canvas.width / 2, canvas.height / 2 + 20 )
-  ctx.fillText( "Bombs Used - " + game.owners.player.bombs_fired, canvas.width / 2, canvas.height / 2 + 40 )
+  ctx.fillText( "Lasers Fired - " + game.owners.player.lasersFired, canvas.width / 2, canvas.height / 2 + 20 )
+  ctx.fillText( "Bombs Used - " + game.owners.player.bombsFired, canvas.width / 2, canvas.height / 2 + 40 )
 
 ctx.strokeStyle = "#FFFFFF"
 ctx.lineWidth = 4
@@ -715,8 +774,8 @@ initGame = ->
         color: "#0044FF"
         health: 100
         kills: 0
-        lasers_fired: 0
-        bombs_fired: 0
+        lasersFired: 0
+        bombsFired: 0
 
       enemies:
         lasers: []
@@ -729,6 +788,9 @@ initGame = ->
       dispHealth: 0
       colorCycle: 0
       colorCycleDir: 10
+
+    powerups:
+      healthups: []
 
     crashed: false
 
@@ -840,7 +902,9 @@ gameloop = ->
   clearScreen()
 
   enemy.update() for enemy in game.owners.enemies.units
-  game.owners.enemies.units = (enemy for enemy in game.owners.enemies.units when enemy.alive())
+  game.powerups.healthups = game.powerups.healthups.concat( new HealthUp( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < 0.2 )
+  game.owners.enemies.units = (enemy for enemy in game.owners.enemies.units when enemy.health > 0)
+
   game.owners.enemies.units.push( new Fighter( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.03 and game.owners.player.kills >= 0
   game.owners.enemies.units.push( new Kamikaze( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.02 and game.owners.player.kills >= 15
   game.owners.enemies.units.push( new Bomber( randInt(0, canvas.width), -10 ) ) if Math.random() < 0.01 and game.owners.player.kills >= 30
@@ -849,27 +913,19 @@ gameloop = ->
   ship.update()
 
   for ownerName, owner of game.owners
-      laser.update() for laser in owner.lasers
-
-  ship.takeDamage()
-
-  for ownerName, owner of game.owners
+    laser.update() for laser in owner.lasers
     owner.lasers = (laser for laser in owner.lasers when 0 < laser.y < canvas.height and not laser.killedSomething)
-
-  for ownerName, owner of game.owners
     bomb.update() for bomb in owner.bombs
-
-  for ownerName, owner of game.owners
     owner.bombs = (bomb for bomb in owner.bombs when bomb.cooldown > 0)
-
-  for ownerName, owner of game.owners
     shrapnal.update() for shrapnal in owner.shrapnals
-
-  for ownerName, owner of game.owners
     owner.shrapnals = (shrapnal for shrapnal in owner.shrapnals when shrapnal.cooldown > 0)
 
+  for powerupTypeName, powerupType of game.powerups
+    powerup.update() for powerup in powerupType
+    game.powerups[powerupTypeName] = (powerup for powerup in powerupType when not powerup.used)
+
   if mouse.leftDown and ship.laserCooldown <= 0
-    game.owners.player.lasers_fired += 1
+    game.owners.player.lasersFired += 1
     game.owners.player.lasers.push( new Laser( ship.x, ship.y, -20, game.owners.player) )
     if ship.heat > 80
       ship.laserCooldown = 7
@@ -880,7 +936,7 @@ gameloop = ->
     ship.heat += 7
 
   if mouse.rightDown and ship.bombCooldown <= 0
-    game.owners.player.bombs_fired += 1
+    game.owners.player.bombsFired += 1
     game.owners.player.bombs.push( new Bomb( ship.x, ship.y, -12, 20, game.owners.player) ) if currentState is gameState.playing
     if ship.heat > 80
       ship.bombCooldown = 20
@@ -905,8 +961,6 @@ gameloop = ->
     ctx.fillStyle = "rgb(".concat( game.timers.colorCycle, ",", game.timers.colorCycle, ",0)");
     ctx.font = "normal 18px Lucidia Console"
     ctx.fillText( "[ Heat Warning ]", canvas.width / 2, canvas.height - 30)
-  else
-    ctx.fillStyle = "#00FF00"
 
   if game.timers.dispHealth > 0
     ctx.strokeStyle = "rgb(".concat( game.timers.dispHealth , "," , game.timers.dispHealth , "," , game.timers.dispHealth , ")" )
@@ -917,6 +971,7 @@ gameloop = ->
   game.crashed = false
 
 # Can change how game begins based on what you start the state as
+# Allows for auto-play like behavior if you want it
 switch currentState
   when gameState.playing
     initGame()

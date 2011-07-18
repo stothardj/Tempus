@@ -17,6 +17,7 @@
 class Fighter
   constructor: (@x, @y) ->
     @shootCooldown = 0
+    @health = 1
 
   draw: ->
     ctx.strokeStyle = "#FFFFFF"
@@ -37,31 +38,31 @@ class Fighter
     @shootCooldown = 35
     game.owners.enemies.lasers.push( new Laser( @x, @y, LASER_SPEED, game.owners.enemies ) )
 
-  alive: ->
-    return false if @y > canvas.height
+  takeDamage: ->
+    return @health = 0 if @y > canvas.height
     if boxHit(ship,fighter)
       game.owners.player.health -= 24
       game.owners.player.kills += 1
       game.timers.dispHealth = 255
-      return false
+      return @health = 0
     for laser in game.owners.player.lasers
       if Math.abs(@x - laser.x) <= eval(FIGHTER_WIDTH / 2) and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_HEIGHT) / 2 + eval(FIGHTER_HEIGHT / 2)
         laser.killedSomething = true
         game.owners.player.kills += 1
-        return false
+        return @health = 0
     for bomb in game.owners.player.bombs
       if boxHit(bomb,fighter)
         bomb.cooldown = 0
         game.owners.player.kills += 1
-        return false
+        return @health = 0
     for shrapnal in game.owners.player.shrapnals
       if boxHit(shrapnal,fighter)
         game.owners.player.kills += 1
-        return false
-    true
+        return @health = 0
 
   update: ->
     @shoot() if @shootCooldown is 0
     @shootCooldown -= 1
     @move()
     @draw()
+    @takeDamage()

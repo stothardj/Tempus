@@ -1,5 +1,5 @@
 (function() {
-  var Bomb, Bomber, Fighter, Kamikaze, Laser, Ship, Shrapnal, Spinner, audio, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, firstInit, firstTime, game, gameState, gameloop, initGame, mouse, musicPlaying, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause;
+  var Bomb, Bomber, Fighter, HealthUp, Kamikaze, Laser, Ship, Shrapnal, Spinner, audio, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, firstInit, firstTime, game, gameState, gameloop, initGame, mouse, musicPlaying, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause;
   canvas = document.getElementById("c");
   ctx = canvas.getContext("2d");
   audio = $('<audio></audio>').attr({
@@ -78,6 +78,7 @@
       this.angle = 0;
       this.bombCooldown = 0;
       this.turnVel = (Math.random() - 0.5) / 30;
+      this.health = 1;
     }
     Bomber.prototype.move = function() {
       this.x += 2 * Math.cos(this.angle + Math.PI / 2);
@@ -102,19 +103,11 @@
       this.bombCooldown = 40;
       return game.owners.enemies.bombs.push(new Bomb(this.x, this.y, 4, 35, game.owners.enemies));
     };
-    Bomber.prototype.update = function() {
-      if (this.bombCooldown === 0) {
-        this.bomb();
-      }
-      this.bombCooldown -= 1;
-      this.move();
-      return this.draw();
-    };
-    Bomber.prototype.alive = function() {
+    Bomber.prototype.takeDamage = function() {
       var bomb, laser, shrapnal, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
       if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
         if (this.goneOnScreen) {
-          return false;
+          return this.health = 0;
         }
       } else {
         this.goneOnScreen = 1;
@@ -123,7 +116,7 @@
         game.owners.player.health -= 24;
         game.owners.player.kills += 1;
         game.timers.dispHealth = 255;
-        return false;
+        return this.health = 0;
       }
       _ref = game.owners.player.lasers;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -131,7 +124,7 @@
         if (Math.abs(this.x - laser.x) <= 5 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 14) {
           laser.killedSomething = true;
           game.owners.player.kills += 1;
-          return false;
+          return this.health = 0;
         }
       }
       _ref2 = game.owners.player.bombs;
@@ -140,7 +133,7 @@
         if (Math.abs(bomb.x - this.x) < 7 && Math.abs(bomb.y - this.y) < 16) {
           bomb.cooldown = 0;
           game.owners.player.kills += 1;
-          return false;
+          return this.health = 0;
         }
       }
       _ref3 = game.owners.player.shrapnals;
@@ -148,10 +141,18 @@
         shrapnal = _ref3[_k];
         if (Math.abs(shrapnal.x - this.x) < 6 && Math.abs(shrapnal.y - this.y) < 15) {
           game.owners.player.kills += 1;
-          return false;
+          return this.health = 0;
         }
       }
-      return true;
+    };
+    Bomber.prototype.update = function() {
+      if (this.bombCooldown === 0) {
+        this.bomb();
+      }
+      this.bombCooldown -= 1;
+      this.move();
+      this.draw();
+      return this.takeDamage();
     };
     return Bomber;
   })();
@@ -160,6 +161,7 @@
       this.x = x;
       this.y = y;
       this.shootCooldown = 0;
+      this.health = 1;
     }
     Fighter.prototype.draw = function() {
       ctx.strokeStyle = "#FFFFFF";
@@ -180,16 +182,16 @@
       this.shootCooldown = 35;
       return game.owners.enemies.lasers.push(new Laser(this.x, this.y, 20, game.owners.enemies));
     };
-    Fighter.prototype.alive = function() {
+    Fighter.prototype.takeDamage = function() {
       var bomb, laser, shrapnal, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
       if (this.y > canvas.height) {
-        return false;
+        return this.health = 0;
       }
       if (Math.abs(ship.x - this.x) < 30 && Math.abs(ship.y - this.y) < 30) {
         game.owners.player.health -= 24;
         game.owners.player.kills += 1;
         game.timers.dispHealth = 255;
-        return false;
+        return this.health = 0;
       }
       _ref = game.owners.player.lasers;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -197,7 +199,7 @@
         if (Math.abs(this.x - laser.x) <= 10 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10) {
           laser.killedSomething = true;
           game.owners.player.kills += 1;
-          return false;
+          return this.health = 0;
         }
       }
       _ref2 = game.owners.player.bombs;
@@ -206,7 +208,7 @@
         if (Math.abs(bomb.x - this.x) < 12 && Math.abs(bomb.y - this.y) < 12) {
           bomb.cooldown = 0;
           game.owners.player.kills += 1;
-          return false;
+          return this.health = 0;
         }
       }
       _ref3 = game.owners.player.shrapnals;
@@ -214,10 +216,9 @@
         shrapnal = _ref3[_k];
         if (Math.abs(shrapnal.x - this.x) < 11 && Math.abs(shrapnal.y - this.y) < 11) {
           game.owners.player.kills += 1;
-          return false;
+          return this.health = 0;
         }
       }
-      return true;
     };
     Fighter.prototype.update = function() {
       if (this.shootCooldown === 0) {
@@ -225,9 +226,40 @@
       }
       this.shootCooldown -= 1;
       this.move();
-      return this.draw();
+      this.draw();
+      return this.takeDamage();
     };
     return Fighter;
+  })();
+  HealthUp = (function() {
+    function HealthUp(x, y) {
+      this.x = x;
+      this.y = y;
+      this.used = 0;
+    }
+    HealthUp.prototype.move = function() {
+      return this.y += 5;
+    };
+    HealthUp.prototype.draw = function() {
+      ctx.fillStyle = "#00FF00";
+      return ctx.fillRect(this.x - 2, this.y - 2, 4, 4);
+    };
+    HealthUp.prototype.detectUse = function() {
+      if (Math.abs(ship.x - this.x) < 22 && Math.abs(ship.y - this.y) < 22) {
+        this.used = 1;
+        game.owners.player.health = Math.min(game.owners.player.health + 15, 100);
+        game.timers.dispHealth = 255;
+      }
+      if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+        return this.used = 1;
+      }
+    };
+    HealthUp.prototype.update = function() {
+      this.move();
+      this.draw();
+      return this.detectUse();
+    };
+    return HealthUp;
   })();
   Kamikaze = (function() {
     function Kamikaze(x, y) {
@@ -236,6 +268,7 @@
       this.angle = 0;
       this.shootCooldown = 0;
       this.moveState = 0;
+      this.health = 1;
     }
     Kamikaze.prototype.move = function() {
       var desired_angle;
@@ -282,16 +315,16 @@
       ctx.rotate(-this.angle);
       return ctx.translate(-this.x, -this.y);
     };
-    Kamikaze.prototype.alive = function() {
+    Kamikaze.prototype.takeDamage = function() {
       var bomb, laser, shrapnal, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
       if (this.y > canvas.height || this.moveState && (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height)) {
-        return false;
+        return this.health = 0;
       }
       if (Math.abs(ship.x - this.x) < 30 && Math.abs(ship.y - this.y) < 30) {
         game.owners.player.kills += 1;
         game.owners.player.health -= 35;
         game.timers.dispHealth = 255;
-        return false;
+        return this.health = 0;
       }
       _ref = game.owners.player.lasers;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -299,7 +332,7 @@
         if (Math.abs(this.x - laser.x) <= 10 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10) {
           laser.killedSomething = true;
           game.owners.player.kills += 1;
-          return false;
+          return this.health = 0;
         }
       }
       _ref2 = game.owners.player.bombs;
@@ -308,7 +341,7 @@
         if (Math.abs(bomb.x - this.x) < 12 && Math.abs(bomb.y - this.y) < 12) {
           bomb.cooldown = 0;
           game.owners.player.kills += 1;
-          return false;
+          return this.health = 0;
         }
       }
       _ref3 = game.owners.player.shrapnals;
@@ -316,14 +349,14 @@
         shrapnal = _ref3[_k];
         if (Math.abs(shrapnal.x - this.x) < 11 && Math.abs(shrapnal.y - this.y) < 11) {
           game.owners.player.kills += 1;
-          return false;
+          return this.health = 0;
         }
       }
-      return true;
     };
     Kamikaze.prototype.update = function() {
       this.move();
-      return this.draw();
+      this.draw();
+      return this.takeDamage();
     };
     return Kamikaze;
   })();
@@ -401,7 +434,8 @@
     };
     Ship.prototype.update = function() {
       this.move();
-      return this.draw();
+      this.draw();
+      return this.takeDamage();
     };
     return Ship;
   })();
@@ -436,6 +470,7 @@
       this.angle = 0;
       this.shootCooldown = 0;
       this.burst = 0;
+      this.health = 1;
     }
     Spinner.prototype.draw = function() {
       ctx.translate(this.x, this.y);
@@ -463,16 +498,16 @@
       }
       return game.owners.enemies.lasers.push(new Laser(this.x, this.y, 20, game.owners.enemies));
     };
-    Spinner.prototype.alive = function() {
+    Spinner.prototype.takeDamage = function() {
       var bomb, laser, shrapnal, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
       if (this.y > canvas.height) {
-        return false;
+        return this.health = 0;
       }
       if (Math.abs(ship.x - this.x) < 30 && Math.abs(ship.y - this.y) < 30) {
         game.owners.player.health -= 24;
         game.owners.player.kills += 1;
         game.timers.dispHealth = 255;
-        return false;
+        return this.health = 0;
       }
       _ref = game.owners.player.lasers;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -480,7 +515,7 @@
         if (Math.abs(this.x - laser.x) <= 10 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + 16) / 2 + 10) {
           laser.killedSomething = true;
           game.owners.player.kills += 1;
-          return false;
+          return this.health = 0;
         }
       }
       _ref2 = game.owners.player.bombs;
@@ -489,7 +524,7 @@
         if (Math.abs(bomb.x - this.x) < 12 && Math.abs(bomb.y - this.y) < 12) {
           bomb.cooldown = 0;
           game.owners.player.kills += 1;
-          return false;
+          return this.health = 0;
         }
       }
       _ref3 = game.owners.player.shrapnals;
@@ -497,10 +532,9 @@
         shrapnal = _ref3[_k];
         if (Math.abs(shrapnal.x - this.x) < 11 && Math.abs(shrapnal.y - this.y) < 11) {
           game.owners.player.kills += 1;
-          return false;
+          return this.health = 0;
         }
       }
-      return true;
     };
     Spinner.prototype.update = function() {
       if (this.shootCooldown <= 0) {
@@ -508,7 +542,8 @@
       }
       this.shootCooldown -= 1;
       this.move();
-      return this.draw();
+      this.draw();
+      return this.takeDamage();
     };
     return Spinner;
   })();
@@ -542,8 +577,8 @@
     ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 20);
     ctx.font = "normal 18px Lucidia Console";
     ctx.fillText("Kills - " + game.owners.player.kills, canvas.width / 2, canvas.height / 2);
-    ctx.fillText("Lasers Fired - " + game.owners.player.lasers_fired, canvas.width / 2, canvas.height / 2 + 20);
-    return ctx.fillText("Bombs Used - " + game.owners.player.bombs_fired, canvas.width / 2, canvas.height / 2 + 40);
+    ctx.fillText("Lasers Fired - " + game.owners.player.lasersFired, canvas.width / 2, canvas.height / 2 + 20);
+    return ctx.fillText("Bombs Used - " + game.owners.player.bombsFired, canvas.width / 2, canvas.height / 2 + 40);
   };
   ctx.strokeStyle = "#FFFFFF";
   ctx.lineWidth = 4;
@@ -569,8 +604,8 @@
           color: "#0044FF",
           health: 100,
           kills: 0,
-          lasers_fired: 0,
-          bombs_fired: 0
+          lasersFired: 0,
+          bombsFired: 0
         },
         enemies: {
           lasers: [],
@@ -584,6 +619,9 @@
         dispHealth: 0,
         colorCycle: 0,
         colorCycleDir: 10
+      },
+      powerups: {
+        healthups: []
       },
       crashed: false
     };
@@ -663,7 +701,7 @@
     }
   });
   gameloop = function() {
-    var bomb, enemy, laser, owner, ownerName, shrapnal, _i, _j, _k, _l, _len, _len2, _len3, _len4, _ref, _ref10, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+    var bomb, enemy, laser, owner, ownerName, powerup, powerupType, powerupTypeName, shrapnal, _i, _j, _k, _l, _len, _len2, _len3, _len4, _len5, _m, _ref, _ref2, _ref3, _ref4, _ref5, _ref6;
     if (game.crashed) {
       currentState = gameState.crashed;
       clearInterval(timeHandle);
@@ -688,13 +726,25 @@
       enemy = _ref[_i];
       enemy.update();
     }
+    game.powerups.healthups = game.powerups.healthups.concat((function() {
+      var _j, _len2, _ref2, _results;
+      _ref2 = game.owners.enemies.units;
+      _results = [];
+      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+        enemy = _ref2[_j];
+        if (enemy.health <= 0 && Math.random() < 0.2) {
+          _results.push(new HealthUp(enemy.x, enemy.y));
+        }
+      }
+      return _results;
+    })());
     game.owners.enemies.units = (function() {
       var _j, _len2, _ref2, _results;
       _ref2 = game.owners.enemies.units;
       _results = [];
       for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
         enemy = _ref2[_j];
-        if (enemy.alive()) {
+        if (enemy.health > 0) {
           _results.push(enemy);
         }
       }
@@ -721,67 +771,46 @@
         laser = _ref3[_j];
         laser.update();
       }
-    }
-    ship.takeDamage();
-    _ref4 = game.owners;
-    for (ownerName in _ref4) {
-      owner = _ref4[ownerName];
       owner.lasers = (function() {
-        var _k, _len3, _ref5, _ref6, _results;
-        _ref5 = owner.lasers;
+        var _k, _len3, _ref4, _ref5, _results;
+        _ref4 = owner.lasers;
         _results = [];
-        for (_k = 0, _len3 = _ref5.length; _k < _len3; _k++) {
-          laser = _ref5[_k];
-          if ((0 < (_ref6 = laser.y) && _ref6 < canvas.height) && !laser.killedSomething) {
+        for (_k = 0, _len3 = _ref4.length; _k < _len3; _k++) {
+          laser = _ref4[_k];
+          if ((0 < (_ref5 = laser.y) && _ref5 < canvas.height) && !laser.killedSomething) {
             _results.push(laser);
           }
         }
         return _results;
       })();
-    }
-    _ref5 = game.owners;
-    for (ownerName in _ref5) {
-      owner = _ref5[ownerName];
-      _ref6 = owner.bombs;
-      for (_k = 0, _len3 = _ref6.length; _k < _len3; _k++) {
-        bomb = _ref6[_k];
+      _ref4 = owner.bombs;
+      for (_k = 0, _len3 = _ref4.length; _k < _len3; _k++) {
+        bomb = _ref4[_k];
         bomb.update();
       }
-    }
-    _ref7 = game.owners;
-    for (ownerName in _ref7) {
-      owner = _ref7[ownerName];
       owner.bombs = (function() {
-        var _l, _len4, _ref8, _results;
-        _ref8 = owner.bombs;
+        var _l, _len4, _ref5, _results;
+        _ref5 = owner.bombs;
         _results = [];
-        for (_l = 0, _len4 = _ref8.length; _l < _len4; _l++) {
-          bomb = _ref8[_l];
+        for (_l = 0, _len4 = _ref5.length; _l < _len4; _l++) {
+          bomb = _ref5[_l];
           if (bomb.cooldown > 0) {
             _results.push(bomb);
           }
         }
         return _results;
       })();
-    }
-    _ref8 = game.owners;
-    for (ownerName in _ref8) {
-      owner = _ref8[ownerName];
-      _ref9 = owner.shrapnals;
-      for (_l = 0, _len4 = _ref9.length; _l < _len4; _l++) {
-        shrapnal = _ref9[_l];
+      _ref5 = owner.shrapnals;
+      for (_l = 0, _len4 = _ref5.length; _l < _len4; _l++) {
+        shrapnal = _ref5[_l];
         shrapnal.update();
       }
-    }
-    _ref10 = game.owners;
-    for (ownerName in _ref10) {
-      owner = _ref10[ownerName];
       owner.shrapnals = (function() {
-        var _len5, _m, _ref11, _results;
-        _ref11 = owner.shrapnals;
+        var _len5, _m, _ref6, _results;
+        _ref6 = owner.shrapnals;
         _results = [];
-        for (_m = 0, _len5 = _ref11.length; _m < _len5; _m++) {
-          shrapnal = _ref11[_m];
+        for (_m = 0, _len5 = _ref6.length; _m < _len5; _m++) {
+          shrapnal = _ref6[_m];
           if (shrapnal.cooldown > 0) {
             _results.push(shrapnal);
           }
@@ -789,8 +818,27 @@
         return _results;
       })();
     }
+    _ref6 = game.powerups;
+    for (powerupTypeName in _ref6) {
+      powerupType = _ref6[powerupTypeName];
+      for (_m = 0, _len5 = powerupType.length; _m < _len5; _m++) {
+        powerup = powerupType[_m];
+        powerup.update();
+      }
+      game.powerups[powerupTypeName] = (function() {
+        var _len6, _n, _results;
+        _results = [];
+        for (_n = 0, _len6 = powerupType.length; _n < _len6; _n++) {
+          powerup = powerupType[_n];
+          if (!powerup.used) {
+            _results.push(powerup);
+          }
+        }
+        return _results;
+      })();
+    }
     if (mouse.leftDown && ship.laserCooldown <= 0) {
-      game.owners.player.lasers_fired += 1;
+      game.owners.player.lasersFired += 1;
       game.owners.player.lasers.push(new Laser(ship.x, ship.y, -20, game.owners.player));
       if (ship.heat > 80) {
         ship.laserCooldown = 7;
@@ -802,7 +850,7 @@
       ship.heat += 7;
     }
     if (mouse.rightDown && ship.bombCooldown <= 0) {
-      game.owners.player.bombs_fired += 1;
+      game.owners.player.bombsFired += 1;
       if (currentState === gameState.playing) {
         game.owners.player.bombs.push(new Bomb(ship.x, ship.y, -12, 20, game.owners.player));
       }
@@ -834,8 +882,6 @@
       ctx.fillStyle = "rgb(".concat(game.timers.colorCycle, ",", game.timers.colorCycle, ",0)");
       ctx.font = "normal 18px Lucidia Console";
       ctx.fillText("[ Heat Warning ]", canvas.width / 2, canvas.height - 30);
-    } else {
-      ctx.fillStyle = "#00FF00";
     }
     if (game.timers.dispHealth > 0) {
       ctx.strokeStyle = "rgb(".concat(game.timers.dispHealth, ",", game.timers.dispHealth, ",", game.timers.dispHealth, ")");

@@ -19,6 +19,7 @@ class Bomber
     @angle = 0
     @bombCooldown = 0
     @turnVel = (Math.random() - 0.5) / 30;
+    @health = 1
 
   move: ->
     @x += 2 * Math.cos(@angle + Math.PI / 2)
@@ -43,36 +44,35 @@ class Bomber
     @bombCooldown = 40
     game.owners.enemies.bombs.push( new Bomb( @x, @y, 4, 35, game.owners.enemies ) )
 
-  update: ->
-    @bomb() if @bombCooldown is 0
-    @bombCooldown -= 1
-    @move()
-    @draw()
-
-  alive: ->
+  takeDamage: ->
     # TODO: Make collision take into account rotating (bigger box?)
     if offscreen
-      return false if @goneOnScreen
+      return @health = 0 if @goneOnScreen
     else
       @goneOnScreen = 1
     if boxHit(ship,bomber)
       game.owners.player.health -= 24
       game.owners.player.kills += 1
       game.timers.dispHealth = 255
-      return false
+      return @health = 0
     for laser in game.owners.player.lasers
       if Math.abs(@x - laser.x) <= eval(BOMBER_WIDTH / 2) and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_HEIGHT) / 2 + eval(BOMBER_HEIGHT / 2)
         laser.killedSomething = true
         game.owners.player.kills += 1
-        return false
+        return @health = 0
     for bomb in game.owners.player.bombs
       if boxHit(bomb,bomber)
         bomb.cooldown = 0
         game.owners.player.kills += 1
-        return false
+        return @health = 0
     for shrapnal in game.owners.player.shrapnals
       if boxHit(shrapnal,bomber)
         game.owners.player.kills += 1
-        return false
+        return @health = 0
 
-    true
+  update: ->
+    @bomb() if @bombCooldown is 0
+    @bombCooldown -= 1
+    @move()
+    @draw()
+    @takeDamage()

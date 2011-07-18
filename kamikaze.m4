@@ -19,6 +19,7 @@ class Kamikaze
     @angle = 0
     @shootCooldown = 0
     @moveState = 0
+    @health = 1
 
   move: ->
     switch @moveState
@@ -58,29 +59,29 @@ class Kamikaze
     ctx.rotate( -@angle )
     ctx.translate( -@x, -@y )
 
-  alive: ->
-    return false if @y > canvas.height or @moveState and offscreen
+  takeDamage: ->
+    return @health = 0 if @y > canvas.height or @moveState and offscreen
     if boxHit(ship,kamikaze)
       game.owners.player.kills += 1
       game.owners.player.health -= 35
       game.timers.dispHealth = 255
-      return false
+      return @health = 0
     for laser in game.owners.player.lasers
       if Math.abs(@x - laser.x) <= eval(KAMIKAZE_WIDTH / 2) and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_HEIGHT) / 2 + eval(KAMIKAZE_HEIGHT / 2)
         laser.killedSomething = true
         game.owners.player.kills += 1
-        return false
+        return @health = 0
     for bomb in game.owners.player.bombs
       if boxHit(bomb,kamikaze)
         bomb.cooldown = 0
         game.owners.player.kills += 1
-        return false
+        return @health = 0
     for shrapnal in game.owners.player.shrapnals
       if boxHit(shrapnal,kamikaze)
         game.owners.player.kills += 1
-        return false
-    true
+        return @health = 0
 
   update: ->
     @move()
     @draw()
+    @takeDamage()

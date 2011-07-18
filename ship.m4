@@ -39,22 +39,17 @@ class Ship
     ctx.stroke()
 
   takeDamage: ->
-    # Takes into account owner, laser length, laser speed, and ship size
     for laser in game.owners.enemies.lasers
       if Math.abs(@x - laser.x) <= eval(SHIP_WIDTH / 2) and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_HEIGHT) / 2 + eval(SHIP_HEIGHT / 2)
         laser.killedSomething = true
         game.owners.player.health -= 8
         game.timers.dispHealth = 255
-    # Takes into account owner, bomb speed, and ship size
     for bomb in game.owners.enemies.bombs
-      # if Math.abs(@x - bomb.x) <= 12 and Math.abs(@y - bomb.y + bomb.speed / 2) <= Math.abs(bomb.speed) / 2 + 10
       if boxHit(bomb,ship)
         bomb.cooldown = 0
         game.owners.player.health -= 2
         game.timers.dispHealth = 255
-    # Takes into account owner, shrapnal speed, and ship size
     for shrapnal in game.owners.enemies.shrapnals
-      # if Math.abs(@x - shrapnal.x) <= 12 and Math.abs(@y - shrapnal.y + shrapnal.speed / 2) <= Math.abs(shrapnal.speed) / 2 + 10
       if boxHit(shrapnal,ship)
         shrapnal.cooldown = 0
         game.owners.player.health -= 2
@@ -63,3 +58,4 @@ class Ship
   update: ->
     @move()
     @draw()
+    @takeDamage()

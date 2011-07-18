@@ -14,19 +14,7 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-class Shrapnal
-  constructor: (@x, @y, @angle, @speed, @owner) ->
-    @cooldown = 10
-
-  move: ->
-    @x += (@speed * Math.cos(@angle))
-    @y += (@speed * Math.sin(@angle))
-
-  draw: ->
-    ctx.fillStyle = @owner.color
-    drawAsBox(Shrapnal)
-
-  update: ->
-    @cooldown -= 1
-    @move()
-    @draw()
+define(HEALTHUP_RAND,0.2)dnl
+define(HEALTHUP_WIDTH,4)dnl
+define(HEALTHUP_HEIGHT,4)dnl
+define(HEALTHUP_SPEED,5)dnl
