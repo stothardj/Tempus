@@ -813,7 +813,8 @@ unpause = ->
 $(document)
   .keyup( (e) ->
     # console.log event.which
-    switch event.which
+    console.log e
+    switch e.which
       when 80 # P key
         switch currentState
           when gameState.paused

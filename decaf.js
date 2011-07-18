@@ -643,7 +643,8 @@
     return timeHandle = every(32, gameloop);
   };
   $(document).keyup(function(e) {
-    switch (event.which) {
+    console.log(e);
+    switch (e.which) {
       case 80:
         switch (currentState) {
           case gameState.paused:
