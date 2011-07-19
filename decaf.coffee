@@ -168,9 +168,9 @@ canvas = document.getElementById("c")
 ctx = canvas.getContext("2d")
 audio = $('<audio></audio>')
   .attr({ 'loop' : 'loop'})
-  .append($('<source><source>')
+  .append($('<source></source>')
   .attr({ 'src' : 'media/tonight_full.ogg'}))
-  .append($('<source><source>')
+  .append($('<source></source>')
   .attr({ 'src' : 'media/tonight_full.mp3'}))
   .appendTo('body')[0]
 
