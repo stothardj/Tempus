@@ -39,8 +39,12 @@ ctx = canvas.getContext("2d")
 audio = $('<audio></audio>')
   .attr({ 'loop' : 'loop'})
   .append($('<source><source>')
-  .attr({ 'src' : 'media/tonight_full.ogg'})
-  ).appendTo('body')[0];
+  .attr({ 'src' : 'media/tonight_full.ogg'}))
+  .append($('<source><source>')
+  .attr({ 'src' : 'media/tonight_full.mp3'}))
+  .appendTo('body')[0]
+
+console.log audio
 
 if not ctx
   throw "Loading context failed"
@@ -181,8 +185,7 @@ unpause = ->
 
 $(document)
   .keyup( (e) ->
-    # console.log event.which
-    console.log e
+    # console.log e
     switch e.which
       when 80 # P key
         switch currentState

@@ -6,7 +6,10 @@
     'loop': 'loop'
   }).append($('<source><source>').attr({
     'src': 'media/tonight_full.ogg'
+  })).append($('<source><source>').attr({
+    'src': 'media/tonight_full.mp3'
   })).appendTo('body')[0];
+  console.log(audio);
   if (!ctx) {
     throw "Loading context failed";
   }
@@ -643,7 +646,6 @@
     return timeHandle = every(32, gameloop);
   };
   $(document).keyup(function(e) {
-    console.log(e);
     switch (e.which) {
       case 80:
         switch (currentState) {
