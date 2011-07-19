@@ -169,9 +169,11 @@ ctx = canvas.getContext("2d")
 audio = $('<audio></audio>')
   .attr({ 'loop' : 'loop'})
   .append($('<source></source>')
-  .attr({ 'src' : 'media/tonight_full.ogg'}))
+  .attr({ 'src' : 'media/tonight_full.ogg'})
+  .attr({ 'type': 'audio/ogg' }))
   .append($('<source></source>')
-  .attr({ 'src' : 'media/tonight_full.mp3'}))
+  .attr({ 'src' : 'media/tonight_full.mp3'})
+  .attr({ 'type': 'audio/mpeg'}))
   .appendTo('body')[0]
 
 console.log audio
