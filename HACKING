@@ -1,0 +1,7 @@
+The main file is decaf.m4
+
+Right now the real source files are the m4 files. All of the intermediate files are included in the repo for convenience of browsing and so you don't have to compile this to try it out. Still, don't modify them directly.
+
+I'm actually interested in removing the layer of m4. I may use my ppp.py "Python preprocessor" in my github to keep track of source file dependencies instead of the ugly method used right now. Unfortuntely first I need to replace the m4 macros which actually generate code with something in plain common lisp.
+
+If you are trying to get to grips with the source feel free to ask, since no one else ever seems to look at this.
