@@ -14,7 +14,9 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-class Kamikaze
+!import "box.coffee"
+
+class Kamikaze extends Box
   constructor: (@x, @y) ->
     @angle = 0
     @shootCooldown = 0
@@ -25,12 +27,6 @@ class Kamikaze
   threshold: 15
   width: 20
   height: 20
-
-  boxHit: (other) ->
-    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
-
-  offscreen: ->
-    @x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height
 
   move: ->
     switch @moveState

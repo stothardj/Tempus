@@ -9,9 +9,8 @@ comb-compiled.js: comb.js
 comb.js: comb.coffee
 	coffee -c comb.coffee
 
-comb.coffee: *.coffee
-	rm -f comb.coffee
-	cat *.coffee > comb.coffee
+comb.coffee: decaf.coffee
+	./ppp.py decaf.coffee > comb.coffee
 
 quick: comb.js
 

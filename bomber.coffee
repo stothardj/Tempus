@@ -14,7 +14,10 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-class Bomber
+
+!import "box.coffee"
+
+class Bomber extends Box
   constructor: (@x, @y) ->
     @angle = 0
     @bombCooldown = 0
@@ -25,9 +28,6 @@ class Bomber
   threshold: 30
   width: 10
   height: 28
-  
-  boxHit: (other) ->
-    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
 
   move: ->
     @x += 2 * Math.cos(@angle + Math.PI / 2)
@@ -51,9 +51,6 @@ class Bomber
   bomb: ->
     @bombCooldown = 40
     game.owners.enemies.bombs.push( new Bomb( @x, @y, 4, 35, game.owners.enemies ) )
-
-  offscreen: ->
-    @x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height
 
   takeDamage: ->
     # TODO: Make collision take into account rotating (bigger box?)

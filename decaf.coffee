@@ -14,6 +14,17 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
+
+!import "bomb.coffee"
+!import "healthup.coffee"
+!import "ship.coffee"
+!import "bomber.coffee"
+!import "kamikaze.coffee"
+!import "shrapnal.coffee"
+!import "fighter.coffee"
+!import "laser.coffee"
+!import "spinner.coffee"
+
 GOOD_COLOR = "#0044FF"
 BAD_COLOR = "#FF0000"
 

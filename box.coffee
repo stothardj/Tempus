@@ -14,27 +14,16 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-!import "box.coffee"
 
-class Bomb extends Box
-  constructor: (@x, @y, @speed, @cooldown, @owner) ->
+# Many objects are basically treated as boxes
+class Box
+  constructor: (@x, @y) ->
 
-  width: 4
-  height: 4
-  speed: 12
+  boxHit: (other) ->
+    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
 
-  move: ->
-    @y += @speed
+  offscreen: ->
+    @x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height
 
-  explode: ->
-    @owner.shrapnals = @owner.shrapnals.concat( (new Shrapnal(@x, @y, ang * 36 * Math.PI / 180, Shrapnal::speed, @owner) for ang in [0..9]) )
-
-  draw: ->
-    ctx.fillStyle = @owner.color
-    @drawAsBox()
-
-  update: ->
-    @cooldown -= 1
-    @explode() if @cooldown <= 0
-    @move()
-    @draw()
+  drawAsBox: ->
+    ctx.fillRect( @x - @width / 2, @y - @height / 2, @width, @height )

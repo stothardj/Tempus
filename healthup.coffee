@@ -14,7 +14,9 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-class HealthUp
+!import "box.coffee"
+
+class HealthUp extends Box
   constructor: (@x, @y) ->
     @used = 0
 
@@ -22,12 +24,6 @@ class HealthUp
   width: 4
   height: 4
   speed: 5
-
-  drawAsBox: ->
-    ctx.fillRect( @x - @width / 2, @y - @height / 2, @width, @height )
-
-  boxHit: (other) ->
-    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
  
   move: ->
     @y += @speed
@@ -35,9 +31,6 @@ class HealthUp
   draw: ->
     ctx.fillStyle = "#00FF00"
     @drawAsBox()
-
-  offscreen: ->
-    @x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height
 
   detectUse: ->
     if @boxHit(ship)

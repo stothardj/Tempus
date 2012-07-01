@@ -1,3 +1,5 @@
 The main file is decaf.coffee
 
 This project used to use m4 files for macros, but it was getting ugly so that was removed (at the cost that now the compiled code is bigger).
+
+This project now uses ppp.py which is a simple preprocessor I wrote. It is hosted on my github page (I'm stothardj) in case you want to modify that code.

@@ -14,16 +14,60 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-class Bomb
+
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
+
+# Many objects are basically treated as boxes
+class Box
+  constructor: (@x, @y) ->
+
+  boxHit: (other) ->
+    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
+
+  offscreen: ->
+    @x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height
+
+  drawAsBox: ->
+    ctx.fillRect( @x - @width / 2, @y - @height / 2, @width, @height )
+
+class Bomb extends Box
   constructor: (@x, @y, @speed, @cooldown, @owner) ->
 
   width: 4
   height: 4
   speed: 12
 
-  drawAsBox: ->
-    ctx.fillRect( @x - @width / 2, @y - @height / 2, @width, @height )
-  
   move: ->
     @y += @speed
 
@@ -54,7 +98,126 @@ class Bomb
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-class Bomber
+
+class HealthUp extends Box
+  constructor: (@x, @y) ->
+    @used = 0
+
+  rand: 0.2
+  width: 4
+  height: 4
+  speed: 5
+ 
+  move: ->
+    @y += @speed
+
+  draw: ->
+    ctx.fillStyle = "#00FF00"
+    @drawAsBox()
+
+  detectUse: ->
+    if @boxHit(ship)
+      console.log "Used"
+      @used = 1
+      game.owners.player.health = Math.min( game.owners.player.health + 15, 100 )
+      game.timers.dispHealth = 255
+
+    @used = 1 if @offscreen()
+    if @offscreen()
+      console.log "Offscreen"
+      console.log @x
+      console.log @y
+      console.log canvas.width
+      console.log canvas.height
+
+  update: ->
+    @move()
+    @draw()
+    @detectUse()# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
+
+# Made a class even though there should be only one. Consistent so
+# even macros can be used across this and enemies
+class Ship
+  constructor: (@x, @y) ->
+    @laserCooldown = 0
+    @bombCooldown = 0
+    @heat = 0
+
+  width: 40
+  height: 40
+
+  boxHit: (other) ->
+    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
+
+  move: ->
+    @x = (@x + mouse.x) / 2
+    @y = (@y + mouse.y) / 2
+
+  draw: ->
+    ctx.strokeStyle = "#FFFFFF"
+    ctx.beginPath()
+    ctx.moveTo( @x, @y - @height / 2 )
+    ctx.quadraticCurveTo( @x + @width / 2, @y, @x + @width / 2, @y + @height / 2 )
+    ctx.quadraticCurveTo( @x + @width / 8, @y + @height / 4, @x, @y + @height / 4 )
+    ctx.quadraticCurveTo( @x - @width / 8, @y + @height / 4, @x - @width / 2, @y + @height / 2 )
+    ctx.quadraticCurveTo( @x - @width / 2, @y, @x, @y - @height / 2 )
+    ctx.closePath()
+    ctx.stroke()
+
+  takeDamage: ->
+    for laser in game.owners.enemies.lasers
+      if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
+        laser.killedSomething = true
+        game.owners.player.health -= 8
+        game.timers.dispHealth = 255
+    for bomb in game.owners.enemies.bombs
+      if @boxHit(bomb)
+        bomb.cooldown = 0
+        game.owners.player.health -= 2
+        game.timers.dispHealth = 255
+    for shrapnal in game.owners.enemies.shrapnals
+      if @boxHit(shrapnal)
+        shrapnal.cooldown = 0
+        game.owners.player.health -= 2
+        game.timers.dispHealth = 255
+
+  update: ->
+    @move()
+    @draw()
+    @takeDamage()# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
+
+
+class Bomber extends Box
   constructor: (@x, @y) ->
     @angle = 0
     @bombCooldown = 0
@@ -65,9 +228,6 @@ class Bomber
   threshold: 30
   width: 10
   height: 28
-  
-  boxHit: (other) ->
-    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
 
   move: ->
     @x += 2 * Math.cos(@angle + Math.PI / 2)
@@ -91,9 +251,6 @@ class Bomber
   bomb: ->
     @bombCooldown = 40
     game.owners.enemies.bombs.push( new Bomb( @x, @y, 4, 35, game.owners.enemies ) )
-
-  offscreen: ->
-    @x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height
 
   takeDamage: ->
     # TODO: Make collision take into account rotating (bigger box?)
@@ -143,10 +300,320 @@ class Bomber
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
+
+class Kamikaze extends Box
+  constructor: (@x, @y) ->
+    @angle = 0
+    @shootCooldown = 0
+    @moveState = 0
+    @health = 1
+
+  rand: 0.02
+  threshold: 15
+  width: 20
+  height: 20
+
+  move: ->
+    switch @moveState
+      when 0 # Wandering down
+        if Math.abs(@x - ship.x) < 150 and Math.abs(@y - ship.y) < 150
+          @moveState = 1
+        else
+          @angle = 0
+          @y += 1
+      when 1 # Detected ship, turn to face
+        if @y > ship.y
+          desired_angle = Math.PI - Math.atan( (@x - ship.x) / (@y - ship.y) )
+        else
+          desired_angle = - Math.atan( (@x - ship.x) / (@y - ship.y) )
+        if Math.abs(desired_angle - @angle) < (Math.PI / 24) or Math.abs(desired_angle - @angle) > Math.PI * 2 - (Math.PI / 24)
+          @angle = desired_angle
+          @moveState = 2
+        else if (@angle < desired_angle and @angle - desired_angle < Math.PI) or (Math.PI * 2 - @angle) - desired_angle < Math.PI
+          @angle += Math.PI / 24
+        else
+          @angle -= Math.PI / 24
+      when 2 # Charge
+        @x += 30 * Math.cos(@angle + Math.PI / 2)
+        @y += 30 * Math.sin(@angle + Math.PI / 2)
+
+  draw: ->
+    ctx.translate( @x, @y )
+    ctx.rotate( @angle )
+    ctx.beginPath()
+    ctx.moveTo( - @width / 2, - @height / 2 )
+    ctx.lineTo( @width / 2, - @height / 2 )
+    ctx.lineTo( @width / 2, @height / 5 )
+    ctx.lineTo( 0, @height / 2 )
+    ctx.lineTo( - @width / 2, @height / 5 )
+    ctx.closePath()
+    ctx.stroke()
+    ctx.rotate( -@angle )
+    ctx.translate( -@x, -@y )
+
+  takeDamage: ->
+    return @health = 0 if @y > canvas.height or @moveState and @offscreen()
+    if @boxHit(ship)
+      game.owners.player.kills += 1
+      game.owners.player.health -= 35
+      game.timers.dispHealth = 255
+      return @health = 0
+    for laser in game.owners.player.lasers
+      if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
+        laser.killedSomething = true
+        game.owners.player.kills += 1
+        return @health = 0
+    for bomb in game.owners.player.bombs
+      if @boxHit(bomb)
+        bomb.cooldown = 0
+        game.owners.player.kills += 1
+        return @health = 0
+    for shrapnal in game.owners.player.shrapnals
+      if @boxHit(shrapnal)
+        game.owners.player.kills += 1
+        return @health = 0
+
+  update: ->
+    @move()
+    @draw()
+    @takeDamage()
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
+class Shrapnal
+  constructor: (@x, @y, @angle, @speed, @owner) ->
+    @cooldown = 10
+
+  speed: 10
+  width: 2
+  height: 2
+
+  drawAsBox: ->
+    ctx.fillRect( @x - @width / 2, @y - @height / 2, @width, @height )
+
+  move: ->
+    @x += (@speed * Math.cos(@angle))
+    @y += (@speed * Math.sin(@angle))
+
+  draw: ->
+    ctx.fillStyle = @owner.color
+    @drawAsBox()
+
+  update: ->
+    @cooldown -= 1
+    @move()
+    @draw()
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
+class Fighter
+  constructor: (@x, @y) ->
+    @shootCooldown = 0
+    @health = 1
+
+  rand: 0.03
+  threshold: 0
+  width: 20
+  height: 20
+
+  boxHit: (other) ->
+    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
+
+  draw: ->
+    ctx.strokeStyle = "#FFFFFF"
+    ctx.beginPath()
+    ctx.moveTo( @x - @width / 2, @y - @height / 2 )
+    ctx.lineTo( @x + @width / 2, @y - @height / 2 )
+    ctx.lineTo( @x, @y + @height / 2 )
+
+    ctx.closePath()
+    ctx.stroke()
+
+  move: ->
+    @y += 3
+    mv = (ship.x - @x) / 12
+    @x += if Math.abs(mv) < 5 then mv else 5 * mv/Math.abs(mv)
+
+  shoot: ->
+    @shootCooldown = 35
+    game.owners.enemies.lasers.push( new Laser( @x, @y, Laser::speed, game.owners.enemies ) )
+
+  takeDamage: ->
+    return @health = 0 if @y > canvas.height
+    if @boxHit(ship)
+      game.owners.player.health -= 24
+      game.owners.player.kills += 1
+      game.timers.dispHealth = 255
+      return @health = 0
+    for laser in game.owners.player.lasers
+      if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
+        laser.killedSomething = true
+        game.owners.player.kills += 1
+        return @health = 0
+    for bomb in game.owners.player.bombs
+      if @boxHit(bomb)
+        bomb.cooldown = 0
+        game.owners.player.kills += 1
+        return @health = 0
+    for shrapnal in game.owners.player.shrapnals
+      if @boxHit(shrapnal)
+        game.owners.player.kills += 1
+        return @health = 0
+
+  update: ->
+    @shoot() if @shootCooldown is 0
+    @shootCooldown -= 1
+    @move()
+    @draw()
+    @takeDamage()# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
+class Laser
+  constructor: (@x, @y, @speed, @owner) ->
+    @killedSomething = false
+
+  speed: 20
+  width: 2
+  height: 16
+
+  drawAsBox: ->
+    ctx.fillRect( @x - @width / 2, @y - @height / 2, @width, @height )
+
+  draw: ->
+    ctx.fillStyle = @owner.color;
+    @drawAsBox()
+
+  move: ->
+    @y += @speed
+
+  update: ->
+    @move()
+    @draw()
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
+class Spinner
+  constructor: (@x, @y) ->
+    @angle = 0
+    @shootCooldown = 0
+    @burst = 0
+    @health = 1
+
+  rand: 0.005
+  threshold: 45
+  width: 20
+  height: 20
+
+  boxHit: (other) ->
+    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
+  
+  draw: ->
+    ctx.translate( @x, @y )
+    ctx.rotate( @angle )
+    ctx.beginPath()
+    ctx.moveTo( - @width / 2, - @height / 2 )
+    ctx.lineTo( @width / 2, - @height / 2 )
+    ctx.lineTo( @width / 2, @height / 2 )
+    ctx.lineTo( - @width / 2, @height / 2 )
+    ctx.closePath()
+    ctx.stroke()
+    ctx.rotate( -@angle )
+    ctx.translate( -@x, -@y )
+
+  move: ->
+    @angle += 0.1
+    @y += 2
+
+  shoot: ->
+    if @burst < 5
+      @burst += 1
+    else
+      @shootCooldown = 55
+      @burst = 0
+    game.owners.enemies.lasers.push( new Laser( @x, @y, Laser::speed, game.owners.enemies ) )
+
+  takeDamage: ->
+    return @health = 0 if @y > canvas.height
+    if @boxHit(ship)
+      game.owners.player.health -= 24
+      game.owners.player.kills += 1
+      game.timers.dispHealth = 255
+      return @health = 0
+    for laser in game.owners.player.lasers
+      if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
+        laser.killedSomething = true
+        game.owners.player.kills += 1
+        return @health = 0
+    for bomb in game.owners.player.bombs
+      if @boxHit(bomb)
+        bomb.cooldown = 0
+        game.owners.player.kills += 1
+        return @health = 0
+    for shrapnal in game.owners.player.shrapnals
+      if @boxHit(shrapnal)
+        game.owners.player.kills += 1
+        return @health = 0
+
+  update: ->
+    @shoot() if @shootCooldown <= 0
+    @shootCooldown -= 1
+    @move()
+    @draw()
+    @takeDamage()
 GOOD_COLOR = "#0044FF"
 BAD_COLOR = "#FF0000"
-
-#'
 
 genship = (t) ->
   if game.owners.player.kills >= t::threshold and Math.random() < t::rand
@@ -460,461 +927,3 @@ switch currentState
   when gameState.title
     drawTitleScreen()
 
-# This file is part of Tempus.
-#
-# Tempus is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Tempus is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Copyright 2011 Jake Stothard
-class Fighter
-  constructor: (@x, @y) ->
-    @shootCooldown = 0
-    @health = 1
-
-  rand: 0.03
-  threshold: 0
-  width: 20
-  height: 20
-
-  boxHit: (other) ->
-    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
-
-  draw: ->
-    ctx.strokeStyle = "#FFFFFF"
-    ctx.beginPath()
-    ctx.moveTo( @x - @width / 2, @y - @height / 2 )
-    ctx.lineTo( @x + @width / 2, @y - @height / 2 )
-    ctx.lineTo( @x, @y + @height / 2 )
-
-    ctx.closePath()
-    ctx.stroke()
-
-  move: ->
-    @y += 3
-    mv = (ship.x - @x) / 12
-    @x += if Math.abs(mv) < 5 then mv else 5 * mv/Math.abs(mv)
-
-  shoot: ->
-    @shootCooldown = 35
-    game.owners.enemies.lasers.push( new Laser( @x, @y, Laser::speed, game.owners.enemies ) )
-
-  takeDamage: ->
-    return @health = 0 if @y > canvas.height
-    if @boxHit(ship)
-      game.owners.player.health -= 24
-      game.owners.player.kills += 1
-      game.timers.dispHealth = 255
-      return @health = 0
-    for laser in game.owners.player.lasers
-      if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
-        laser.killedSomething = true
-        game.owners.player.kills += 1
-        return @health = 0
-    for bomb in game.owners.player.bombs
-      if @boxHit(bomb)
-        bomb.cooldown = 0
-        game.owners.player.kills += 1
-        return @health = 0
-    for shrapnal in game.owners.player.shrapnals
-      if @boxHit(shrapnal)
-        game.owners.player.kills += 1
-        return @health = 0
-
-  update: ->
-    @shoot() if @shootCooldown is 0
-    @shootCooldown -= 1
-    @move()
-    @draw()
-    @takeDamage()# This file is part of Tempus.
-#
-# Tempus is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Tempus is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Copyright 2011 Jake Stothard
-class HealthUp
-  constructor: (@x, @y) ->
-    @used = 0
-
-  rand: 0.2
-  width: 4
-  height: 4
-  speed: 5
-
-  drawAsBox: ->
-    ctx.fillRect( @x - @width / 2, @y - @height / 2, @width, @height )
-
-  boxHit: (other) ->
-    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
- 
-  move: ->
-    @y += @speed
-
-  draw: ->
-    ctx.fillStyle = "#00FF00"
-    @drawAsBox()
-
-  offscreen: ->
-    @x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height
-
-  detectUse: ->
-    if @boxHit(ship)
-      console.log "Used"
-      @used = 1
-      game.owners.player.health = Math.min( game.owners.player.health + 15, 100 )
-      game.timers.dispHealth = 255
-
-    @used = 1 if @offscreen()
-    if @offscreen()
-      console.log "Offscreen"
-      console.log @x
-      console.log @y
-      console.log canvas.width
-      console.log canvas.height
-
-  update: ->
-    @move()
-    @draw()
-    @detectUse()# This file is part of Tempus.
-#
-# Tempus is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Tempus is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Copyright 2011 Jake Stothard
-class Kamikaze
-  constructor: (@x, @y) ->
-    @angle = 0
-    @shootCooldown = 0
-    @moveState = 0
-    @health = 1
-
-  rand: 0.02
-  threshold: 15
-  width: 20
-  height: 20
-
-  boxHit: (other) ->
-    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
-
-  offscreen: ->
-    @x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height
-
-  move: ->
-    switch @moveState
-      when 0 # Wandering down
-        if Math.abs(@x - ship.x) < 150 and Math.abs(@y - ship.y) < 150
-          @moveState = 1
-        else
-          @angle = 0
-          @y += 1
-      when 1 # Detected ship, turn to face
-        if @y > ship.y
-          desired_angle = Math.PI - Math.atan( (@x - ship.x) / (@y - ship.y) )
-        else
-          desired_angle = - Math.atan( (@x - ship.x) / (@y - ship.y) )
-        if Math.abs(desired_angle - @angle) < (Math.PI / 24) or Math.abs(desired_angle - @angle) > Math.PI * 2 - (Math.PI / 24)
-          @angle = desired_angle
-          @moveState = 2
-        else if (@angle < desired_angle and @angle - desired_angle < Math.PI) or (Math.PI * 2 - @angle) - desired_angle < Math.PI
-          @angle += Math.PI / 24
-        else
-          @angle -= Math.PI / 24
-      when 2 # Charge
-        @x += 30 * Math.cos(@angle + Math.PI / 2)
-        @y += 30 * Math.sin(@angle + Math.PI / 2)
-
-  draw: ->
-    ctx.translate( @x, @y )
-    ctx.rotate( @angle )
-    ctx.beginPath()
-    ctx.moveTo( - @width / 2, - @height / 2 )
-    ctx.lineTo( @width / 2, - @height / 2 )
-    ctx.lineTo( @width / 2, @height / 5 )
-    ctx.lineTo( 0, @height / 2 )
-    ctx.lineTo( - @width / 2, @height / 5 )
-    ctx.closePath()
-    ctx.stroke()
-    ctx.rotate( -@angle )
-    ctx.translate( -@x, -@y )
-
-  takeDamage: ->
-    return @health = 0 if @y > canvas.height or @moveState and @offscreen()
-    if @boxHit(ship)
-      game.owners.player.kills += 1
-      game.owners.player.health -= 35
-      game.timers.dispHealth = 255
-      return @health = 0
-    for laser in game.owners.player.lasers
-      if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
-        laser.killedSomething = true
-        game.owners.player.kills += 1
-        return @health = 0
-    for bomb in game.owners.player.bombs
-      if @boxHit(bomb)
-        bomb.cooldown = 0
-        game.owners.player.kills += 1
-        return @health = 0
-    for shrapnal in game.owners.player.shrapnals
-      if @boxHit(shrapnal)
-        game.owners.player.kills += 1
-        return @health = 0
-
-  update: ->
-    @move()
-    @draw()
-    @takeDamage()
-# This file is part of Tempus.
-#
-# Tempus is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Tempus is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Copyright 2011 Jake Stothard
-class Laser
-  constructor: (@x, @y, @speed, @owner) ->
-    @killedSomething = false
-
-  speed: 20
-  width: 2
-  height: 16
-
-  drawAsBox: ->
-    ctx.fillRect( @x - @width / 2, @y - @height / 2, @width, @height )
-
-  draw: ->
-    ctx.fillStyle = @owner.color;
-    @drawAsBox()
-
-  move: ->
-    @y += @speed
-
-  update: ->
-    @move()
-    @draw()
-# This file is part of Tempus.
-#
-# Tempus is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Tempus is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Copyright 2011 Jake Stothard
-
-# Made a class even though there should be only one. Consistent so
-# even macros can be used across this and enemies
-class Ship
-  constructor: (@x, @y) ->
-    @laserCooldown = 0
-    @bombCooldown = 0
-    @heat = 0
-
-  width: 40
-  height: 40
-
-  boxHit: (other) ->
-    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
-
-  move: ->
-    @x = (@x + mouse.x) / 2
-    @y = (@y + mouse.y) / 2
-
-  draw: ->
-    ctx.strokeStyle = "#FFFFFF"
-    ctx.beginPath()
-    ctx.moveTo( @x, @y - @height / 2 )
-    ctx.quadraticCurveTo( @x + @width / 2, @y, @x + @width / 2, @y + @height / 2 )
-    ctx.quadraticCurveTo( @x + @width / 8, @y + @height / 4, @x, @y + @height / 4 )
-    ctx.quadraticCurveTo( @x - @width / 8, @y + @height / 4, @x - @width / 2, @y + @height / 2 )
-    ctx.quadraticCurveTo( @x - @width / 2, @y, @x, @y - @height / 2 )
-    ctx.closePath()
-    ctx.stroke()
-
-  takeDamage: ->
-    for laser in game.owners.enemies.lasers
-      if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
-        laser.killedSomething = true
-        game.owners.player.health -= 8
-        game.timers.dispHealth = 255
-    for bomb in game.owners.enemies.bombs
-      if @boxHit(bomb)
-        bomb.cooldown = 0
-        game.owners.player.health -= 2
-        game.timers.dispHealth = 255
-    for shrapnal in game.owners.enemies.shrapnals
-      if @boxHit(shrapnal)
-        shrapnal.cooldown = 0
-        game.owners.player.health -= 2
-        game.timers.dispHealth = 255
-
-  update: ->
-    @move()
-    @draw()
-    @takeDamage()# This file is part of Tempus.
-#
-# Tempus is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Tempus is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Copyright 2011 Jake Stothard
-class Shrapnal
-  constructor: (@x, @y, @angle, @speed, @owner) ->
-    @cooldown = 10
-
-  speed: 10
-  width: 2
-  height: 2
-
-  drawAsBox: ->
-    ctx.fillRect( @x - @width / 2, @y - @height / 2, @width, @height )
-
-  move: ->
-    @x += (@speed * Math.cos(@angle))
-    @y += (@speed * Math.sin(@angle))
-
-  draw: ->
-    ctx.fillStyle = @owner.color
-    @drawAsBox()
-
-  update: ->
-    @cooldown -= 1
-    @move()
-    @draw()
-# This file is part of Tempus.
-#
-# Tempus is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Tempus is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Copyright 2011 Jake Stothard
-class Spinner
-  constructor: (@x, @y) ->
-    @angle = 0
-    @shootCooldown = 0
-    @burst = 0
-    @health = 1
-
-  rand: 0.005
-  threshold: 45
-  width: 20
-  height: 20
-
-  boxHit: (other) ->
-    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
-  
-  draw: ->
-    ctx.translate( @x, @y )
-    ctx.rotate( @angle )
-    ctx.beginPath()
-    ctx.moveTo( - @width / 2, - @height / 2 )
-    ctx.lineTo( @width / 2, - @height / 2 )
-    ctx.lineTo( @width / 2, @height / 2 )
-    ctx.lineTo( - @width / 2, @height / 2 )
-    ctx.closePath()
-    ctx.stroke()
-    ctx.rotate( -@angle )
-    ctx.translate( -@x, -@y )
-
-  move: ->
-    @angle += 0.1
-    @y += 2
-
-  shoot: ->
-    if @burst < 5
-      @burst += 1
-    else
-      @shootCooldown = 55
-      @burst = 0
-    game.owners.enemies.lasers.push( new Laser( @x, @y, Laser::speed, game.owners.enemies ) )
-
-  takeDamage: ->
-    return @health = 0 if @y > canvas.height
-    if @boxHit(ship)
-      game.owners.player.health -= 24
-      game.owners.player.kills += 1
-      game.timers.dispHealth = 255
-      return @health = 0
-    for laser in game.owners.player.lasers
-      if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
-        laser.killedSomething = true
-        game.owners.player.kills += 1
-        return @health = 0
-    for bomb in game.owners.player.bombs
-      if @boxHit(bomb)
-        bomb.cooldown = 0
-        game.owners.player.kills += 1
-        return @health = 0
-    for shrapnal in game.owners.player.shrapnals
-      if @boxHit(shrapnal)
-        game.owners.player.kills += 1
-        return @health = 0
-
-  update: ->
-    @shoot() if @shootCooldown <= 0
-    @shootCooldown -= 1
-    @move()
-    @draw()
-    @takeDamage()
