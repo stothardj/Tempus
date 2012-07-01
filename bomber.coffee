@@ -14,55 +14,76 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-class Fighter
+class Bomber
   constructor: (@x, @y) ->
-    @shootCooldown = 0
+    @angle = 0
+    @bombCooldown = 0
+    @turnVel = (Math.random() - 0.5) / 30;
     @health = 1
 
-  draw: ->
-    ctx.strokeStyle = "#FFFFFF"
-    ctx.beginPath()
-    ctx.moveTo( @x - eval(FIGHTER_WIDTH / 2), @y - eval(FIGHTER_HEIGHT / 2) )
-    ctx.lineTo( @x + eval(FIGHTER_WIDTH / 2), @y - eval(FIGHTER_HEIGHT / 2) )
-    ctx.lineTo( @x, @y + eval(FIGHTER_HEIGHT / 2) )
-
-    ctx.closePath()
-    ctx.stroke()
+  rand: 0.01
+  threshold: 30
+  width: 10
+  height: 28
+  
+  boxHit: (other) ->
+    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
 
   move: ->
-    @y += 3
-    mv = (ship.x - @x) / 12
-    @x += if Math.abs(mv) < 5 then mv else 5 * mv/Math.abs(mv)
+    @x += 2 * Math.cos(@angle + Math.PI / 2)
+    @y += 2 * Math.sin(@angle + Math.PI / 2)
+    @angle += @turnVel
+    @goneOnScreen = 0
 
-  shoot: ->
-    @shootCooldown = 35
-    game.owners.enemies.lasers.push( new Laser( @x, @y, LASER_SPEED, game.owners.enemies ) )
+  draw: ->
+    ctx.translate( @x, @y )
+    ctx.rotate( @angle )
+    ctx.beginPath()
+    ctx.moveTo( 0, @height / 2 )
+    ctx.lineTo( @width / 2, 0 )
+    ctx.lineTo( 0, - @height / 2 )
+    ctx.lineTo( - @width / 2, 0 )
+    ctx.closePath()
+    ctx.stroke()
+    ctx.rotate( -@angle )
+    ctx.translate( -@x, -@y )
+
+  bomb: ->
+    @bombCooldown = 40
+    game.owners.enemies.bombs.push( new Bomb( @x, @y, 4, 35, game.owners.enemies ) )
+
+  offscreen: ->
+    @x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height
 
   takeDamage: ->
-    return @health = 0 if @y > canvas.height
-    if boxHit(ship,fighter)
+    # TODO: Make collision take into account rotating (bigger box?)
+    if @offscreen()
+      return @health = 0 if @goneOnScreen
+    else
+      @goneOnScreen = 1
+    if @boxHit(ship)
       game.owners.player.health -= 24
       game.owners.player.kills += 1
       game.timers.dispHealth = 255
       return @health = 0
     for laser in game.owners.player.lasers
-      if Math.abs(@x - laser.x) <= eval(FIGHTER_WIDTH / 2) and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_HEIGHT) / 2 + eval(FIGHTER_HEIGHT / 2)
+      if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
         laser.killedSomething = true
         game.owners.player.kills += 1
         return @health = 0
     for bomb in game.owners.player.bombs
-      if boxHit(bomb,fighter)
+      if @boxHit(bomb)
         bomb.cooldown = 0
         game.owners.player.kills += 1
         return @health = 0
     for shrapnal in game.owners.player.shrapnals
-      if boxHit(shrapnal,fighter)
+      if @boxHit(shrapnal)
         game.owners.player.kills += 1
         return @health = 0
 
   update: ->
-    @shoot() if @shootCooldown is 0
-    @shootCooldown -= 1
+    @bomb() if @bombCooldown is 0
+    @bombCooldown -= 1
     @move()
     @draw()
     @takeDamage()

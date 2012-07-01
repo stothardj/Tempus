@@ -14,7 +14,26 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-define(SPINNER_RAND,0.005)dnl
-define(SPINNER_THRESHOLD,45)dnl
-define(SPINNER_WIDTH,20)dnl
-define(SPINNER_HEIGHT,20)dnl
+class Shrapnal
+  constructor: (@x, @y, @angle, @speed, @owner) ->
+    @cooldown = 10
+
+  speed: 10
+  width: 2
+  height: 2
+
+  drawAsBox: ->
+    ctx.fillRect( @x - @width / 2, @y - @height / 2, @width, @height )
+
+  move: ->
+    @x += (@speed * Math.cos(@angle))
+    @y += (@speed * Math.sin(@angle))
+
+  draw: ->
+    ctx.fillStyle = @owner.color
+    @drawAsBox()
+
+  update: ->
+    @cooldown -= 1
+    @move()
+    @draw()

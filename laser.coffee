@@ -14,7 +14,24 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-define(KAMIKAZE_RAND,0.02)dnl
-define(KAMIKAZE_THRESHOLD,15)dnl
-define(KAMIKAZE_WIDTH,20)dnl
-define(KAMIKAZE_HEIGHT,20)dnl
+class Laser
+  constructor: (@x, @y, @speed, @owner) ->
+    @killedSomething = false
+
+  speed: 20
+  width: 2
+  height: 16
+
+  drawAsBox: ->
+    ctx.fillRect( @x - @width / 2, @y - @height / 2, @width, @height )
+
+  draw: ->
+    ctx.fillStyle = @owner.color;
+    @drawAsBox()
+
+  move: ->
+    @y += @speed
+
+  update: ->
+    @move()
+    @draw()

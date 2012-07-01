@@ -18,21 +18,41 @@ class HealthUp
   constructor: (@x, @y) ->
     @used = 0
 
+  rand: 0.2
+  width: 4
+  height: 4
+  speed: 5
+
+  drawAsBox: ->
+    ctx.fillRect( @x - @width / 2, @y - @height / 2, @width, @height )
+
+  boxHit: (other) ->
+    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
+ 
   move: ->
-    @y += HEALTHUP_SPEED
+    @y += @speed
 
   draw: ->
     ctx.fillStyle = "#00FF00"
-    drawAsBox(HealthUp)
+    @drawAsBox()
+
+  offscreen: ->
+    @x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height
 
   detectUse: ->
-    if boxHit(ship,healthup)
+    if @boxHit(ship)
+      console.log "Used"
       @used = 1
       game.owners.player.health = Math.min( game.owners.player.health + 15, 100 )
       game.timers.dispHealth = 255
 
-    @used = 1 if offscreen
-
+    @used = 1 if @offscreen()
+    if @offscreen()
+      console.log "Offscreen"
+      console.log @x
+      console.log @y
+      console.log canvas.width
+      console.log canvas.height
 
   update: ->
     @move()

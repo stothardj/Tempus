@@ -1,18 +1,19 @@
 SHELL = /bin/sh
 .PHONY: clean quick
 .SUFFIXES:
-.SUFFIXES: .m4 .coffee .js
+.SUFFIXES: .coffee .js
 
-decaf-compiled.js: decaf.js
-	java -jar compiler.jar --js decaf.js --js_output_file decaf-compiled.js
+comb-compiled.js: comb.js
+	java -jar compiler.jar --js comb.js --js_output_file comb-compiled.js
 
-decaf.js: decaf.coffee
-	coffee -c decaf.coffee
+comb.js: comb.coffee
+	coffee -c comb.coffee
 
-decaf.coffee: *.m4
-	m4 decaf.m4 > decaf.coffee
+comb.coffee: *.coffee
+	rm -f comb.coffee
+	cat *.coffee > comb.coffee
 
-quick: decaf.js
+quick: comb.js
 
 clean:
-	rm -f decaf-compile.js decaf.js decaf.coffee
+	rm -f comb-compile.js comb.js comb.coffee

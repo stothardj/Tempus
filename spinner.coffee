@@ -21,14 +21,22 @@ class Spinner
     @burst = 0
     @health = 1
 
+  rand: 0.005
+  threshold: 45
+  width: 20
+  height: 20
+
+  boxHit: (other) ->
+    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
+  
   draw: ->
     ctx.translate( @x, @y )
     ctx.rotate( @angle )
     ctx.beginPath()
-    ctx.moveTo( - eval(SPINNER_WIDTH / 2), - eval(SPINNER_HEIGHT / 2) )
-    ctx.lineTo( eval(SPINNER_WIDTH / 2), - eval(SPINNER_HEIGHT / 2) )
-    ctx.lineTo( eval(SPINNER_WIDTH / 2), eval(SPINNER_HEIGHT / 2) )
-    ctx.lineTo( - eval(SPINNER_WIDTH / 2), eval(SPINNER_HEIGHT / 2) )
+    ctx.moveTo( - @width / 2, - @height / 2 )
+    ctx.lineTo( @width / 2, - @height / 2 )
+    ctx.lineTo( @width / 2, @height / 2 )
+    ctx.lineTo( - @width / 2, @height / 2 )
     ctx.closePath()
     ctx.stroke()
     ctx.rotate( -@angle )
@@ -44,27 +52,27 @@ class Spinner
     else
       @shootCooldown = 55
       @burst = 0
-    game.owners.enemies.lasers.push( new Laser( @x, @y, LASER_SPEED, game.owners.enemies ) )
+    game.owners.enemies.lasers.push( new Laser( @x, @y, Laser::speed, game.owners.enemies ) )
 
   takeDamage: ->
     return @health = 0 if @y > canvas.height
-    if boxHit(ship,fighter)
+    if @boxHit(ship)
       game.owners.player.health -= 24
       game.owners.player.kills += 1
       game.timers.dispHealth = 255
       return @health = 0
     for laser in game.owners.player.lasers
-      if Math.abs(@x - laser.x) <= eval(SPINNER_WIDTH / 2) and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_HEIGHT) / 2 + eval(SPINNER_HEIGHT / 2)
+      if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
         laser.killedSomething = true
         game.owners.player.kills += 1
         return @health = 0
     for bomb in game.owners.player.bombs
-      if boxHit(bomb,fighter)
+      if @boxHit(bomb)
         bomb.cooldown = 0
         game.owners.player.kills += 1
         return @health = 0
     for shrapnal in game.owners.player.shrapnals
-      if boxHit(shrapnal,fighter)
+      if @boxHit(shrapnal)
         game.owners.player.kills += 1
         return @health = 0
 

@@ -21,6 +21,17 @@ class Kamikaze
     @moveState = 0
     @health = 1
 
+  rand: 0.02
+  threshold: 15
+  width: 20
+  height: 20
+
+  boxHit: (other) ->
+    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
+
+  offscreen: ->
+    @x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height
+
   move: ->
     switch @moveState
       when 0 # Wandering down
@@ -49,35 +60,35 @@ class Kamikaze
     ctx.translate( @x, @y )
     ctx.rotate( @angle )
     ctx.beginPath()
-    ctx.moveTo( -eval(KAMIKAZE_WIDTH / 2), -eval(KAMIKAZE_HEIGHT / 2) )
-    ctx.lineTo( eval(KAMIKAZE_WIDTH / 2), -eval(KAMIKAZE_HEIGHT / 2) )
-    ctx.lineTo( eval(KAMIKAZE_WIDTH / 2), eval(KAMIKAZE_HEIGHT / 5) )
-    ctx.lineTo( 0, eval(KAMIKAZE_HEIGHT / 2) )
-    ctx.lineTo( -eval(KAMIKAZE_WIDTH / 2), eval(KAMIKAZE_HEIGHT / 5) )
+    ctx.moveTo( - @width / 2, - @height / 2 )
+    ctx.lineTo( @width / 2, - @height / 2 )
+    ctx.lineTo( @width / 2, @height / 5 )
+    ctx.lineTo( 0, @height / 2 )
+    ctx.lineTo( - @width / 2, @height / 5 )
     ctx.closePath()
     ctx.stroke()
     ctx.rotate( -@angle )
     ctx.translate( -@x, -@y )
 
   takeDamage: ->
-    return @health = 0 if @y > canvas.height or @moveState and offscreen
-    if boxHit(ship,kamikaze)
+    return @health = 0 if @y > canvas.height or @moveState and @offscreen()
+    if @boxHit(ship)
       game.owners.player.kills += 1
       game.owners.player.health -= 35
       game.timers.dispHealth = 255
       return @health = 0
     for laser in game.owners.player.lasers
-      if Math.abs(@x - laser.x) <= eval(KAMIKAZE_WIDTH / 2) and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + LASER_HEIGHT) / 2 + eval(KAMIKAZE_HEIGHT / 2)
+      if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
         laser.killedSomething = true
         game.owners.player.kills += 1
         return @health = 0
     for bomb in game.owners.player.bombs
-      if boxHit(bomb,kamikaze)
+      if @boxHit(bomb)
         bomb.cooldown = 0
         game.owners.player.kills += 1
         return @health = 0
     for shrapnal in game.owners.player.shrapnals
-      if boxHit(shrapnal,kamikaze)
+      if @boxHit(shrapnal)
         game.owners.player.kills += 1
         return @health = 0
 

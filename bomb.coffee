@@ -14,5 +14,28 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-define(SHIP_WIDTH,40)dnl
-define(SHIP_HEIGHT,40)dnl
+class Bomb
+  constructor: (@x, @y, @speed, @cooldown, @owner) ->
+
+  width: 4
+  height: 4
+  speed: 12
+
+  drawAsBox: ->
+    ctx.fillRect( @x - @width / 2, @y - @height / 2, @width, @height )
+  
+  move: ->
+    @y += @speed
+
+  explode: ->
+    @owner.shrapnals = @owner.shrapnals.concat( (new Shrapnal(@x, @y, ang * 36 * Math.PI / 180, Shrapnal::speed, @owner) for ang in [0..9]) )
+
+  draw: ->
+    ctx.fillStyle = @owner.color
+    @drawAsBox()
+
+  update: ->
+    @cooldown -= 1
+    @explode() if @cooldown <= 0
+    @move()
+    @draw()
