@@ -3,14 +3,12 @@
   <head>
     <title>Tempus</title>
     <link type="text/css" rel="stylesheet" href="main.css" />
-    <link type="text/css" href="ui/css/custom-theme/jquery-ui-1.8.14.custom.css" rel="stylesheet" />	
+    <link type="text/css" href="ui/css/custom-theme/jquery-ui-1.8.21.custom.css" rel="stylesheet" />	
     <script src="jquery-1.6.1.min.js"></script>
-    <script src="ui/js/jquery-ui-1.8.14.custom.min.js"></script>
+    <script src="ui/js/jquery-ui-1.8.21.custom.min.js"></script>
     <script src="initui.js"></script>
   </head>
   <body>
-    <script src="hacks.js"></script>
-
     <div id="tabs">
       <ul>
 	<li><a href="#game">Game</a></li>
@@ -19,11 +17,7 @@
 	<li><a href="#license">License</a></li>
       </ul>
       <div id="game">
-	<canvas id="c" width="800" height="600" tabindex="1">
-	  Failed to load canvas
-	</canvas>
-
-	<input type="checkbox" id="enableMusic" checked="checked">Enable Music</input>
+	<iframe src="game.html" width="850" height="650" frameborder="0"></iframe>
       </div>
       <div id="code">
 	<p>
@@ -54,6 +48,5 @@
 	</pre>
       </div>
     </div>
-    <script src="decaf.js"></script>
   </body>
 </html>
