@@ -1,5 +1,5 @@
 (function() {
-  var BAD_COLOR, Bomb, Bomber, Box, Fighter, GOOD_COLOR, HealthUp, Kamikaze, Laser, Ship, Shrapnal, Spinner, audio, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, firstInit, firstTime, game, gameState, gameloop, genship, initGame, mouse, musicPlaying, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause,
+  var BAD_COLOR, Bomb, Bomber, Box, Fighter, GOOD_COLOR, HealthUp, Kamikaze, Laser, PowerUp, ShieldUp, Ship, Shrapnal, Spinner, audio, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, firstInit, firstTime, game, gameState, gameloop, genship, initGame, mouse, musicPlaying, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -76,6 +76,43 @@
 
   })(Box);
 
+  PowerUp = (function(_super) {
+
+    __extends(PowerUp, _super);
+
+    function PowerUp(x, y) {
+      this.x = x;
+      this.y = y;
+      this.used = 0;
+    }
+
+    PowerUp.prototype.move = function() {
+      return this.y += this.speed;
+    };
+
+    PowerUp.prototype.draw = function() {
+      ctx.fillStyle = this.color;
+      return this.drawAsBox();
+    };
+
+    PowerUp.prototype.detectUse = function() {
+      if (this.boxHit(ship)) {
+        this.used = 1;
+        this.use();
+      }
+      if (this.offscreen()) return this.used = 1;
+    };
+
+    PowerUp.prototype.update = function() {
+      this.move();
+      this.draw();
+      return this.detectUse();
+    };
+
+    return PowerUp;
+
+  })(Box);
+
   HealthUp = (function(_super) {
 
     __extends(HealthUp, _super);
@@ -83,10 +120,10 @@
     function HealthUp(x, y) {
       this.x = x;
       this.y = y;
-      this.used = 0;
+      HealthUp.__super__.constructor.call(this, this.x, this.y);
     }
 
-    HealthUp.prototype.rand = 0.2;
+    HealthUp.prototype.rand = 0.05;
 
     HealthUp.prototype.width = 4;
 
@@ -94,41 +131,45 @@
 
     HealthUp.prototype.speed = 5;
 
-    HealthUp.prototype.move = function() {
-      return this.y += this.speed;
-    };
+    HealthUp.prototype.color = "#00FF00";
 
-    HealthUp.prototype.draw = function() {
-      ctx.fillStyle = "#00FF00";
-      return this.drawAsBox();
-    };
-
-    HealthUp.prototype.detectUse = function() {
-      if (this.boxHit(ship)) {
-        console.log("Used");
-        this.used = 1;
-        game.owners.player.health = Math.min(game.owners.player.health + 15, 100);
-        game.timers.dispHealth = 255;
-      }
-      if (this.offscreen()) this.used = 1;
-      if (this.offscreen()) {
-        console.log("Offscreen");
-        console.log(this.x);
-        console.log(this.y);
-        console.log(canvas.width);
-        return console.log(canvas.height);
-      }
-    };
-
-    HealthUp.prototype.update = function() {
-      this.move();
-      this.draw();
-      return this.detectUse();
+    HealthUp.prototype.use = function() {
+      game.owners.player.health = Math.min(game.owners.player.health + 15, 100);
+      return game.timers.dispHealth = 255;
     };
 
     return HealthUp;
 
-  })(Box);
+  })(PowerUp);
+
+  ShieldUp = (function(_super) {
+
+    __extends(ShieldUp, _super);
+
+    function ShieldUp(x, y) {
+      this.x = x;
+      this.y = y;
+      ShieldUp.__super__.constructor.call(this, this.x, this.y);
+    }
+
+    ShieldUp.prototype.rand = 0.1;
+
+    ShieldUp.prototype.width = 4;
+
+    ShieldUp.prototype.height = 4;
+
+    ShieldUp.prototype.speed = 5;
+
+    ShieldUp.prototype.color = "#0088FF";
+
+    ShieldUp.prototype.use = function() {
+      game.owners.player.shield = Math.min(game.owners.player.shield + 200, 4000);
+      return game.timers.dispHealth = 255;
+    };
+
+    return ShieldUp;
+
+  })(PowerUp);
 
   Ship = (function() {
 
@@ -153,7 +194,15 @@
       return this.y = (this.y + mouse.y) / 2;
     };
 
+    Ship.prototype.drawShield = function() {
+      ctx.strokeStyle = "rgb(0,".concat(Math.floor(game.timers.colorCycle / 2), ",", game.timers.colorCycle, ")");
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, Math.min(this.width, this.height), 0, 2 * Math.PI, false);
+      return ctx.stroke();
+    };
+
     Ship.prototype.draw = function() {
+      if (game.owners.player.shield > 0) this.drawShield();
       ctx.strokeStyle = "#FFFFFF";
       ctx.beginPath();
       ctx.moveTo(this.x, this.y - this.height / 2);
@@ -165,6 +214,15 @@
       return ctx.stroke();
     };
 
+    Ship.prototype.damage = function(amount) {
+      game.timers.dispHealth = 255;
+      game.owners.player.shield -= amount * 20;
+      if (game.owners.player.shield < 0) {
+        game.owners.player.health += Math.floor(game.owners.player.shield / 20);
+        return game.owners.player.shield = 0;
+      }
+    };
+
     Ship.prototype.takeDamage = function() {
       var bomb, laser, shrapnal, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3, _results;
       _ref = game.owners.enemies.lasers;
@@ -172,8 +230,7 @@
         laser = _ref[_i];
         if (Math.abs(this.x - laser.x) <= this.width / 2 && Math.abs(this.y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + this.height / 2) {
           laser.killedSomething = true;
-          game.owners.player.health -= 8;
-          game.timers.dispHealth = 255;
+          this.damage(8);
         }
       }
       _ref2 = game.owners.enemies.bombs;
@@ -181,8 +238,7 @@
         bomb = _ref2[_j];
         if (this.boxHit(bomb)) {
           bomb.cooldown = 0;
-          game.owners.player.health -= 2;
-          game.timers.dispHealth = 255;
+          this.damage(2);
         }
       }
       _ref3 = game.owners.enemies.shrapnals;
@@ -191,8 +247,7 @@
         shrapnal = _ref3[_k];
         if (this.boxHit(shrapnal)) {
           shrapnal.cooldown = 0;
-          game.owners.player.health -= 2;
-          _results.push(game.timers.dispHealth = 255);
+          _results.push(this.damage(2));
         } else {
           _results.push(void 0);
         }
@@ -203,7 +258,8 @@
     Ship.prototype.update = function() {
       this.move();
       this.draw();
-      return this.takeDamage();
+      this.takeDamage();
+      return game.owners.player.shield = Math.max(game.owners.player.shield - 1, 0);
     };
 
     return Ship;
@@ -265,9 +321,8 @@
         this.goneOnScreen = 1;
       }
       if (this.boxHit(ship)) {
-        game.owners.player.health -= 24;
+        ship.damage(24);
         game.owners.player.kills += 1;
-        game.timers.dispHealth = 255;
         return this.health = 0;
       }
       _ref = game.owners.player.lasers;
@@ -385,8 +440,7 @@
       }
       if (this.boxHit(ship)) {
         game.owners.player.kills += 1;
-        game.owners.player.health -= 35;
-        game.timers.dispHealth = 255;
+        ship.damage(35);
         return this.health = 0;
       }
       _ref = game.owners.player.lasers;
@@ -515,9 +569,8 @@
       var bomb, laser, shrapnal, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
       if (this.y > canvas.height) return this.health = 0;
       if (this.boxHit(ship)) {
-        game.owners.player.health -= 24;
+        ship.damage(24);
         game.owners.player.kills += 1;
-        game.timers.dispHealth = 255;
         return this.health = 0;
       }
       _ref = game.owners.player.lasers;
@@ -654,9 +707,8 @@
       var bomb, laser, shrapnal, _i, _j, _k, _len, _len2, _len3, _ref, _ref2, _ref3;
       if (this.y > canvas.height) return this.health = 0;
       if (this.boxHit(ship)) {
-        game.owners.player.health -= 24;
+        ship.damage(24);
         game.owners.player.kills += 1;
-        game.timers.dispHealth = 255;
         return this.health = 0;
       }
       _ref = game.owners.player.lasers;
@@ -826,6 +878,7 @@
           units: ship,
           color: GOOD_COLOR,
           health: 100,
+          shield: 0,
           kills: 0,
           lasersFired: 0,
           bombsFired: 0
@@ -844,15 +897,21 @@
         colorCycleDir: 10
       },
       powerups: {
-        healthups: []
+        healthups: [],
+        shieldups: []
       },
       crashed: false
     };
   };
 
   dispHealth = function() {
+    ctx.strokeStyle = "rgb(0,".concat(game.timers.dispHealth, ",0)");
     ctx.beginPath();
     ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 20, 0, Math.max(game.owners.player.health, 0) * Math.PI / 50, false);
+    ctx.stroke();
+    ctx.strokeStyle = "rgb(0,".concat(Math.floor(game.timers.dispHealth / 2), ",", game.timers.dispHealth, ")");
+    ctx.beginPath();
+    ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 40, 0, Math.max(game.owners.player.shield, 0) * Math.PI / 2000, false);
     return ctx.stroke();
   };
 
@@ -962,6 +1021,18 @@
         enemy = _ref2[_j];
         if (enemy.health <= 0 && Math.random() < HealthUp.prototype.rand) {
           _results.push(new HealthUp(enemy.x, enemy.y));
+        }
+      }
+      return _results;
+    })());
+    game.powerups.shieldups = game.powerups.shieldups.concat((function() {
+      var _j, _len2, _ref2, _results;
+      _ref2 = game.owners.enemies.units;
+      _results = [];
+      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+        enemy = _ref2[_j];
+        if (enemy.health <= 0 && Math.random() < ShieldUp.prototype.rand) {
+          _results.push(new ShieldUp(enemy.x, enemy.y));
         }
       }
       return _results;
@@ -1090,7 +1161,6 @@
       ctx.fillText("[ Heat Warning ]", canvas.width / 2, canvas.height - 30);
     }
     if (game.timers.dispHealth > 0) {
-      ctx.strokeStyle = "rgb(".concat(game.timers.dispHealth, ",", game.timers.dispHealth, ",", game.timers.dispHealth, ")");
       dispHealth();
       ctx.strokeStyle = "#FFFFFF";
       game.timers.dispHealth -= 10;

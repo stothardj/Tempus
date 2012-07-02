@@ -16,16 +16,16 @@
 # Copyright 2011 Jake Stothard
 !import "powerup.coffee"
 
-class HealthUp extends PowerUp
+class ShieldUp extends PowerUp
   constructor: (@x, @y) ->
     super(@x, @y)
 
-  rand: 0.05
+  rand: 0.1
   width: 4
   height: 4
   speed: 5
-  color: "#00FF00"
+  color: "#0088FF"
 
   use: ->
-    game.owners.player.health = Math.min( game.owners.player.health + 15, 100 )
+    game.owners.player.shield = Math.min( game.owners.player.shield + 200, 4000 )
     game.timers.dispHealth = 255

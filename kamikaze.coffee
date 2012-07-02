@@ -70,8 +70,7 @@ class Kamikaze extends Box
     return @health = 0 if @y > canvas.height or @moveState and @offscreen()
     if @boxHit(ship)
       game.owners.player.kills += 1
-      game.owners.player.health -= 35
-      game.timers.dispHealth = 255
+      ship.damage(35)
       return @health = 0
     for laser in game.owners.player.lasers
       if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2

@@ -33,7 +33,14 @@ class Ship
     @x = (@x + mouse.x) / 2
     @y = (@y + mouse.y) / 2
 
+  drawShield: ->
+    ctx.strokeStyle = "rgb(0,".concat( Math.floor(game.timers.colorCycle / 2), ",", game.timers.colorCycle, ")")
+    ctx.beginPath()
+    ctx.arc(@x, @y, Math.min(@width, @height) , 0, 2 * Math.PI, false)
+    ctx.stroke()
+
   draw: ->
+    @drawShield() if game.owners.player.shield > 0
     ctx.strokeStyle = "#FFFFFF"
     ctx.beginPath()
     ctx.moveTo( @x, @y - @height / 2 )
@@ -44,24 +51,32 @@ class Ship
     ctx.closePath()
     ctx.stroke()
 
+  damage: (amount) ->
+    game.timers.dispHealth = 255
+    game.owners.player.shield -= amount * 20
+    if game.owners.player.shield < 0
+      game.owners.player.health += Math.floor(game.owners.player.shield / 20)
+      game.owners.player.shield = 0
+  
   takeDamage: ->
     for laser in game.owners.enemies.lasers
       if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
         laser.killedSomething = true
-        game.owners.player.health -= 8
-        game.timers.dispHealth = 255
+        @damage(8)
+        
     for bomb in game.owners.enemies.bombs
       if @boxHit(bomb)
         bomb.cooldown = 0
-        game.owners.player.health -= 2
-        game.timers.dispHealth = 255
+        @damage(2)
+  
     for shrapnal in game.owners.enemies.shrapnals
       if @boxHit(shrapnal)
         shrapnal.cooldown = 0
-        game.owners.player.health -= 2
-        game.timers.dispHealth = 255
+        @damage(2)
+  
 
   update: ->
     @move()
     @draw()
     @takeDamage()
+    game.owners.player.shield = Math.max( game.owners.player.shield - 1, 0 )

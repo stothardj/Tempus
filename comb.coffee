@@ -98,42 +98,89 @@ class Bomb extends Box
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
 
-class HealthUp extends Box
+# Note this is an abstract class, not to be instantiated
+class PowerUp extends Box
   constructor: (@x, @y) ->
     @used = 0
 
-  rand: 0.2
-  width: 4
-  height: 4
-  speed: 5
- 
   move: ->
     @y += @speed
 
   draw: ->
-    ctx.fillStyle = "#00FF00"
+    ctx.fillStyle = @color
     @drawAsBox()
 
   detectUse: ->
     if @boxHit(ship)
-      console.log "Used"
       @used = 1
-      game.owners.player.health = Math.min( game.owners.player.health + 15, 100 )
-      game.timers.dispHealth = 255
+      @use()
 
     @used = 1 if @offscreen()
-    if @offscreen()
-      console.log "Offscreen"
-      console.log @x
-      console.log @y
-      console.log canvas.width
-      console.log canvas.height
 
   update: ->
     @move()
     @draw()
-    @detectUse()# This file is part of Tempus.
+    @detectUse()
+class HealthUp extends PowerUp
+  constructor: (@x, @y) ->
+    super(@x, @y)
+
+  rand: 0.05
+  width: 4
+  height: 4
+  speed: 5
+  color: "#00FF00"
+
+  use: ->
+    game.owners.player.health = Math.min( game.owners.player.health + 15, 100 )
+    game.timers.dispHealth = 255
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
+
+class ShieldUp extends PowerUp
+  constructor: (@x, @y) ->
+    super(@x, @y)
+
+  rand: 0.1
+  width: 4
+  height: 4
+  speed: 5
+  color: "#0088FF"
+
+  use: ->
+    game.owners.player.shield = Math.min( game.owners.player.shield + 200, 4000 )
+    game.timers.dispHealth = 255# This file is part of Tempus.
 #
 # Tempus is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -168,7 +215,14 @@ class Ship
     @x = (@x + mouse.x) / 2
     @y = (@y + mouse.y) / 2
 
+  drawShield: ->
+    ctx.strokeStyle = "rgb(0,".concat( Math.floor(game.timers.colorCycle / 2), ",", game.timers.colorCycle, ")")
+    ctx.beginPath()
+    ctx.arc(@x, @y, Math.min(@width, @height) , 0, 2 * Math.PI, false)
+    ctx.stroke()
+
   draw: ->
+    @drawShield() if game.owners.player.shield > 0
     ctx.strokeStyle = "#FFFFFF"
     ctx.beginPath()
     ctx.moveTo( @x, @y - @height / 2 )
@@ -179,27 +233,36 @@ class Ship
     ctx.closePath()
     ctx.stroke()
 
+  damage: (amount) ->
+    game.timers.dispHealth = 255
+    game.owners.player.shield -= amount * 20
+    if game.owners.player.shield < 0
+      game.owners.player.health += Math.floor(game.owners.player.shield / 20)
+      game.owners.player.shield = 0
+  
   takeDamage: ->
     for laser in game.owners.enemies.lasers
       if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
         laser.killedSomething = true
-        game.owners.player.health -= 8
-        game.timers.dispHealth = 255
+        @damage(8)
+        
     for bomb in game.owners.enemies.bombs
       if @boxHit(bomb)
         bomb.cooldown = 0
-        game.owners.player.health -= 2
-        game.timers.dispHealth = 255
+        @damage(2)
+  
     for shrapnal in game.owners.enemies.shrapnals
       if @boxHit(shrapnal)
         shrapnal.cooldown = 0
-        game.owners.player.health -= 2
-        game.timers.dispHealth = 255
+        @damage(2)
+  
 
   update: ->
     @move()
     @draw()
-    @takeDamage()# This file is part of Tempus.
+    @takeDamage()
+    game.owners.player.shield = Math.max( game.owners.player.shield - 1, 0 )
+# This file is part of Tempus.
 #
 # Tempus is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -259,9 +322,9 @@ class Bomber extends Box
     else
       @goneOnScreen = 1
     if @boxHit(ship)
-      game.owners.player.health -= 24
+      ship.damage(24)
       game.owners.player.kills += 1
-      game.timers.dispHealth = 255
+
       return @health = 0
     for laser in game.owners.player.lasers
       if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
@@ -355,8 +418,7 @@ class Kamikaze extends Box
     return @health = 0 if @y > canvas.height or @moveState and @offscreen()
     if @boxHit(ship)
       game.owners.player.kills += 1
-      game.owners.player.health -= 35
-      game.timers.dispHealth = 255
+      ship.damage(35)
       return @health = 0
     for laser in game.owners.player.lasers
       if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
@@ -467,9 +529,8 @@ class Fighter
   takeDamage: ->
     return @health = 0 if @y > canvas.height
     if @boxHit(ship)
-      game.owners.player.health -= 24
+      ship.damage(24)
       game.owners.player.kills += 1
-      game.timers.dispHealth = 255
       return @health = 0
     for laser in game.owners.player.lasers
       if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
@@ -587,9 +648,8 @@ class Spinner
   takeDamage: ->
     return @health = 0 if @y > canvas.height
     if @boxHit(ship)
-      game.owners.player.health -= 24
+      ship.damage(24)
       game.owners.player.kills += 1
-      game.timers.dispHealth = 255
       return @health = 0
     for laser in game.owners.player.lasers
       if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
@@ -709,6 +769,7 @@ firstInit = ->
   firstTime = false
 
 initGame = ->
+  #TODO: Decided on concrete separation of what goes in game.owners.player and what is bound to ship
   firstInit() if firstTime
   ship = new Ship(mouse.x, mouse.y)
 
@@ -721,6 +782,7 @@ initGame = ->
         units: ship
         color: GOOD_COLOR
         health: 100
+        shield: 0
         kills: 0
         lasersFired: 0
         bombsFired: 0
@@ -739,12 +801,18 @@ initGame = ->
 
     powerups:
       healthups: []
+      shieldups: []
 
     crashed: false
 
 dispHealth = ->
+  ctx.strokeStyle = "rgb(0,".concat( game.timers.dispHealth , ",0)" )
   ctx.beginPath()
   ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 20, 0, Math.max(game.owners.player.health, 0) * Math.PI / 50, false)
+  ctx.stroke()
+  ctx.strokeStyle = "rgb(0,".concat( Math.floor(game.timers.dispHealth / 2) , "," , game.timers.dispHealth , ")" )
+  ctx.beginPath()
+  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 40, 0, Math.max(game.owners.player.shield, 0) * Math.PI / 2000, false)
   ctx.stroke()
 
 pause = ->
@@ -850,7 +918,9 @@ gameloop = ->
   clearScreen()
 
   enemy.update() for enemy in game.owners.enemies.units
+  #TODO: make powerup looped over instead of copying code
   game.powerups.healthups = game.powerups.healthups.concat( new HealthUp( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < HealthUp::rand )
+  game.powerups.shieldups = game.powerups.shieldups.concat( new ShieldUp( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < ShieldUp::rand )
   game.owners.enemies.units = (enemy for enemy in game.owners.enemies.units when enemy.health > 0)
 
   genship(Fighter)
@@ -902,7 +972,7 @@ gameloop = ->
   ctx.textBaseline = "bottom"
 
   if ship.heat > 80
-    ctx.fillStyle = "rgb(".concat( game.timers.colorCycle, ",0,0)");
+    ctx.fillStyle = "rgb(".concat( game.timers.colorCycle, ",0,0)")
     ctx.font = "bold 20px Lucidia Console"
     ctx.fillText( "[ Heat Critical ]", canvas.width / 2, canvas.height - 30)
   else if ship.heat > 40
@@ -911,7 +981,6 @@ gameloop = ->
     ctx.fillText( "[ Heat Warning ]", canvas.width / 2, canvas.height - 30)
 
   if game.timers.dispHealth > 0
-    ctx.strokeStyle = "rgb(".concat( game.timers.dispHealth , "," , game.timers.dispHealth , "," , game.timers.dispHealth , ")" )
     dispHealth()
     ctx.strokeStyle = "#FFFFFF"
     game.timers.dispHealth -= 10

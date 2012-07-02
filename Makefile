@@ -9,7 +9,7 @@ comb-compiled.js: comb.js
 comb.js: comb.coffee
 	coffee -c comb.coffee
 
-comb.coffee: decaf.coffee
+comb.coffee: *.coffee
 	./ppp.py decaf.coffee > comb.coffee
 
 quick: comb.js

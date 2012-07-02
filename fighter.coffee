@@ -49,9 +49,8 @@ class Fighter
   takeDamage: ->
     return @health = 0 if @y > canvas.height
     if @boxHit(ship)
-      game.owners.player.health -= 24
+      ship.damage(24)
       game.owners.player.kills += 1
-      game.timers.dispHealth = 255
       return @health = 0
     for laser in game.owners.player.lasers
       if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2

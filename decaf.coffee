@@ -17,6 +17,7 @@
 
 !import "bomb.coffee"
 !import "healthup.coffee"
+!import "shieldup.coffee"
 !import "ship.coffee"
 !import "bomber.coffee"
 !import "kamikaze.coffee"
@@ -122,6 +123,7 @@ firstInit = ->
   firstTime = false
 
 initGame = ->
+  #TODO: Decided on concrete separation of what goes in game.owners.player and what is bound to ship
   firstInit() if firstTime
   ship = new Ship(mouse.x, mouse.y)
 
@@ -134,6 +136,7 @@ initGame = ->
         units: ship
         color: GOOD_COLOR
         health: 100
+        shield: 0
         kills: 0
         lasersFired: 0
         bombsFired: 0
@@ -152,12 +155,18 @@ initGame = ->
 
     powerups:
       healthups: []
+      shieldups: []
 
     crashed: false
 
 dispHealth = ->
+  ctx.strokeStyle = "rgb(0,".concat( game.timers.dispHealth , ",0)" )
   ctx.beginPath()
   ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 20, 0, Math.max(game.owners.player.health, 0) * Math.PI / 50, false)
+  ctx.stroke()
+  ctx.strokeStyle = "rgb(0,".concat( Math.floor(game.timers.dispHealth / 2) , "," , game.timers.dispHealth , ")" )
+  ctx.beginPath()
+  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 40, 0, Math.max(game.owners.player.shield, 0) * Math.PI / 2000, false)
   ctx.stroke()
 
 pause = ->
@@ -263,7 +272,9 @@ gameloop = ->
   clearScreen()
 
   enemy.update() for enemy in game.owners.enemies.units
+  #TODO: make powerup looped over instead of copying code
   game.powerups.healthups = game.powerups.healthups.concat( new HealthUp( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < HealthUp::rand )
+  game.powerups.shieldups = game.powerups.shieldups.concat( new ShieldUp( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < ShieldUp::rand )
   game.owners.enemies.units = (enemy for enemy in game.owners.enemies.units when enemy.health > 0)
 
   genship(Fighter)
@@ -315,7 +326,7 @@ gameloop = ->
   ctx.textBaseline = "bottom"
 
   if ship.heat > 80
-    ctx.fillStyle = "rgb(".concat( game.timers.colorCycle, ",0,0)");
+    ctx.fillStyle = "rgb(".concat( game.timers.colorCycle, ",0,0)")
     ctx.font = "bold 20px Lucidia Console"
     ctx.fillText( "[ Heat Critical ]", canvas.width / 2, canvas.height - 30)
   else if ship.heat > 40
@@ -324,7 +335,6 @@ gameloop = ->
     ctx.fillText( "[ Heat Warning ]", canvas.width / 2, canvas.height - 30)
 
   if game.timers.dispHealth > 0
-    ctx.strokeStyle = "rgb(".concat( game.timers.dispHealth , "," , game.timers.dispHealth , "," , game.timers.dispHealth , ")" )
     dispHealth()
     ctx.strokeStyle = "#FFFFFF"
     game.timers.dispHealth -= 10

@@ -14,18 +14,28 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-!import "powerup.coffee"
+!import "box.coffee"
 
-class HealthUp extends PowerUp
+# Note this is an abstract class, not to be instantiated
+class PowerUp extends Box
   constructor: (@x, @y) ->
-    super(@x, @y)
+    @used = 0
 
-  rand: 0.05
-  width: 4
-  height: 4
-  speed: 5
-  color: "#00FF00"
+  move: ->
+    @y += @speed
 
-  use: ->
-    game.owners.player.health = Math.min( game.owners.player.health + 15, 100 )
-    game.timers.dispHealth = 255
+  draw: ->
+    ctx.fillStyle = @color
+    @drawAsBox()
+
+  detectUse: ->
+    if @boxHit(ship)
+      @used = 1
+      @use()
+
+    @used = 1 if @offscreen()
+
+  update: ->
+    @move()
+    @draw()
+    @detectUse()
