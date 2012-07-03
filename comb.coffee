@@ -226,6 +226,7 @@ class Ship
     @laserCooldown = 0
     @bombCooldown = 0
     @heat = 0
+    @laserPower = 1
 
   width: 40
   height: 40
@@ -278,7 +279,6 @@ class Ship
         shrapnal.cooldown = 0
         @damage(2)
   
-
   update: ->
     @move()
     @draw()
@@ -461,6 +461,36 @@ class Kamikaze extends Box
     @move()
     @draw()
     @takeDamage()
+# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
+
+class LaserUp extends PowerUp
+  constructor: (@x, @y) ->
+    super(@x, @y)
+
+  rand: 0.02
+  width: 4
+  height: 4
+  speed: 5
+  color: "#FF9900"
+
+  use: ->
+    ship.laserPower += 1
+
 # This file is part of Tempus.
 #
 # Tempus is free software: you can redistribute it and/or modify
@@ -820,6 +850,7 @@ initGame = ->
 
     powerups:
       healthups: []
+      laserups: []
       shieldups: []
 
     crashed: false
@@ -940,6 +971,8 @@ gameloop = ->
   #TODO: make powerup looped over instead of copying code
   game.powerups.healthups = game.powerups.healthups.concat( new HealthUp( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < HealthUp::rand )
   game.powerups.shieldups = game.powerups.shieldups.concat( new ShieldUp( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < ShieldUp::rand )
+  game.powerups.laserups = game.powerups.laserups.concat( new LaserUp( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < LaserUp::rand )
+
   game.owners.enemies.units = (enemy for enemy in game.owners.enemies.units when enemy.health > 0)
 
   genship(Fighter)
@@ -962,8 +995,9 @@ gameloop = ->
     game.powerups[powerupTypeName] = (powerup for powerup in powerupType when not powerup.used)
 
   if mouse.leftDown and ship.laserCooldown <= 0
-    game.owners.player.lasersFired += 1
-    game.owners.player.lasers.push( new Laser( ship.x, ship.y, -Laser::speed, game.owners.player) )
+    game.owners.player.lasersFired += ship.laserPower
+    for i in [1..ship.laserPower]
+      game.owners.player.lasers.push( new Laser( ship.x + i * 4 - ship.laserPower * 2, ship.y, -Laser::speed, game.owners.player) )
     if ship.heat > 80
       ship.laserCooldown = 7
     else if ship.heat > 40

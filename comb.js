@@ -1,5 +1,5 @@
 (function() {
-  var BAD_COLOR, Bomb, Bomber, Box, Fighter, GOOD_COLOR, HealthUp, Kamikaze, Laser, PowerUp, SHIP_MAX_HEALTH, SHIP_MAX_SHIELD, ShieldUp, Ship, Shrapnal, Spinner, audio, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, firstInit, firstTime, game, gameState, gameloop, genship, initGame, mouse, musicPlaying, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause,
+  var BAD_COLOR, Bomb, Bomber, Box, Fighter, GOOD_COLOR, HealthUp, Kamikaze, Laser, LaserUp, PowerUp, SHIP_MAX_HEALTH, SHIP_MAX_SHIELD, ShieldUp, Ship, Shrapnal, Spinner, audio, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, firstInit, firstTime, game, gameState, gameloop, genship, initGame, mouse, musicPlaying, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -187,6 +187,7 @@
       this.laserCooldown = 0;
       this.bombCooldown = 0;
       this.heat = 0;
+      this.laserPower = 1;
     }
 
     Ship.prototype.width = 40;
@@ -488,6 +489,34 @@
     return Kamikaze;
 
   })(Box);
+
+  LaserUp = (function(_super) {
+
+    __extends(LaserUp, _super);
+
+    function LaserUp(x, y) {
+      this.x = x;
+      this.y = y;
+      LaserUp.__super__.constructor.call(this, this.x, this.y);
+    }
+
+    LaserUp.prototype.rand = 0.02;
+
+    LaserUp.prototype.width = 4;
+
+    LaserUp.prototype.height = 4;
+
+    LaserUp.prototype.speed = 5;
+
+    LaserUp.prototype.color = "#FF9900";
+
+    LaserUp.prototype.use = function() {
+      return ship.laserPower += 1;
+    };
+
+    return LaserUp;
+
+  })(PowerUp);
 
   Shrapnal = (function() {
 
@@ -902,6 +931,7 @@
       },
       powerups: {
         healthups: [],
+        laserups: [],
         shieldups: []
       },
       crashed: false
@@ -992,7 +1022,7 @@
   });
 
   gameloop = function() {
-    var bomb, enemy, laser, owner, ownerName, powerup, powerupType, powerupTypeName, shrapnal, _i, _j, _k, _l, _len, _len2, _len3, _len4, _len5, _m, _ref, _ref2, _ref3, _ref4, _ref5, _ref6;
+    var bomb, enemy, i, laser, owner, ownerName, powerup, powerupType, powerupTypeName, shrapnal, _i, _j, _k, _l, _len, _len2, _len3, _len4, _len5, _m, _ref, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7;
     if (game.crashed) {
       currentState = gameState.crashed;
       clearInterval(timeHandle);
@@ -1037,6 +1067,18 @@
         enemy = _ref2[_j];
         if (enemy.health <= 0 && Math.random() < ShieldUp.prototype.rand) {
           _results.push(new ShieldUp(enemy.x, enemy.y));
+        }
+      }
+      return _results;
+    })());
+    game.powerups.laserups = game.powerups.laserups.concat((function() {
+      var _j, _len2, _ref2, _results;
+      _ref2 = game.owners.enemies.units;
+      _results = [];
+      for (_j = 0, _len2 = _ref2.length; _j < _len2; _j++) {
+        enemy = _ref2[_j];
+        if (enemy.health <= 0 && Math.random() < LaserUp.prototype.rand) {
+          _results.push(new LaserUp(enemy.x, enemy.y));
         }
       }
       return _results;
@@ -1125,8 +1167,10 @@
       })();
     }
     if (mouse.leftDown && ship.laserCooldown <= 0) {
-      game.owners.player.lasersFired += 1;
-      game.owners.player.lasers.push(new Laser(ship.x, ship.y, -Laser.prototype.speed, game.owners.player));
+      game.owners.player.lasersFired += ship.laserPower;
+      for (i = 1, _ref7 = ship.laserPower; 1 <= _ref7 ? i <= _ref7 : i >= _ref7; 1 <= _ref7 ? i++ : i--) {
+        game.owners.player.lasers.push(new Laser(ship.x + i * 4 - ship.laserPower * 2, ship.y, -Laser.prototype.speed, game.owners.player));
+      }
       if (ship.heat > 80) {
         ship.laserCooldown = 7;
       } else if (ship.heat > 40) {

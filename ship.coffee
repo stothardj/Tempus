@@ -25,6 +25,7 @@ class Ship
     @laserCooldown = 0
     @bombCooldown = 0
     @heat = 0
+    @laserPower = 1
 
   width: 40
   height: 40
@@ -77,7 +78,6 @@ class Ship
         shrapnal.cooldown = 0
         @damage(2)
   
-
   update: ->
     @move()
     @draw()

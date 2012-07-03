@@ -22,6 +22,7 @@
 !import "ship.coffee"
 !import "bomber.coffee"
 !import "kamikaze.coffee"
+!import "laserup.coffee"
 !import "shrapnal.coffee"
 !import "fighter.coffee"
 !import "laser.coffee"
@@ -153,6 +154,7 @@ initGame = ->
 
     powerups:
       healthups: []
+      laserups: []
       shieldups: []
 
     crashed: false
@@ -273,6 +275,8 @@ gameloop = ->
   #TODO: make powerup looped over instead of copying code
   game.powerups.healthups = game.powerups.healthups.concat( new HealthUp( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < HealthUp::rand )
   game.powerups.shieldups = game.powerups.shieldups.concat( new ShieldUp( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < ShieldUp::rand )
+  game.powerups.laserups = game.powerups.laserups.concat( new LaserUp( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < LaserUp::rand )
+
   game.owners.enemies.units = (enemy for enemy in game.owners.enemies.units when enemy.health > 0)
 
   genship(Fighter)
@@ -295,8 +299,9 @@ gameloop = ->
     game.powerups[powerupTypeName] = (powerup for powerup in powerupType when not powerup.used)
 
   if mouse.leftDown and ship.laserCooldown <= 0
-    game.owners.player.lasersFired += 1
-    game.owners.player.lasers.push( new Laser( ship.x, ship.y, -Laser::speed, game.owners.player) )
+    game.owners.player.lasersFired += ship.laserPower
+    for i in [1..ship.laserPower]
+      game.owners.player.lasers.push( new Laser( ship.x + i * 4 - ship.laserPower * 2, ship.y, -Laser::speed, game.owners.player) )
     if ship.heat > 80
       ship.laserCooldown = 7
     else if ship.heat > 40
