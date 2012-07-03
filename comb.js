@@ -1,5 +1,5 @@
 (function() {
-  var BAD_COLOR, Bomb, Bomber, Box, Fighter, GOOD_COLOR, HealthUp, Kamikaze, Laser, PowerUp, ShieldUp, Ship, Shrapnal, Spinner, audio, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, firstInit, firstTime, game, gameState, gameloop, genship, initGame, mouse, musicPlaying, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause,
+  var BAD_COLOR, Bomb, Bomber, Box, Fighter, GOOD_COLOR, HealthUp, Kamikaze, Laser, PowerUp, SHIP_MAX_HEALTH, SHIP_MAX_SHIELD, ShieldUp, Ship, Shrapnal, Spinner, audio, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, firstInit, firstTime, game, gameState, gameloop, genship, initGame, mouse, musicPlaying, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -76,6 +76,14 @@
 
   })(Box);
 
+  GOOD_COLOR = "#0044FF";
+
+  BAD_COLOR = "#FF0000";
+
+  SHIP_MAX_HEALTH = 100;
+
+  SHIP_MAX_SHIELD = 4000;
+
   PowerUp = (function(_super) {
 
     __extends(PowerUp, _super);
@@ -134,7 +142,7 @@
     HealthUp.prototype.color = "#00FF00";
 
     HealthUp.prototype.use = function() {
-      game.owners.player.health = Math.min(game.owners.player.health + 15, 100);
+      game.owners.player.health = Math.min(game.owners.player.health + 15, SHIP_MAX_HEALTH);
       return game.timers.dispHealth = 255;
     };
 
@@ -163,7 +171,7 @@
     ShieldUp.prototype.color = "#0088FF";
 
     ShieldUp.prototype.use = function() {
-      game.owners.player.shield = Math.min(game.owners.player.shield + 200, 4000);
+      game.owners.player.shield = Math.min(game.owners.player.shield + 200, SHIP_MAX_SHIELD);
       return game.timers.dispHealth = 255;
     };
 
@@ -751,10 +759,6 @@
 
   })();
 
-  GOOD_COLOR = "#0044FF";
-
-  BAD_COLOR = "#FF0000";
-
   genship = function(t) {
     if (game.owners.player.kills >= t.prototype.threshold && Math.random() < t.prototype.rand) {
       return game.owners.enemies.units.push(new t(randInt(0, canvas.width), -10));
@@ -877,7 +881,7 @@
           shrapnals: [],
           units: ship,
           color: GOOD_COLOR,
-          health: 100,
+          health: SHIP_MAX_HEALTH,
           shield: 0,
           kills: 0,
           lasersFired: 0,
@@ -907,11 +911,11 @@
   dispHealth = function() {
     ctx.strokeStyle = "rgb(0,".concat(game.timers.dispHealth, ",0)");
     ctx.beginPath();
-    ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 20, 0, Math.max(game.owners.player.health, 0) * Math.PI / 50, false);
+    ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 20, 0, Math.max(game.owners.player.health, 0) * Math.PI * 2 / SHIP_MAX_HEALTH, false);
     ctx.stroke();
     ctx.strokeStyle = "rgb(0,".concat(Math.floor(game.timers.dispHealth / 2), ",", game.timers.dispHealth, ")");
     ctx.beginPath();
-    ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 40, 0, Math.max(game.owners.player.shield, 0) * Math.PI / 2000, false);
+    ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 40, 0, Math.max(game.owners.player.shield, 0) * Math.PI * 2 / SHIP_MAX_SHIELD, false);
     return ctx.stroke();
   };
 

@@ -16,6 +16,7 @@
 # Copyright 2011 Jake Stothard
 
 !import "bomb.coffee"
+!import "config.coffee"
 !import "healthup.coffee"
 !import "shieldup.coffee"
 !import "ship.coffee"
@@ -25,9 +26,6 @@
 !import "fighter.coffee"
 !import "laser.coffee"
 !import "spinner.coffee"
-
-GOOD_COLOR = "#0044FF"
-BAD_COLOR = "#FF0000"
 
 genship = (t) ->
   if game.owners.player.kills >= t::threshold and Math.random() < t::rand
@@ -135,7 +133,7 @@ initGame = ->
         shrapnals: []
         units: ship
         color: GOOD_COLOR
-        health: 100
+        health: SHIP_MAX_HEALTH
         shield: 0
         kills: 0
         lasersFired: 0
@@ -162,11 +160,11 @@ initGame = ->
 dispHealth = ->
   ctx.strokeStyle = "rgb(0,".concat( game.timers.dispHealth , ",0)" )
   ctx.beginPath()
-  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 20, 0, Math.max(game.owners.player.health, 0) * Math.PI / 50, false)
+  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 20, 0, Math.max(game.owners.player.health, 0) * Math.PI * 2 / SHIP_MAX_HEALTH, false)
   ctx.stroke()
   ctx.strokeStyle = "rgb(0,".concat( Math.floor(game.timers.dispHealth / 2) , "," , game.timers.dispHealth , ")" )
   ctx.beginPath()
-  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 40, 0, Math.max(game.owners.player.shield, 0) * Math.PI / 2000, false)
+  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 40, 0, Math.max(game.owners.player.shield, 0) * Math.PI * 2 / SHIP_MAX_SHIELD, false)
   ctx.stroke()
 
 pause = ->

@@ -14,19 +14,8 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-!import "config.coffee"
-!import "powerup.coffee"
 
-class ShieldUp extends PowerUp
-  constructor: (@x, @y) ->
-    super(@x, @y)
-
-  rand: 0.1
-  width: 4
-  height: 4
-  speed: 5
-  color: "#0088FF"
-
-  use: ->
-    game.owners.player.shield = Math.min( game.owners.player.shield + 200, SHIP_MAX_SHIELD )
-    game.timers.dispHealth = 255
+GOOD_COLOR = "#0044FF"
+BAD_COLOR = "#FF0000"
+SHIP_MAX_HEALTH = 100
+SHIP_MAX_SHIELD = 4000

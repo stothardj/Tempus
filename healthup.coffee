@@ -14,6 +14,7 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
+!import "config.coffee"
 !import "powerup.coffee"
 
 class HealthUp extends PowerUp
@@ -27,5 +28,5 @@ class HealthUp extends PowerUp
   color: "#00FF00"
 
   use: ->
-    game.owners.player.health = Math.min( game.owners.player.health + 15, 100 )
+    game.owners.player.health = Math.min( game.owners.player.health + 15, SHIP_MAX_HEALTH )
     game.timers.dispHealth = 255

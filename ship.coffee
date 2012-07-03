@@ -17,6 +17,9 @@
 
 # Made a class even though there should be only one. Consistent so
 # even macros can be used across this and enemies
+
+!import "config.coffee"
+
 class Ship
   constructor: (@x, @y) ->
     @laserCooldown = 0

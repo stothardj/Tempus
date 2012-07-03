@@ -98,6 +98,26 @@ class Bomb extends Box
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
+
+GOOD_COLOR = "#0044FF"
+BAD_COLOR = "#FF0000"
+SHIP_MAX_HEALTH = 100
+SHIP_MAX_SHIELD = 4000# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
 # This file is part of Tempus.
 #
 # Tempus is free software: you can redistribute it and/or modify
@@ -149,7 +169,7 @@ class HealthUp extends PowerUp
   color: "#00FF00"
 
   use: ->
-    game.owners.player.health = Math.min( game.owners.player.health + 15, 100 )
+    game.owners.player.health = Math.min( game.owners.player.health + 15, SHIP_MAX_HEALTH )
     game.timers.dispHealth = 255
 # This file is part of Tempus.
 #
@@ -179,7 +199,7 @@ class ShieldUp extends PowerUp
   color: "#0088FF"
 
   use: ->
-    game.owners.player.shield = Math.min( game.owners.player.shield + 200, 4000 )
+    game.owners.player.shield = Math.min( game.owners.player.shield + 200, SHIP_MAX_SHIELD )
     game.timers.dispHealth = 255# This file is part of Tempus.
 #
 # Tempus is free software: you can redistribute it and/or modify
@@ -199,6 +219,8 @@ class ShieldUp extends PowerUp
 
 # Made a class even though there should be only one. Consistent so
 # even macros can be used across this and enemies
+
+
 class Ship
   constructor: (@x, @y) ->
     @laserCooldown = 0
@@ -672,9 +694,6 @@ class Spinner
     @move()
     @draw()
     @takeDamage()
-GOOD_COLOR = "#0044FF"
-BAD_COLOR = "#FF0000"
-
 genship = (t) ->
   if game.owners.player.kills >= t::threshold and Math.random() < t::rand
     game.owners.enemies.units.push( new t( randInt(0, canvas.width), -10 ) )
@@ -781,7 +800,7 @@ initGame = ->
         shrapnals: []
         units: ship
         color: GOOD_COLOR
-        health: 100
+        health: SHIP_MAX_HEALTH
         shield: 0
         kills: 0
         lasersFired: 0
@@ -808,11 +827,11 @@ initGame = ->
 dispHealth = ->
   ctx.strokeStyle = "rgb(0,".concat( game.timers.dispHealth , ",0)" )
   ctx.beginPath()
-  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 20, 0, Math.max(game.owners.player.health, 0) * Math.PI / 50, false)
+  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 20, 0, Math.max(game.owners.player.health, 0) * Math.PI * 2 / SHIP_MAX_HEALTH, false)
   ctx.stroke()
   ctx.strokeStyle = "rgb(0,".concat( Math.floor(game.timers.dispHealth / 2) , "," , game.timers.dispHealth , ")" )
   ctx.beginPath()
-  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 40, 0, Math.max(game.owners.player.shield, 0) * Math.PI / 2000, false)
+  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 40, 0, Math.max(game.owners.player.shield, 0) * Math.PI * 2 / SHIP_MAX_SHIELD, false)
   ctx.stroke()
 
 pause = ->
