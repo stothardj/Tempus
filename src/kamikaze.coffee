@@ -19,7 +19,6 @@
 class Kamikaze extends Box
   constructor: (@x, @y) ->
     @angle = 0
-    @shootCooldown = 0
     @moveState = 0
     @health = 1
 

@@ -16,13 +16,14 @@
 # Copyright 2011 Jake Stothard
 class Fighter
   constructor: (@x, @y) ->
-    @shootCooldown = 0
+    @shootCooldown = Math.floor(Math.random() * @cooldownTime)
     @health = 1
 
   rand: 0.03
   threshold: 0
   width: 20
   height: 20
+  cooldownTime: 35
 
   boxHit: (other) ->
     Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
@@ -43,7 +44,7 @@ class Fighter
     @x += if Math.abs(mv) < 5 then mv else 5 * mv/Math.abs(mv)
 
   shoot: ->
-    @shootCooldown = 35
+    @shootCooldown = @cooldownTime
     game.owners.enemies.lasers.push( new Laser( @x, @y, Laser::speed, game.owners.enemies ) )
 
   takeDamage: ->

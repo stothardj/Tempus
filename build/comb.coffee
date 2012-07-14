@@ -102,7 +102,8 @@ class Bomb extends Box
 GOOD_COLOR = "#0044FF"
 BAD_COLOR = "#FF0000"
 SHIP_MAX_HEALTH = 100
-SHIP_MAX_SHIELD = 4000# This file is part of Tempus.
+SHIP_MAX_SHIELD = 4000
+PLAYER_LIVES = 3# This file is part of Tempus.
 #
 # Tempus is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -305,7 +306,7 @@ class Ship
 class Bomber extends Box
   constructor: (@x, @y) ->
     @angle = 0
-    @bombCooldown = 0
+    @bombCooldown = Math.floor(Math.random() * @cooldownTime)
     @turnVel = (Math.random() - 0.5) / 30;
     @health = 1
 
@@ -313,6 +314,7 @@ class Bomber extends Box
   threshold: 30
   width: 10
   height: 28
+  cooldownTime:40
 
   move: ->
     @x += 2 * Math.cos(@angle + Math.PI / 2)
@@ -334,7 +336,7 @@ class Bomber extends Box
     ctx.translate( -@x, -@y )
 
   bomb: ->
-    @bombCooldown = 40
+    @bombCooldown = @cooldownTime
     game.owners.enemies.bombs.push( new Bomb( @x, @y, 4, 35, game.owners.enemies ) )
 
   takeDamage: ->
@@ -389,7 +391,6 @@ class Bomber extends Box
 class Kamikaze extends Box
   constructor: (@x, @y) ->
     @angle = 0
-    @shootCooldown = 0
     @moveState = 0
     @health = 1
 
@@ -548,13 +549,14 @@ class Shrapnal
 # Copyright 2011 Jake Stothard
 class Fighter
   constructor: (@x, @y) ->
-    @shootCooldown = 0
+    @shootCooldown = Math.floor(Math.random() * @cooldownTime)
     @health = 1
 
   rand: 0.03
   threshold: 0
   width: 20
   height: 20
+  cooldownTime: 35
 
   boxHit: (other) ->
     Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
@@ -575,7 +577,7 @@ class Fighter
     @x += if Math.abs(mv) < 5 then mv else 5 * mv/Math.abs(mv)
 
   shoot: ->
-    @shootCooldown = 35
+    @shootCooldown = @cooldownTime
     game.owners.enemies.lasers.push( new Laser( @x, @y, Laser::speed, game.owners.enemies ) )
 
   takeDamage: ->
@@ -660,7 +662,7 @@ class Laser
 class Spinner
   constructor: (@x, @y) ->
     @angle = 0
-    @shootCooldown = 0
+    @shootCooldown = Math.floor(Math.random() * @cooldownTime)
     @burst = 0
     @health = 1
 
@@ -668,6 +670,7 @@ class Spinner
   threshold: 45
   width: 20
   height: 20
+  cooldownTime: 55
 
   boxHit: (other) ->
     Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
@@ -693,7 +696,7 @@ class Spinner
     if @burst < 5
       @burst += 1
     else
-      @shootCooldown = 55
+      @shootCooldown = @cooldownTime
       @burst = 0
     game.owners.enemies.lasers.push( new Laser( @x, @y, Laser::speed, game.owners.enemies ) )
 
@@ -723,7 +726,58 @@ class Spinner
     @shootCooldown -= 1
     @move()
     @draw()
-    @takeDamage()
+    @takeDamage()# This file is part of Tempus.
+#
+# Tempus is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tempus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2011 Jake Stothard
+
+
+class Game
+  constructor: ->
+    @owners =
+      player:
+        lasers: []
+        bombs: []
+        shrapnals: []
+        units: ship
+        color: GOOD_COLOR
+        health: SHIP_MAX_HEALTH
+        shield: 0
+        kills: 0
+        lasersFired: 0
+        bombsFired: 0
+
+      enemies:
+        lasers: []
+        bombs: []
+        shrapnals: []
+        units: []
+        color: BAD_COLOR
+
+    @timers =
+      dispHealth: 0
+      colorCycle: 0
+      colorCycleDir: 10
+
+    @powerups =
+      healthups: []
+      laserups: []
+      shieldups: []
+
+    @crashed = false
+
 genship = (t) ->
   if game.owners.player.kills >= t::threshold and Math.random() < t::rand
     game.owners.enemies.units.push( new t( randInt(0, canvas.width), -10 ) )
@@ -818,42 +872,9 @@ firstInit = ->
   firstTime = false
 
 initGame = ->
-  #TODO: Decided on concrete separation of what goes in game.owners.player and what is bound to ship
   firstInit() if firstTime
   ship = new Ship(mouse.x, mouse.y)
-
-  game =
-    owners:
-      player:
-        lasers: []
-        bombs: []
-        shrapnals: []
-        units: ship
-        color: GOOD_COLOR
-        health: SHIP_MAX_HEALTH
-        shield: 0
-        kills: 0
-        lasersFired: 0
-        bombsFired: 0
-
-      enemies:
-        lasers: []
-        bombs: []
-        shrapnals: []
-        units: []
-        color: BAD_COLOR
-
-    timers:
-      dispHealth: 0
-      colorCycle: 0
-      colorCycleDir: 10
-
-    powerups:
-      healthups: []
-      laserups: []
-      shieldups: []
-
-    crashed: false
+  game = new Game()
 
 dispHealth = ->
   ctx.strokeStyle = "rgb(0,".concat( game.timers.dispHealth , ",0)" )

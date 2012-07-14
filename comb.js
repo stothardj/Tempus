@@ -1,5 +1,5 @@
 (function() {
-  var BAD_COLOR, Bomb, Bomber, Box, Fighter, GOOD_COLOR, HealthUp, Kamikaze, Laser, LaserUp, PowerUp, SHIP_MAX_HEALTH, SHIP_MAX_SHIELD, ShieldUp, Ship, Shrapnal, Spinner, audio, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, firstInit, firstTime, game, gameState, gameloop, genship, initGame, mouse, musicPlaying, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause,
+  var BAD_COLOR, Bomb, Bomber, Box, Fighter, GOOD_COLOR, Game, HealthUp, Kamikaze, Laser, LaserUp, PLAYER_LIVES, PowerUp, SHIP_MAX_HEALTH, SHIP_MAX_SHIELD, ShieldUp, Ship, Shrapnal, Spinner, audio, canvas, clearScreen, ctx, currentState, dispHealth, drawGameOver, drawTitleScreen, every, firstInit, firstTime, game, gameState, gameloop, genship, initGame, mouse, musicPlaying, pause, randInt, setLowerLeftFont, setTitleFont, ship, timeHandle, unpause,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -83,6 +83,8 @@
   SHIP_MAX_HEALTH = 100;
 
   SHIP_MAX_SHIELD = 4000;
+
+  PLAYER_LIVES = 3;
 
   PowerUp = (function(_super) {
 
@@ -283,7 +285,7 @@
       this.x = x;
       this.y = y;
       this.angle = 0;
-      this.bombCooldown = 0;
+      this.bombCooldown = Math.floor(Math.random() * this.cooldownTime);
       this.turnVel = (Math.random() - 0.5) / 30;
       this.health = 1;
     }
@@ -295,6 +297,8 @@
     Bomber.prototype.width = 10;
 
     Bomber.prototype.height = 28;
+
+    Bomber.prototype.cooldownTime = 40;
 
     Bomber.prototype.move = function() {
       this.x += 2 * Math.cos(this.angle + Math.PI / 2);
@@ -318,7 +322,7 @@
     };
 
     Bomber.prototype.bomb = function() {
-      this.bombCooldown = 40;
+      this.bombCooldown = this.cooldownTime;
       return game.owners.enemies.bombs.push(new Bomb(this.x, this.y, 4, 35, game.owners.enemies));
     };
 
@@ -382,7 +386,6 @@
       this.x = x;
       this.y = y;
       this.angle = 0;
-      this.shootCooldown = 0;
       this.moveState = 0;
       this.health = 1;
     }
@@ -564,7 +567,7 @@
     function Fighter(x, y) {
       this.x = x;
       this.y = y;
-      this.shootCooldown = 0;
+      this.shootCooldown = Math.floor(Math.random() * this.cooldownTime);
       this.health = 1;
     }
 
@@ -575,6 +578,8 @@
     Fighter.prototype.width = 20;
 
     Fighter.prototype.height = 20;
+
+    Fighter.prototype.cooldownTime = 35;
 
     Fighter.prototype.boxHit = function(other) {
       return Math.abs(other.x - this.x) < (other.width + this.width) / 2 && Math.abs(other.y - this.y) < (other.height + this.height) / 2;
@@ -598,7 +603,7 @@
     };
 
     Fighter.prototype.shoot = function() {
-      this.shootCooldown = 35;
+      this.shootCooldown = this.cooldownTime;
       return game.owners.enemies.lasers.push(new Laser(this.x, this.y, Laser.prototype.speed, game.owners.enemies));
     };
 
@@ -694,7 +699,7 @@
       this.x = x;
       this.y = y;
       this.angle = 0;
-      this.shootCooldown = 0;
+      this.shootCooldown = Math.floor(Math.random() * this.cooldownTime);
       this.burst = 0;
       this.health = 1;
     }
@@ -706,6 +711,8 @@
     Spinner.prototype.width = 20;
 
     Spinner.prototype.height = 20;
+
+    Spinner.prototype.cooldownTime = 55;
 
     Spinner.prototype.boxHit = function(other) {
       return Math.abs(other.x - this.x) < (other.width + this.width) / 2 && Math.abs(other.y - this.y) < (other.height + this.height) / 2;
@@ -734,7 +741,7 @@
       if (this.burst < 5) {
         this.burst += 1;
       } else {
-        this.shootCooldown = 55;
+        this.shootCooldown = this.cooldownTime;
         this.burst = 0;
       }
       return game.owners.enemies.lasers.push(new Laser(this.x, this.y, Laser.prototype.speed, game.owners.enemies));
@@ -785,6 +792,47 @@
     };
 
     return Spinner;
+
+  })();
+
+  Game = (function() {
+
+    function Game() {
+      this.owners = {
+        player: {
+          lasers: [],
+          bombs: [],
+          shrapnals: [],
+          units: ship,
+          color: GOOD_COLOR,
+          health: SHIP_MAX_HEALTH,
+          shield: 0,
+          kills: 0,
+          lasersFired: 0,
+          bombsFired: 0
+        },
+        enemies: {
+          lasers: [],
+          bombs: [],
+          shrapnals: [],
+          units: [],
+          color: BAD_COLOR
+        }
+      };
+      this.timers = {
+        dispHealth: 0,
+        colorCycle: 0,
+        colorCycleDir: 10
+      };
+      this.powerups = {
+        healthups: [],
+        laserups: [],
+        shieldups: []
+      };
+      this.crashed = false;
+    }
+
+    return Game;
 
   })();
 
@@ -902,40 +950,7 @@
   initGame = function() {
     if (firstTime) firstInit();
     ship = new Ship(mouse.x, mouse.y);
-    return game = {
-      owners: {
-        player: {
-          lasers: [],
-          bombs: [],
-          shrapnals: [],
-          units: ship,
-          color: GOOD_COLOR,
-          health: SHIP_MAX_HEALTH,
-          shield: 0,
-          kills: 0,
-          lasersFired: 0,
-          bombsFired: 0
-        },
-        enemies: {
-          lasers: [],
-          bombs: [],
-          shrapnals: [],
-          units: [],
-          color: BAD_COLOR
-        }
-      },
-      timers: {
-        dispHealth: 0,
-        colorCycle: 0,
-        colorCycleDir: 10
-      },
-      powerups: {
-        healthups: [],
-        laserups: [],
-        shieldups: []
-      },
-      crashed: false
-    };
+    return game = new Game();
   };
 
   dispHealth = function() {

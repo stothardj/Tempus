@@ -15,7 +15,38 @@
 #
 # Copyright 2011 Jake Stothard
 
-GOOD_COLOR = "#0044FF"
-BAD_COLOR = "#FF0000"
-SHIP_MAX_HEALTH = 100
-SHIP_MAX_SHIELD = 4000
+!import "config.coffee"
+
+class Game
+  constructor: ->
+    @owners =
+      player:
+        lasers: []
+        bombs: []
+        shrapnals: []
+        units: ship
+        color: GOOD_COLOR
+        health: SHIP_MAX_HEALTH
+        shield: 0
+        kills: 0
+        lasersFired: 0
+        bombsFired: 0
+
+      enemies:
+        lasers: []
+        bombs: []
+        shrapnals: []
+        units: []
+        color: BAD_COLOR
+
+    @timers =
+      dispHealth: 0
+      colorCycle: 0
+      colorCycleDir: 10
+
+    @powerups =
+      healthups: []
+      laserups: []
+      shieldups: []
+
+    @crashed = false

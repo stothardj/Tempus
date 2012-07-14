@@ -27,6 +27,7 @@
 !import "fighter.coffee"
 !import "laser.coffee"
 !import "spinner.coffee"
+!import "game.coffee"
 
 genship = (t) ->
   if game.owners.player.kills >= t::threshold and Math.random() < t::rand
@@ -122,42 +123,9 @@ firstInit = ->
   firstTime = false
 
 initGame = ->
-  #TODO: Decided on concrete separation of what goes in game.owners.player and what is bound to ship
   firstInit() if firstTime
   ship = new Ship(mouse.x, mouse.y)
-
-  game =
-    owners:
-      player:
-        lasers: []
-        bombs: []
-        shrapnals: []
-        units: ship
-        color: GOOD_COLOR
-        health: SHIP_MAX_HEALTH
-        shield: 0
-        kills: 0
-        lasersFired: 0
-        bombsFired: 0
-
-      enemies:
-        lasers: []
-        bombs: []
-        shrapnals: []
-        units: []
-        color: BAD_COLOR
-
-    timers:
-      dispHealth: 0
-      colorCycle: 0
-      colorCycleDir: 10
-
-    powerups:
-      healthups: []
-      laserups: []
-      shieldups: []
-
-    crashed: false
+  game = new Game()
 
 dispHealth = ->
   ctx.strokeStyle = "rgb(0,".concat( game.timers.dispHealth , ",0)" )

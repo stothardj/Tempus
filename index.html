@@ -3,7 +3,7 @@
   <head>
     <title>Tempus</title>
     <link type="text/css" rel="stylesheet" href="main.css" />
-    <link type="text/css" href="ui/css/custom-theme/jquery-ui-1.8.21.custom.css" rel="stylesheet" />	
+    <link type="text/css" href="ui/css/custom-theme/jquery-ui-1.8.21.custom.css" rel="stylesheet" />
     <script src="jquery-1.7.2.min.js"></script>
     <script src="ui/js/jquery-ui-1.8.21.custom.min.js"></script>
     <script src="initui.js"></script>
@@ -16,19 +16,24 @@
 	<li><a href="#thanks">Thanks to</a></li>
 	<li><a href="#license">License</a></li>
       </ul>
-      <div id="game">
+      <div id="game" class="tab">
 	<div style="height: 650px">
-	  <div style="width: 60%; float: left">
-	    <iframe src="game.html" width="850" height="650" frameborder="0"></iframe>
-	  </div>
-	  <div style="width: 40%; float: right">
-	    <p>Instructions:</p>
-	    <p>The ship follows the mouse. Left click to fire a laser. Right click to fire a bomb. Ammo is unlimited but overheating decreases the fire rate.</p>
-	    <p>Just try to live as you can, there's no objective yet.</p>
-	  </div>
+	  <!-- If you know a better way than using a table please patch this, otherwise leave me alone about it -->
+	  <table>
+	    <tr>
+	      <td>
+		<iframe src="game.html" width="850" height="650" frameborder="0"></iframe>
+	      </td>
+	      <td>
+		<p>Instructions:</p>
+		<p>The ship follows the mouse. Left click to fire a laser. Right click to fire a bomb. Ammo is unlimited but overheating decreases the fire rate.</p>
+		<p>Just try to live as you can, there's no objective yet.</p>
+	      </td>
+	    </tr>
+	  </table>
 	</div>
       </div>
-      <div id="code">
+      <div id="code" class="tab">
 	<p>
 	  Contributions are very welcome. To see the code repository go to
 	  <a href="https://bitbucket.org/stothardj/tempus">https://bitbucket.org/stothardj/tempus</a>
@@ -37,13 +42,13 @@
 	  This is written in coffeescript and run through the closure compiler (simple_optimizations)
 	</p>
       </div>
-      <div id="thanks">
+      <div id="thanks" class="tab">
 	<p>
 	  The background music was stolen from
 	  <a href="http://www.lukhash.com/">http://www.lukhash.com</a>
 	</p>
       </div>
-      <div id="license">
+      <div id="license" class="tab">
 	<pre>
 	  Tempus is free software: you can redistribute it and/or modify
 	  it under the terms of the GNU General Public License as published by

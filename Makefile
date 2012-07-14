@@ -1,4 +1,5 @@
 SHELL = /bin/sh
+SOURCES=$(wildcard src/*.coffee)
 .PHONY: clean quick
 .SUFFIXES:
 .SUFFIXES: .coffee .js
@@ -6,13 +7,13 @@ SHELL = /bin/sh
 comb-compiled.js: comb.js
 	java -jar compiler.jar --js comb.js --js_output_file comb-compiled.js
 
-comb.js: comb.coffee
-	coffee -c comb.coffee
+comb.js: build/comb.coffee
+	coffee -o . -c build/comb.coffee
 
-comb.coffee: *.coffee
-	./ppp.py decaf.coffee > comb.coffee
+build/comb.coffee: $(SOURCES)
+	./ppp.py src/decaf.coffee > build/comb.coffee
 
 quick: comb.js
 
 clean:
-	rm -f comb-compile.js comb.js comb.coffee
+	rm -f comb-compiled.js comb.js build/comb.coffee
