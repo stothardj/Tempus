@@ -29,5 +29,5 @@ class HealthUp extends PowerUp
   color: "#00FF00"
 
   use: ->
-    game.owners.player.health = Math.min( game.owners.player.health + 15, SHIP_MAX_HEALTH )
+    ship.health = Math.min( ship.health + 15, SHIP_MAX_HEALTH )
     game.timers.dispHealth = 255

@@ -1,8 +1,8 @@
 syntax: glob
 \#*\#
 *~
-compiler-latest.zip
-compiler.jar
+www/js/toaster
+www/js/tempus*
 media
 .*
 ^.hgignore

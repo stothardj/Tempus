@@ -29,5 +29,5 @@ class ShieldUp extends PowerUp
   color: "#0088FF"
 
   use: ->
-    game.owners.player.shield = Math.min( game.owners.player.shield + 200, SHIP_MAX_SHIELD )
+    ship.shield = Math.min( ship.shield + 200, SHIP_MAX_SHIELD )
     game.timers.dispHealth = 255

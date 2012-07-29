@@ -25,6 +25,8 @@ class Ship
     @bombCooldown = 0
     @heat = 0
     @laserPower = 1
+    @health = SHIP_MAX_HEALTH
+    @shield = 0
 
   width: 40
   height: 40
@@ -43,7 +45,7 @@ class Ship
     ctx.stroke()
 
   draw: ->
-    @drawShield() if game.owners.player.shield > 0
+    @drawShield() if @shield > 0
     ctx.strokeStyle = "#FFFFFF"
     ctx.beginPath()
     ctx.moveTo( @x, @y - @height / 2 )
@@ -56,10 +58,10 @@ class Ship
 
   damage: (amount) ->
     game.timers.dispHealth = 255
-    game.owners.player.shield -= amount * 20
-    if game.owners.player.shield < 0
-      game.owners.player.health += Math.floor(game.owners.player.shield / 20)
-      game.owners.player.shield = 0
+    @shield -= amount * 20
+    if @shield < 0
+      @health += Math.floor(@shield / 20)
+      @shield = 0
   
   takeDamage: ->
     for laser in game.owners.enemies.lasers
@@ -81,4 +83,4 @@ class Ship
     @move()
     @draw()
     @takeDamage()
-    game.owners.player.shield = Math.max( game.owners.player.shield - 1, 0 )
+    @shield = Math.max( @shield - 1, 0 )

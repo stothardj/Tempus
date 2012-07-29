@@ -26,8 +26,6 @@ class Game
         shrapnals: []
         units: ship
         color: GOOD_COLOR
-        health: SHIP_MAX_HEALTH
-        shield: 0
         kills: 0
         lasersFired: 0
         bombsFired: 0

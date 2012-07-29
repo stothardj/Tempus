@@ -130,11 +130,11 @@ initGame = ->
 dispHealth = ->
   ctx.strokeStyle = "rgba(0,255,0,".concat( game.timers.dispHealth / 255.0 , ")" )
   ctx.beginPath()
-  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 20, 0, Math.max(game.owners.player.health, 0) * Math.PI * 2 / SHIP_MAX_HEALTH, false)
+  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 20, 0, Math.max(ship.health, 0) * Math.PI * 2 / SHIP_MAX_HEALTH, false)
   ctx.stroke()
   ctx.strokeStyle = "rgba(0,127,255,".concat( game.timers.dispHealth / 255.0 , ")" )
   ctx.beginPath()
-  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 40, 0, Math.max(game.owners.player.shield, 0) * Math.PI * 2 / SHIP_MAX_SHIELD, false)
+  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 40, 0, Math.max(ship.shield, 0) * Math.PI * 2 / SHIP_MAX_SHIELD, false)
   ctx.stroke()
 
 pause = ->
@@ -236,7 +236,7 @@ gameloop = ->
   game.timers.colorCycleDir *= -1 if game.timers.colorCycle is 0 or game.timers.colorCycle is 255
 
   # Check gameover
-  if game.owners.player.health <= 0
+  if ship.health <= 0
     currentState = gameState.gameOver
     clearInterval( timeHandle )
     drawGameOver()
