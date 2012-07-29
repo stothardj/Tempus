@@ -28,6 +28,8 @@
 #<< laser
 #<< spinner
 #<< game
+#<< anima
+#<< fighterdeath
 
 canvas = document.getElementById("c")
 ctx = canvas.getContext("2d")
@@ -41,16 +43,21 @@ audio = $('<audio></audio>')
   .attr({ 'type': 'audio/mpeg'}))
   .appendTo('body')[0]
 
-console.log audio
-
-if not ctx
-  throw "Loading context failed"
+throw "Loading context failed" unless ctx
 
 # General functions
+# Many of these are stolen off the internet
 randInt = (min, max) ->
   Math.floor( Math.random() * (max - min + 1) ) + min
 
 every = (ms, cb) -> setInterval cb, ms
+
+partition = (list, test = (x) -> x) ->
+  pass = []
+  fail = []
+  for e in list
+    (if test e then pass else fail).push e
+  [pass, fail]
 
 # Here for scope
 game = undefined
@@ -58,12 +65,11 @@ ship = undefined
 firstTime = true
 musicPlaying = false
 
-mouse = {
+mouse =
   x: 250
   y: 200
   leftDown: false
   rightDown: false
-}
 
 timeHandle = undefined
 
@@ -124,11 +130,11 @@ initGame = ->
   game = new Game()
 
 dispHealth = ->
-  ctx.strokeStyle = "rgb(0,".concat( game.timers.dispHealth , ",0)" )
+  ctx.strokeStyle = "rgba(0,255,0,".concat( game.timers.dispHealth / 255.0 , ")" )
   ctx.beginPath()
   ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 20, 0, Math.max(game.owners.player.health, 0) * Math.PI * 2 / SHIP_MAX_HEALTH, false)
   ctx.stroke()
-  ctx.strokeStyle = "rgb(0,".concat( Math.floor(game.timers.dispHealth / 2) , "," , game.timers.dispHealth , ")" )
+  ctx.strokeStyle = "rgba(0,127,255,".concat( game.timers.dispHealth / 255.0 , ")" )
   ctx.beginPath()
   ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 40, 0, Math.max(game.owners.player.shield, 0) * Math.PI * 2 / SHIP_MAX_SHIELD, false)
   ctx.stroke()
@@ -212,21 +218,26 @@ $("#enableMusic")
         musicPlaying = false
   )
 
+genpowerup = (t) ->
+  new t( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < t::rand
 
+# TODO: Once this is sufficiently OO move this into Game object
 gameloop = ->
 
+  # Stop looping if game crashes
   if game.crashed
     currentState = gameState.crashed
     clearInterval( timeHandle )
     return
-
   game.crashed = true
 
+  # Color cycle for flashing text
   game.timers.colorCycle += game.timers.colorCycleDir
   game.timers.colorCycle = Math.min(game.timers.colorCycle, 255)
   game.timers.colorCycle = Math.max(game.timers.colorCycle, 0)
   game.timers.colorCycleDir *= -1 if game.timers.colorCycle is 0 or game.timers.colorCycle is 255
 
+  # Check gameover
   if game.owners.player.health <= 0
     currentState = gameState.gameOver
     clearInterval( timeHandle )
@@ -235,20 +246,35 @@ gameloop = ->
 
   clearScreen()
 
+  # Update enemy
   enemy.update() for enemy in game.owners.enemies.units
+
+  # Put powerups in place of dead enemies
   #TODO: make powerup looped over instead of copying code
-  game.powerups.healthups = game.powerups.healthups.concat( new HealthUp( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < HealthUp::rand )
-  game.powerups.shieldups = game.powerups.shieldups.concat( new ShieldUp( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < ShieldUp::rand )
-  game.powerups.laserups = game.powerups.laserups.concat( new LaserUp( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < LaserUp::rand )
+  game.powerups.healthups = game.powerups.healthups.concat( genpowerup(HealthUp) )
+  game.powerups.shieldups = game.powerups.shieldups.concat( genpowerup(ShieldUp) )
+  game.powerups.laserups = game.powerups.laserups.concat( genpowerup(LaserUp) )
 
-  game.owners.enemies.units = (enemy for enemy in game.owners.enemies.units when enemy.health > 0)
+  # Remove dead enemies
+  # game.owners.enemies.units = (enemy for enemy in game.owners.enemies.units when enemy.health > 0)
+  [ game.owners.enemies.units, dead ] = partition( game.owners.enemies.units, (enemy) -> enemy.health > 0 )
+  console.log "Bring out your dead"
+  console.log dead
+  for d in dead
+    console.log d.getAnimation()
+  game.animations = game.animations.concat( enemy.getAnimation() for enemy in dead )
+  game.animations = (anim for anim in game.animations when not anim.finished() )
 
+
+  # Generate new enemies
   for t in [Fighter, Kamikaze, Bomber, Spinner]
     if game.owners.player.kills >= t::threshold and Math.random() < t::rand
       game.owners.enemies.units.push( new t( randInt(0, canvas.width), -10 ) )
 
+  # Update ship
   ship.update()
 
+  # Update lasers, etc.
   for ownerName, owner of game.owners
     laser.update() for laser in owner.lasers
     owner.lasers = (laser for laser in owner.lasers when 0 < laser.y < canvas.height and not laser.killedSomething)
@@ -257,45 +283,55 @@ gameloop = ->
     shrapnal.update() for shrapnal in owner.shrapnals
     owner.shrapnals = (shrapnal for shrapnal in owner.shrapnals when shrapnal.cooldown > 0)
 
+  # Update powerups
   for powerupTypeName, powerupType of game.powerups
     powerup.update() for powerup in powerupType
     game.powerups[powerupTypeName] = (powerup for powerup in powerupType when not powerup.used)
 
+  # Shoot lasers
   if mouse.leftDown and ship.laserCooldown <= 0
     game.owners.player.lasersFired += ship.laserPower
     for i in [1..ship.laserPower]
       game.owners.player.lasers.push( new Laser( ship.x + i * 4 - ship.laserPower * 2, ship.y, -Laser::speed, game.owners.player) )
-    if ship.heat > 80
+    if ship.heat > SHIP_CRITICAL_TEMP
       ship.laserCooldown = 7
-    else if ship.heat > 40
+    else if ship.heat > SHIP_WARNING_TEMP
       ship.laserCooldown = 5
     else
       ship.laserCooldown = 2
     ship.heat += 7
 
+  # Shoot bombs
   if mouse.rightDown and ship.bombCooldown <= 0
     game.owners.player.bombsFired += 1
     game.owners.player.bombs.push( new Bomb( ship.x, ship.y, -Bomb::speed, 20, game.owners.player) ) if currentState is gameState.playing
-    if ship.heat > 80
+    if ship.heat > SHIP_CRITICAL_TEMP
       ship.bombCooldown = 20
-    else if ship.heat > 40
+    else if ship.heat > SHIP_WARNING_TEMP
       ship.bombCooldown = 10
     else
       ship.bombCooldown = 5
     ship.heat += 10
 
+  # Cooldown
   ship.laserCooldown -= 1 if ship.laserCooldown > 0
   ship.bombCooldown -= 1 if ship.bombCooldown > 0
   ship.heat -= 1 if ship.heat > 0
 
+  # Draw animations
+  for anim in game.animations
+    anim.drawFrame()
+    anim.nextFrame()
+
+  # Draw HUD
   ctx.textAlign = "center"
   ctx.textBaseline = "bottom"
 
-  if ship.heat > 80
+  if ship.heat > SHIP_CRITICAL_TEMP
     ctx.fillStyle = "rgb(".concat( game.timers.colorCycle, ",0,0)")
     ctx.font = "bold 20px Lucidia Console"
     ctx.fillText( "[ Heat Critical ]", canvas.width / 2, canvas.height - 30)
-  else if ship.heat > 40
+  else if ship.heat > SHIP_WARNING_TEMP
     ctx.fillStyle = "rgb(".concat( game.timers.colorCycle, ",", game.timers.colorCycle, ",0)");
     ctx.font = "normal 18px Lucidia Console"
     ctx.fillText( "[ Heat Warning ]", canvas.width / 2, canvas.height - 30)
@@ -305,6 +341,7 @@ gameloop = ->
     ctx.strokeStyle = "#FFFFFF"
     game.timers.dispHealth -= 10
 
+  # Made it to the end, so did not crash this loop
   game.crashed = false
 
 # Can change how game begins based on what you start the state as

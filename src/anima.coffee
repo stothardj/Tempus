@@ -15,14 +15,14 @@
 #
 # Copyright 2011, 2012 Jake Stothard
 
-GOOD_COLOR = "#0044FF"
-BAD_COLOR = "#FF0000"
+class Anima
+  constructor: (@framecount) ->
+    @frame = 0
 
-SHIP_MAX_HEALTH = 100
-SHIP_MAX_SHIELD = 4000
-SHIP_CRITICAL_TEMP = 80
-SHIP_WARNING_TEMP = 40
+  nextFrame: ->
+    @frame += 1
 
-#TODO: Actually give player mutliple lives
-PLAYER_LIVES = 3
+  finished: ->
+    @frame >= @framecount
 
+  drawFrame: ->

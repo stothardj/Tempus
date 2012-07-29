@@ -16,6 +16,7 @@
 # Copyright 2011, 2012 Jake Stothard
 
 #<< enemyship
+#<< fighterdeath
 
 class Fighter extends EnemyShip
   constructor: (@x, @y) ->
@@ -74,3 +75,7 @@ class Fighter extends EnemyShip
     @move()
     @draw()
     @takeDamage()
+
+  getAnimation: ->
+    # return (new Anima(10))
+    new FighterDeath(@x, @y)

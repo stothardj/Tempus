@@ -31,7 +31,6 @@ class Game
         kills: 0
         lasersFired: 0
         bombsFired: 0
-
       enemies:
         lasers: []
         bombs: []
@@ -48,5 +47,7 @@ class Game
       healthups: []
       laserups: []
       shieldups: []
+
+    @animations = []
 
     @crashed = false

@@ -53,6 +53,7 @@ class Kamikaze extends EnemyShip
         @y += 30 * Math.sin(@angle + Math.PI / 2)
 
   draw: ->
+    ctx.strokeStyle = "#FFFFFF"
     ctx.translate( @x, @y )
     ctx.rotate( @angle )
     ctx.beginPath()

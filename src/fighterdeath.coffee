@@ -15,14 +15,27 @@
 #
 # Copyright 2011, 2012 Jake Stothard
 
-GOOD_COLOR = "#0044FF"
-BAD_COLOR = "#FF0000"
+#<< anima
 
-SHIP_MAX_HEALTH = 100
-SHIP_MAX_SHIELD = 4000
-SHIP_CRITICAL_TEMP = 80
-SHIP_WARNING_TEMP = 40
+class FighterDeath extends Anima
+  constructor: (x, y) ->
+    super 5
+    @x = x
+    @y = y
 
-#TODO: Actually give player mutliple lives
-PLAYER_LIVES = 3
+  width: 20
+  height: 20
 
+  drawFrame: ->
+    ctx.strokeStyle = "rgba(255,0,0,".concat( 1 - @frame / @framecount, ")" )
+    ctx.beginPath()
+    # ctx.moveTo( @x - @width / 2, @y - @height / 2 )
+    # ctx.lineTo( @x + @width / 2, @y - @height / 2 )
+    # ctx.lineTo( @x, @y + @height / 2 )
+
+    ctx.moveTo( @x - @width / 2 - @frame, @y - @height / 2 - @frame )
+    ctx.lineTo( @x + @width / 2 + @frame, @y - @height / 2 - @frame )
+    ctx.lineTo( @x, @y + @height / 2 + @frame )
+
+    ctx.closePath()
+    ctx.stroke()
