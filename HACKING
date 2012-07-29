@@ -1,5 +1,5 @@
-The main file is decaf.coffee
+The main file is decaf.coffee in the src directory.
+This project now uses coffee-toaster to compile. Just install it with npm and then use toaster -w in this directory.
 
-This project used to use m4 files for macros, but it was getting ugly so that was removed (at the cost that now the compiled code is bigger).
+Ask me if you need help (stothardj@gmail.com)
 
-This project now uses ppp.py which is a simple preprocessor I wrote. It is hosted on my github page (I'm stothardj) in case you want to modify that code.
