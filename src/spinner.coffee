@@ -16,6 +16,7 @@
 # Copyright 2011, 2012 Jake Stothard
 
 #<< enemyship
+#<< spinnerdeath
 
 class Spinner extends EnemyShip
   constructor: (@x, @y) ->
@@ -31,6 +32,7 @@ class Spinner extends EnemyShip
   cooldownTime: 55
 
   draw: ->
+    ctx.strokeStyle = "#FFFFFF"
     ctx.translate( @x, @y )
     ctx.rotate( @angle )
     ctx.beginPath()
@@ -82,3 +84,6 @@ class Spinner extends EnemyShip
     @move()
     @draw()
     @takeDamage()
+
+  getAnimation: ->
+    new SpinnerDeath(@x, @y, @angle)

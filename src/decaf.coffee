@@ -28,8 +28,6 @@
 #<< laser
 #<< spinner
 #<< game
-#<< anima
-#<< fighterdeath
 
 canvas = document.getElementById("c")
 ctx = canvas.getContext("2d")
@@ -256,15 +254,9 @@ gameloop = ->
   game.powerups.laserups = game.powerups.laserups.concat( genpowerup(LaserUp) )
 
   # Remove dead enemies
-  # game.owners.enemies.units = (enemy for enemy in game.owners.enemies.units when enemy.health > 0)
   [ game.owners.enemies.units, dead ] = partition( game.owners.enemies.units, (enemy) -> enemy.health > 0 )
-  console.log "Bring out your dead"
-  console.log dead
-  for d in dead
-    console.log d.getAnimation()
   game.animations = game.animations.concat( enemy.getAnimation() for enemy in dead )
   game.animations = (anim for anim in game.animations when not anim.finished() )
-
 
   # Generate new enemies
   for t in [Fighter, Kamikaze, Bomber, Spinner]

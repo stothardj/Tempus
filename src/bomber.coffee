@@ -16,6 +16,7 @@
 # Copyright 2011, 2012 Jake Stothard
 
 #<< enemyship
+#<< bomberdeath
 
 class Bomber extends EnemyShip
   constructor: (@x, @y) ->
@@ -37,6 +38,7 @@ class Bomber extends EnemyShip
     @goneOnScreen = 0
 
   draw: ->
+    ctx.strokeStyle = "#FFFFFF"
     ctx.translate( @x, @y )
     ctx.rotate( @angle )
     ctx.beginPath()
@@ -85,3 +87,6 @@ class Bomber extends EnemyShip
     @move()
     @draw()
     @takeDamage()
+
+  getAnimation: ->
+    new BomberDeath(@x, @y, @angle)

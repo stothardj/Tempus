@@ -77,5 +77,4 @@ class Fighter extends EnemyShip
     @takeDamage()
 
   getAnimation: ->
-    # return (new Anima(10))
     new FighterDeath(@x, @y)

@@ -16,6 +16,7 @@
 # Copyright 2011, 2012 Jake Stothard
 
 #<< enemyship
+#<< kamikazedeath
 
 class Kamikaze extends EnemyShip
   constructor: (@x, @y) ->
@@ -92,3 +93,6 @@ class Kamikaze extends EnemyShip
     @move()
     @draw()
     @takeDamage()
+
+  getAnimation: ->
+    new KamikazeDeath(@x, @y, @angle)

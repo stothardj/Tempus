@@ -17,8 +17,8 @@
 
 #<< anima
 
-class FighterDeath extends Anima
-  constructor: (@x, @y) ->
+class KamikazeDeath extends Anima
+  constructor: (@x, @y, @angle) ->
     super 5
 
   width: 20
@@ -26,12 +26,17 @@ class FighterDeath extends Anima
 
   drawFrame: ->
     ctx.strokeStyle = "rgba(255,0,0,".concat( 1 - @frame / @framecount, ")" )
-    ctx.beginPath()
 
     expand = @frame * 2
-    ctx.moveTo( @x - @width / 2 - expand, @y - @height / 2 - expand )
-    ctx.lineTo( @x + @width / 2 + expand, @y - @height / 2 - expand )
-    ctx.lineTo( @x, @y + @height / 2 + expand )
-
+    ctx.translate( @x, @y )
+    ctx.rotate( @angle )
+    ctx.beginPath()
+    ctx.moveTo( - @width / 2 - expand, - @height / 2 - expand )
+    ctx.lineTo( @width / 2 + expand, - @height / 2 - expand )
+    ctx.lineTo( @width / 2 + expand, @height / 5 + expand )
+    ctx.lineTo( 0, @height / 2 + expand )
+    ctx.lineTo( - @width / 2 - expand, @height / 5 + expand )
     ctx.closePath()
     ctx.stroke()
+    ctx.rotate( -@angle )
+    ctx.translate( -@x, -@y )

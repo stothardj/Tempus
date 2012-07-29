@@ -17,21 +17,25 @@
 
 #<< anima
 
-class FighterDeath extends Anima
-  constructor: (@x, @y) ->
+class BomberDeath extends Anima
+  constructor: (@x, @y, @angle) ->
     super 5
 
-  width: 20
-  height: 20
+  width: 10
+  height: 28
 
   drawFrame: ->
     ctx.strokeStyle = "rgba(255,0,0,".concat( 1 - @frame / @framecount, ")" )
-    ctx.beginPath()
 
     expand = @frame * 2
-    ctx.moveTo( @x - @width / 2 - expand, @y - @height / 2 - expand )
-    ctx.lineTo( @x + @width / 2 + expand, @y - @height / 2 - expand )
-    ctx.lineTo( @x, @y + @height / 2 + expand )
-
+    ctx.translate( @x, @y )
+    ctx.rotate( @angle )
+    ctx.beginPath()
+    ctx.moveTo( 0, @height / 2 + expand )
+    ctx.lineTo( @width / 2 + expand, 0 )
+    ctx.lineTo( 0, - @height / 2 - expand )
+    ctx.lineTo( - @width / 2 - expand, 0 )
     ctx.closePath()
     ctx.stroke()
+    ctx.rotate( -@angle )
+    ctx.translate( -@x, -@y )
