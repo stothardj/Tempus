@@ -14,7 +14,8 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-!import "powerup.coffee"
+
+#<< powerup
 
 class LaserUp extends PowerUp
   constructor: (@x, @y) ->

@@ -15,7 +15,7 @@
 #
 # Copyright 2011 Jake Stothard
 
-!import "box.coffee"
+#<< box
 
 class Bomber extends Box
   constructor: (@x, @y) ->

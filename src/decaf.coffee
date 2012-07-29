@@ -15,19 +15,19 @@
 #
 # Copyright 2011 Jake Stothard
 
-!import "bomb.coffee"
-!import "config.coffee"
-!import "healthup.coffee"
-!import "shieldup.coffee"
-!import "ship.coffee"
-!import "bomber.coffee"
-!import "kamikaze.coffee"
-!import "laserup.coffee"
-!import "shrapnal.coffee"
-!import "fighter.coffee"
-!import "laser.coffee"
-!import "spinner.coffee"
-!import "game.coffee"
+#<< bomb
+#<< config
+#<< healthup
+#<< shieldup
+#<< ship
+#<< bomber
+#<< kamikaze
+#<< laserup
+#<< shrapnal
+#<< fighter
+#<< laser
+#<< spinner
+#<< game
 
 genship = (t) ->
   if game.owners.player.kills >= t::threshold and Math.random() < t::rand

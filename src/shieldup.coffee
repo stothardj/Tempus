@@ -14,8 +14,9 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-!import "config.coffee"
-!import "powerup.coffee"
+
+#<< config
+#<< powerup
 
 class ShieldUp extends PowerUp
   constructor: (@x, @y) ->

@@ -14,7 +14,8 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
-!import "box.coffee"
+
+#<< box
 
 class Bomb extends Box
   constructor: (@x, @y, @speed, @cooldown, @owner) ->

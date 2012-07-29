@@ -15,7 +15,7 @@
 #
 # Copyright 2011 Jake Stothard
 
-!import "config.coffee"
+#<< config
 
 class Game
   constructor: ->

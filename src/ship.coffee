@@ -18,7 +18,7 @@
 # Made a class even though there should be only one. Consistent so
 # even macros can be used across this and enemies
 
-!import "config.coffee"
+#<< config
 
 class Ship
   constructor: (@x, @y) ->

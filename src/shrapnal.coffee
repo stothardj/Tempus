@@ -14,6 +14,7 @@
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Copyright 2011 Jake Stothard
+
 class Shrapnal
   constructor: (@x, @y, @angle, @speed, @owner) ->
     @cooldown = 10
