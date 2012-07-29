@@ -13,9 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Copyright 2011 Jake Stothard
+# Copyright 2011, 2012 Jake Stothard
 
-class Spinner
+#<< enemyship
+
+class Spinner extends EnemyShip
   constructor: (@x, @y) ->
     @angle = 0
     @shootCooldown = Math.floor(Math.random() * @cooldownTime)
@@ -28,9 +30,6 @@ class Spinner
   height: 20
   cooldownTime: 55
 
-  boxHit: (other) ->
-    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
-  
   draw: ->
     ctx.translate( @x, @y )
     ctx.rotate( @angle )

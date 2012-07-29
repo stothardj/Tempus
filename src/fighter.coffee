@@ -13,8 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Copyright 2011 Jake Stothard
-class Fighter
+# Copyright 2011, 2012 Jake Stothard
+
+#<< enemyship
+
+class Fighter extends EnemyShip
   constructor: (@x, @y) ->
     @shootCooldown = Math.floor(Math.random() * @cooldownTime)
     @health = 1
@@ -24,9 +27,6 @@ class Fighter
   width: 20
   height: 20
   cooldownTime: 35
-
-  boxHit: (other) ->
-    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
 
   draw: ->
     ctx.strokeStyle = "#FFFFFF"

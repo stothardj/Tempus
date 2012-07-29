@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Copyright 2011 Jake Stothard
+# Copyright 2011, 2012 Jake Stothard
 
 GOOD_COLOR = "#0044FF"
 BAD_COLOR = "#FF0000"

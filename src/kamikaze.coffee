@@ -13,11 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Copyright 2011 Jake Stothard
+# Copyright 2011, 2012 Jake Stothard
 
-#<< box
+#<< enemyship
 
-class Kamikaze extends Box
+class Kamikaze extends EnemyShip
   constructor: (@x, @y) ->
     @angle = 0
     @moveState = 0

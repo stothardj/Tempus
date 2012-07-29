@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Copyright 2011 Jake Stothard
+# Copyright 2011, 2012 Jake Stothard
 
 #<< bomb
 #<< config
@@ -28,10 +28,6 @@
 #<< laser
 #<< spinner
 #<< game
-
-genship = (t) ->
-  if game.owners.player.kills >= t::threshold and Math.random() < t::rand
-    game.owners.enemies.units.push( new t( randInt(0, canvas.width), -10 ) )
 
 canvas = document.getElementById("c")
 ctx = canvas.getContext("2d")
@@ -247,10 +243,9 @@ gameloop = ->
 
   game.owners.enemies.units = (enemy for enemy in game.owners.enemies.units when enemy.health > 0)
 
-  genship(Fighter)
-  genship(Kamikaze)
-  genship(Bomber)
-  genship(Spinner)
+  for t in [Fighter, Kamikaze, Bomber, Spinner]
+    if game.owners.player.kills >= t::threshold and Math.random() < t::rand
+      game.owners.enemies.units.push( new t( randInt(0, canvas.width), -10 ) )
 
   ship.update()
 

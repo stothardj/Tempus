@@ -13,10 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Tempus.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Copyright 2011 Jake Stothard
+# Copyright 2011, 2012 Jake Stothard
 
-# Made a class even though there should be only one. Consistent so
-# even macros can be used across this and enemies
+# Made a class even though there should be only one.
 
 #<< config
 
