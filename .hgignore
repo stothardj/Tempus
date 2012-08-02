@@ -3,6 +3,6 @@ syntax: glob
 *~
 www/js/toaster
 www/js/tempus*
-media
+www/media
 .*
 ^.hgignore

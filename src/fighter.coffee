@@ -28,6 +28,7 @@ class Fighter extends EnemyShip
   width: 20
   height: 20
   cooldownTime: 35
+  impactDamage: 24
 
   draw: ->
     ctx.strokeStyle = "#FFFFFF"
@@ -48,33 +49,19 @@ class Fighter extends EnemyShip
     @shootCooldown = @cooldownTime
     game.owners.enemies.lasers.push( new Laser( @x, @y, Laser::speed, game.owners.enemies ) )
 
-  takeDamage: ->
-    return @health = 0 if @y > canvas.height
-    if @boxHit(ship)
-      ship.damage(24)
-      game.owners.player.kills += 1
-      return @health = 0
-    for laser in game.owners.player.lasers
-      if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
-        laser.killedSomething = true
-        game.owners.player.kills += 1
-        return @health = 0
-    for bomb in game.owners.player.bombs
-      if @boxHit(bomb)
-        bomb.cooldown = 0
-        game.owners.player.kills += 1
-        return @health = 0
-    for shrapnal in game.owners.player.shrapnals
-      if @boxHit(shrapnal)
-        game.owners.player.kills += 1
-        return @health = 0
+  removeOffScreen: ->
+    if @y > canvas.height
+      @health = 0
+      return true
+    return false
 
   update: ->
     @shoot() if @shootCooldown is 0
     @shootCooldown -= 1
     @move()
     @draw()
-    @takeDamage()
+    if not @removeOffScreen()
+      @takeDamage()
 
   getAnimation: ->
     new FighterDeath(@x, @y)

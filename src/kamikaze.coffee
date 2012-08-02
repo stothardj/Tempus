@@ -28,6 +28,7 @@ class Kamikaze extends EnemyShip
   threshold: 15
   width: 20
   height: 20
+  impactDamage: 35
 
   move: ->
     switch @moveState
@@ -68,31 +69,17 @@ class Kamikaze extends EnemyShip
     ctx.rotate( -@angle )
     ctx.translate( -@x, -@y )
 
-  takeDamage: ->
-    return @health = 0 if @y > canvas.height or @moveState and @offscreen()
-    if @boxHit(ship)
-      game.owners.player.kills += 1
-      ship.damage(35)
-      return @health = 0
-    for laser in game.owners.player.lasers
-      if Math.abs(@x - laser.x) <= @width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
-        laser.killedSomething = true
-        game.owners.player.kills += 1
-        return @health = 0
-    for bomb in game.owners.player.bombs
-      if @boxHit(bomb)
-        bomb.cooldown = 0
-        game.owners.player.kills += 1
-        return @health = 0
-    for shrapnal in game.owners.player.shrapnals
-      if @boxHit(shrapnal)
-        game.owners.player.kills += 1
-        return @health = 0
+  removeOffScreen: ->
+    if @y > canvas.height or @moveState > 0 and @offscreen()
+      @health = 0
+      return true
+    return false
 
   update: ->
     @move()
     @draw()
-    @takeDamage()
+    if not @removeOffScreen()
+      @takeDamage()
 
   getAnimation: ->
     new KamikazeDeath(@x, @y, @angle)
