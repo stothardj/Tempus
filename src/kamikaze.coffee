@@ -20,6 +20,7 @@
 
 class Kamikaze extends EnemyShip
   constructor: (@x, @y) ->
+    super(@x, @y)
     @angle = 0
     @moveState = 0
     @health = 1
@@ -71,7 +72,7 @@ class Kamikaze extends EnemyShip
 
   removeOffScreen: ->
     if @y > canvas.height or @moveState > 0 and @offscreen()
-      @health = 0
+      @removed = true
       return true
     return false
 

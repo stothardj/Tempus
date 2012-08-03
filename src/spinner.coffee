@@ -20,6 +20,7 @@
 
 class Spinner extends EnemyShip
   constructor: (@x, @y) ->
+    super(@x, @y)
     @angle = 0
     @shootCooldown = Math.floor(Math.random() * @cooldownTime)
     @burst = 0
@@ -60,7 +61,7 @@ class Spinner extends EnemyShip
 
   removeOffScreen: ->
     if @y > canvas.height
-      @health = 0
+      @removed = true
       return true
     return false
 

@@ -20,6 +20,7 @@
 
 class EnemyShip extends Box
   constructor: (@x, @y) ->
+    @removed = false
 
   getAnimation: ->
     new Anima(0)

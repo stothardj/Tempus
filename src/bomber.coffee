@@ -20,6 +20,7 @@
 
 class Bomber extends EnemyShip
   constructor: (@x, @y) ->
+    super(@x, @y)
     @angle = 0
     @bombCooldown = Math.floor(Math.random() * @cooldownTime)
     @turnVel = (Math.random() - 0.5) / 30;
@@ -59,7 +60,7 @@ class Bomber extends EnemyShip
   removeOffScreen: ->
     if @offscreen()
       if @goneOnScreen
-        @health = 0
+        @removed = true
         return true
     else
       @goneOnScreen = true

@@ -20,6 +20,7 @@
 
 class Fighter extends EnemyShip
   constructor: (@x, @y) ->
+    super(@x, @y)
     @shootCooldown = Math.floor(Math.random() * @cooldownTime)
     @health = 1
 
@@ -51,7 +52,7 @@ class Fighter extends EnemyShip
 
   removeOffScreen: ->
     if @y > canvas.height
-      @health = 0
+      @removed = true
       return true
     return false
 
