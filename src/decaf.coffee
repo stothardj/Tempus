@@ -137,6 +137,19 @@ dispHealth = ->
   ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 40, 0, Math.max(ship.shield, 0) * Math.PI * 2 / SHIP_MAX_SHIELD, false)
   ctx.stroke()
 
+dispLives = ->
+  if game.owners.player.lives < 1
+    return
+
+  ctx.fillStyle = "rgba(255,255,255,".concat( game.timers.dispLives / 255.0 , ")" )
+  # ctx.fillStyle = "#FFFFFF"
+
+  for life in [1..game.owners.player.lives]
+    ctx.beginPath()
+    ctx.arc(11 * life, canvas.height - 11, 5, 0, Math.PI * 2, false)
+    ctx.closePath()
+    ctx.fill()
+
 pause = ->
   currentState = gameState.paused
   clearInterval( timeHandle )
@@ -235,8 +248,14 @@ gameloop = ->
   game.timers.colorCycle = Math.max(game.timers.colorCycle, 0)
   game.timers.colorCycleDir *= -1 if game.timers.colorCycle is 0 or game.timers.colorCycle is 255
 
-  # Check gameover
+  # Check life lost
   if ship.health <= 0
+    game.owners.player.lives -= 1
+    ship = new Ship(0, canvas.height)
+    game.timers.dispLives = 255
+
+  # Check gameover
+  if game.owners.player.lives < 0
     currentState = gameState.gameOver
     clearInterval( timeHandle )
     drawGameOver()
@@ -331,8 +350,13 @@ gameloop = ->
 
   if game.timers.dispHealth > 0
     dispHealth()
-    ctx.strokeStyle = "#FFFFFF"
     game.timers.dispHealth -= 10
+
+  if game.timers.dispLives > 0
+    dispLives()
+    game.timers.dispLives -= 1
+
+  # dispLives()
 
   # Made it to the end, so did not crash this loop
   game.crashed = false

@@ -29,6 +29,7 @@ class Game
         kills: 0
         lasersFired: 0
         bombsFired: 0
+        lives: PLAYER_LIVES
       enemies:
         lasers: []
         bombs: []
@@ -38,6 +39,7 @@ class Game
 
     @timers =
       dispHealth: 0
+      dispLives: 0
       colorCycle: 0
       colorCycleDir: 10
 
