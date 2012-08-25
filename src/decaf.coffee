@@ -17,6 +17,7 @@
 
 #<< bomb
 #<< config
+#<< display
 #<< healthup
 #<< shieldup
 #<< ship
@@ -29,8 +30,12 @@
 #<< spinner
 #<< game
 
-canvas = document.getElementById("c")
-ctx = canvas.getContext("2d")
+console.log "Game init"
+display = Display.get()
+# TODO: Get to the point where it's reasonable to remove these globals
+ctx = display.ctx
+canvas = display.canvas
+
 audio = $('<audio></audio>')
   .attr({ 'loop' : 'loop'})
   .append($('<source></source>')
@@ -41,7 +46,7 @@ audio = $('<audio></audio>')
   .attr({ 'type': 'audio/mpeg'}))
   .appendTo('body')[0]
 
-throw "Loading context failed" unless ctx
+throw "Loading context failed" unless ctx?
 
 # General functions
 # Many of these are stolen off the internet
@@ -80,39 +85,6 @@ gameState =
 
 currentState = gameState.title
 
-setTitleFont = ->
-  ctx.fillStyle = "#FFFFFF"
-  ctx.font = "bold 20px Lucidia Console"
-  ctx.textAlign = "center"
-  ctx.textBaseline = "middle"
-
-setLowerLeftFont = ->
-  ctx.fillStyle = "#FFFFFF"
-  ctx.font = "normal 18px Lucidia Console"
-  ctx.textAlign = "left"
-  ctx.textBaseline = "bottom"
-
-clearScreen = ->
-  ctx.fillStyle = "#000000"
-  ctx.fillRect( 0, 0, canvas.width, canvas.height)
-
-drawTitleScreen = ->
-  clearScreen()
-  setTitleFont()
-  ctx.fillText( "Tempus [Dev]", canvas.width / 2, canvas.height / 2 - 12 )
-  ctx.fillText( "Click to play", canvas.width / 2, canvas.height / 2 + 12)
-  setLowerLeftFont()
-  ctx.fillText( "by Jake Stothard", 10, canvas.height - 10)
-
-drawGameOver = ->
-  clearScreen()
-  setTitleFont()
-  ctx.fillText( "Game Over", canvas.width / 2, canvas.height / 2 - 20 )
-  ctx.font = "normal 18px Lucidia Console"
-  ctx.fillText( "Kills - " + game.owners.player.kills, canvas.width / 2, canvas.height / 2)
-  ctx.fillText( "Lasers Fired - " + game.owners.player.lasersFired, canvas.width / 2, canvas.height / 2 + 20 )
-  ctx.fillText( "Bombs Used - " + game.owners.player.bombsFired, canvas.width / 2, canvas.height / 2 + 40 )
-
 ctx.strokeStyle = "#FFFFFF"
 ctx.lineWidth = 4
 
@@ -127,34 +99,12 @@ initGame = ->
   ship = new Ship(mouse.x, mouse.y)
   game = new Game()
 
-dispHealth = ->
-  ctx.strokeStyle = "rgba(0,255,0,".concat( game.timers.dispHealth / 255.0 , ")" )
-  ctx.beginPath()
-  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 20, 0, Math.max(ship.health, 0) * Math.PI * 2 / SHIP_MAX_HEALTH, false)
-  ctx.stroke()
-  ctx.strokeStyle = "rgba(0,127,255,".concat( game.timers.dispHealth / 255.0 , ")" )
-  ctx.beginPath()
-  ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2 - 40, 0, Math.max(ship.shield, 0) * Math.PI * 2 / SHIP_MAX_SHIELD, false)
-  ctx.stroke()
-
-dispLives = ->
-  if game.owners.player.lives < 1
-    return
-
-  ctx.fillStyle = "rgba(255,255,255,".concat( game.timers.dispLives / 255.0 , ")" )
-  # ctx.fillStyle = "#FFFFFF"
-
-  for life in [1..game.owners.player.lives]
-    ctx.beginPath()
-    ctx.arc(11 * life, canvas.height - 11, 5, 0, Math.PI * 2, false)
-    ctx.closePath()
-    ctx.fill()
-
 pause = ->
   currentState = gameState.paused
   clearInterval( timeHandle )
-  dispHealth()
-  setTitleFont()
+  display.drawHealth()
+  display.drawLives()
+  display.setTitleFont()
   ctx.fillText( "[Paused]", canvas.width / 2, canvas.height / 2)
 
 unpause = ->
@@ -211,7 +161,7 @@ $("#c")
         timeHandle = every 32, gameloop
       when gameState.gameOver
         currentState = gameState.title
-        drawTitleScreen()
+        display.drawTitleScreen()
   )
 
   .bind("contextmenu", (e) ->
@@ -258,10 +208,10 @@ gameloop = ->
   if game.owners.player.lives < 0
     currentState = gameState.gameOver
     clearInterval( timeHandle )
-    drawGameOver()
+    display.drawGameOver()
     return
 
-  clearScreen()
+  display.clearScreen()
 
   # Update enemy
   enemy.update() for enemy in game.owners.enemies.units
@@ -349,14 +299,12 @@ gameloop = ->
     ctx.fillText( "[ Heat Warning ]", canvas.width / 2, canvas.height - 30)
 
   if game.timers.dispHealth > 0
-    dispHealth()
+    display.drawHealth()
     game.timers.dispHealth -= 10
 
   if game.timers.dispLives > 0
-    dispLives()
+    display.drawLives()
     game.timers.dispLives -= 1
-
-  # dispLives()
 
   # Made it to the end, so did not crash this loop
   game.crashed = false
@@ -368,5 +316,5 @@ switch currentState
     initGame()
     timeHandle = every 32, gameloop
   when gameState.title
-    drawTitleScreen()
+    display.drawTitleScreen()
 
