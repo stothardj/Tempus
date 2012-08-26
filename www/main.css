@@ -1,9 +1,65 @@
-#c {
-    cursor: none;
+body {
+    background-color: #EEEEEE;
+    font-family: Helvetica;
 }
-#rights {
-    display: none;
+div#wrapper {
+    position:relative;
+    padding-top: 0px;
+    margin-left:auto;
+    margin-right:auto;
+    top: 0px;
+    width: 1000px;
+    background-color: #FFFFFF;
 }
-div.tab {
-    height: 700px;
+div#banner {
+    position:relative;
+    margin-left:auto;
+    margin-right:auto;
+    top: 0px;
+    width: 1000px;
+    height: 100px;
+    background-color: #DDDDDD;
+    line-height: 100px;
+}
+div#toplinks {
+    position:relative;
+    margin-left:auto;
+    margin-right:auto;
+    top: 0px;
+    width: 1000px;
+    height: 40px;
+    line-height: 40px;
+}
+span.toplink {
+    padding-left: 70px;
+    padding-right: 70px;
+}
+div#content{
+    position:relative;
+    margin-left:auto;
+    margin-right:auto;
+    width: 1000px;
+    text-align: left;
+    padding: 20px;
+}
+div#game {
+    position:relative;
+    margin-left:auto;
+    margin-right:auto;
+    width: 1000px;
+    text-align: center;
+}
+h1 {
+    text-align: center;
+    font-size: 42px;
+}
+a {
+    text-decoration: none;
+    color: #777777;
+}
+a:hover {
+    text-decoration: underline;
+}
+p {
+    padding: 5px;
 }
