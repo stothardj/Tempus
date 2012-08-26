@@ -23,6 +23,8 @@ class Fighter extends EnemyShip
     super(@x, @y)
     @shootCooldown = Math.floor(Math.random() * @cooldownTime)
     @health = 1
+    @halfWidth = @width >> 1
+    @halfHeight = @height >> 1
 
   rand: 0.03
   threshold: 0
@@ -34,9 +36,9 @@ class Fighter extends EnemyShip
   draw: ->
     ctx.strokeStyle = "#FFFFFF"
     ctx.beginPath()
-    ctx.moveTo( @x - @width / 2, @y - @height / 2 )
-    ctx.lineTo( @x + @width / 2, @y - @height / 2 )
-    ctx.lineTo( @x, @y + @height / 2 )
+    ctx.moveTo( @x - @halfWidth, @y - @halfHeight )
+    ctx.lineTo( @x + @halfWidth, @y - @halfHeight )
+    ctx.lineTo( @x, @y + @halfHeight )
 
     ctx.closePath()
     ctx.stroke()
@@ -44,7 +46,12 @@ class Fighter extends EnemyShip
   move: ->
     @y += 3
     mv = (ship.x - @x) / 12
-    @x += if Math.abs(mv) < 5 then mv else 5 * mv/Math.abs(mv)
+    if Math.abs(mv) < 5
+      @x += mv | 0
+    else if mv > 0
+      @x += 5
+    else
+      @x -= 5
 
   shoot: ->
     @shootCooldown = @cooldownTime
@@ -60,7 +67,7 @@ class Fighter extends EnemyShip
     @shoot() if @shootCooldown is 0
     @shootCooldown -= 1
     @move()
-    @draw()
+    # @draw()
     if not @removeOffScreen()
       @takeDamage()
 

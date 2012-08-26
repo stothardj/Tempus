@@ -25,6 +25,8 @@ class Spinner extends EnemyShip
     @shootCooldown = Math.floor(Math.random() * @cooldownTime)
     @burst = 0
     @health = 1
+    @halfWidth = @width >> 1
+    @halfHeight = @height >> 1
 
   rand: 0.005
   threshold: 45
@@ -38,10 +40,10 @@ class Spinner extends EnemyShip
     ctx.translate( @x, @y )
     ctx.rotate( @angle )
     ctx.beginPath()
-    ctx.moveTo( - @width / 2, - @height / 2 )
-    ctx.lineTo( @width / 2, - @height / 2 )
-    ctx.lineTo( @width / 2, @height / 2 )
-    ctx.lineTo( - @width / 2, @height / 2 )
+    ctx.moveTo( - @halfWidth, - @halfHeight )
+    ctx.lineTo( @halfWidth , - @halfHeight )
+    ctx.lineTo( @halfWidth , @halfHeight )
+    ctx.lineTo( - @halfWidth, @halfHeight )
     ctx.closePath()
     ctx.stroke()
     ctx.rotate( -@angle )
@@ -69,7 +71,7 @@ class Spinner extends EnemyShip
     @shoot() if @shootCooldown <= 0
     @shootCooldown -= 1
     @move()
-    @draw()
+    # @draw()
     if not @removeOffScreen()
       @takeDamage()
 

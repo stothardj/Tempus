@@ -24,12 +24,16 @@ class Kamikaze extends EnemyShip
     @angle = 0
     @moveState = 0
     @health = 1
+    @halfWidth = @width >> 1
+    @halfHeight = @height >> 1
+    @fifthHeight = (@height / 5) | 0
 
   rand: 0.02
   threshold: 15
   width: 20
   height: 20
   impactDamage: 35
+  turnSpeed: Math.PI / 24
 
   move: ->
     switch @moveState
@@ -44,27 +48,27 @@ class Kamikaze extends EnemyShip
           desired_angle = Math.PI - Math.atan( (@x - ship.x) / (@y - ship.y) )
         else
           desired_angle = - Math.atan( (@x - ship.x) / (@y - ship.y) )
-        if Math.abs(desired_angle - @angle) < (Math.PI / 24) or Math.abs(desired_angle - @angle) > Math.PI * 2 - (Math.PI / 24)
+        if Math.abs(desired_angle - @angle) < @turnSpeed or Math.abs(desired_angle - @angle) > Math.PI * 2 - @turnSpeed
           @angle = desired_angle
           @moveState = 2
         else if (@angle < desired_angle and @angle - desired_angle < Math.PI) or (Math.PI * 2 - @angle) - desired_angle < Math.PI
-          @angle += Math.PI / 24
+          @angle += @turnSpeed
         else
-          @angle -= Math.PI / 24
+          @angle -= @turnSpeed
       when 2 # Charge
-        @x += 30 * Math.cos(@angle + Math.PI / 2)
-        @y += 30 * Math.sin(@angle + Math.PI / 2)
+        @x += 30 * Math.cos(@angle + halfPi)
+        @y += 30 * Math.sin(@angle + halfPi)
 
   draw: ->
     ctx.strokeStyle = "#FFFFFF"
     ctx.translate( @x, @y )
     ctx.rotate( @angle )
     ctx.beginPath()
-    ctx.moveTo( - @width / 2, - @height / 2 )
-    ctx.lineTo( @width / 2, - @height / 2 )
-    ctx.lineTo( @width / 2, @height / 5 )
-    ctx.lineTo( 0, @height / 2 )
-    ctx.lineTo( - @width / 2, @height / 5 )
+    ctx.moveTo( - @halfWidth, - @halfHeight )
+    ctx.lineTo( @halfWidth, - @halfHeight )
+    ctx.lineTo( @halfWidth, @fifthHeight )
+    ctx.lineTo( 0, @halfHeight )
+    ctx.lineTo( - @halfWidth, @fifthHeight )
     ctx.closePath()
     ctx.stroke()
     ctx.rotate( -@angle )
@@ -78,7 +82,7 @@ class Kamikaze extends EnemyShip
 
   update: ->
     @move()
-    @draw()
+    # @draw()
     if not @removeOffScreen()
       @takeDamage()
 

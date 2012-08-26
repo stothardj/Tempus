@@ -20,6 +20,9 @@
 class KamikazeDeath extends Anima
   constructor: (@x, @y, @angle) ->
     super 5
+    @halfWidth = @width >> 1
+    @halfHeight = @height >> 1
+    @fifthHeight = (@height / 5) | 0
 
   width: 20
   height: 20
@@ -31,11 +34,11 @@ class KamikazeDeath extends Anima
     ctx.translate( @x, @y )
     ctx.rotate( @angle )
     ctx.beginPath()
-    ctx.moveTo( - @width / 2 - expand, - @height / 2 - expand )
-    ctx.lineTo( @width / 2 + expand, - @height / 2 - expand )
-    ctx.lineTo( @width / 2 + expand, @height / 5 + expand )
-    ctx.lineTo( 0, @height / 2 + expand )
-    ctx.lineTo( - @width / 2 - expand, @height / 5 + expand )
+    ctx.moveTo( - @halfWidth - expand, - @halfHeight - expand )
+    ctx.lineTo( @halfWidth + expand, - @halfHeight - expand )
+    ctx.lineTo( @halfWidth + expand, @fifthHeight + expand )
+    ctx.lineTo( 0, @halfHeight + expand )
+    ctx.lineTo( - @halfWidth - expand, @fifthHeight + expand )
     ctx.closePath()
     ctx.stroke()
     ctx.rotate( -@angle )

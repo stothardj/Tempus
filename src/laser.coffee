@@ -18,21 +18,22 @@
 class Laser
   constructor: (@x, @y, @speed, @owner) ->
     @killedSomething = false
+    @halfHeight = @height >> 1
 
   speed: 20
-  width: 2
   height: 16
 
-  drawAsBox: ->
-    ctx.fillRect( @x - @width / 2, @y - @height / 2, @width, @height )
-
   draw: ->
-    ctx.fillStyle = @owner.color;
-    @drawAsBox()
+    ctx.strokeStyle = @owner.color;
+    ctx.beginPath()
+    ctx.moveTo( @x, @y - @halfHeight)
+    ctx.lineTo( @x, @y + @halfHeight)
+    ctx.closePath()
+    ctx.stroke()
 
   move: ->
     @y += @speed
 
   update: ->
     @move()
-    @draw()
+    # @draw()

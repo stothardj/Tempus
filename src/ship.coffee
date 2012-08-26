@@ -17,9 +17,10 @@
 
 # Made a class even though there should be only one.
 
+#<< box
 #<< config
 
-class Ship
+class Ship extends Box
   constructor: (@x, @y) ->
     @laserCooldown = 0
     @bombCooldown = 0
@@ -27,19 +28,20 @@ class Ship
     @laserPower = 1
     @health = SHIP_MAX_HEALTH
     @shield = 0
+    @halfWidth = @width >> 1
+    @eighthWidth = @width >> 3
+    @halfHeight = @height >> 1
+    @fourthHeight = @height >> 2
 
   width: 40
   height: 40
 
-  boxHit: (other) ->
-    Math.abs( other.x - @x ) < (other.width + @width) / 2 and Math.abs( other.y - @y ) < (other.height + @height) / 2
-
   move: ->
-    @x = (@x + mouse.x) / 2
-    @y = (@y + mouse.y) / 2
+    @x = (@x + mouse.x) >> 1
+    @y = (@y + mouse.y) >> 1
 
   drawShield: ->
-    ctx.strokeStyle = "rgb(0,".concat( Math.floor(game.timers.colorCycle / 2), ",", game.timers.colorCycle, ")")
+    ctx.strokeStyle = "rgb(0,".concat( game.timers.colorCycle >> 1, ",", game.timers.colorCycle, ")")
     ctx.beginPath()
     ctx.arc(@x, @y, Math.min(@width, @height) , 0, 2 * Math.PI, false)
     ctx.stroke()
@@ -48,11 +50,11 @@ class Ship
     @drawShield() if @shield > 0
     ctx.strokeStyle = "#FFFFFF"
     ctx.beginPath()
-    ctx.moveTo( @x, @y - @height / 2 )
-    ctx.quadraticCurveTo( @x + @width / 2, @y, @x + @width / 2, @y + @height / 2 )
-    ctx.quadraticCurveTo( @x + @width / 8, @y + @height / 4, @x, @y + @height / 4 )
-    ctx.quadraticCurveTo( @x - @width / 8, @y + @height / 4, @x - @width / 2, @y + @height / 2 )
-    ctx.quadraticCurveTo( @x - @width / 2, @y, @x, @y - @height / 2 )
+    ctx.moveTo( @x, @y - @halfHeight )
+    ctx.quadraticCurveTo( @x + @halfWidth, @y, @x + @halfWidth, @y + @halfHeight )
+    ctx.quadraticCurveTo( @x + @eighthWidth, @y + @fourthHeight, @x, @y + @fourthHeight )
+    ctx.quadraticCurveTo( @x - @eighthWidth, @y + @fourthHeight, @x - @halfWidth, @y + @halfHeight )
+    ctx.quadraticCurveTo( @x - @halfWidth, @y, @x, @y - @halfHeight )
     ctx.closePath()
     ctx.stroke()
 
@@ -81,6 +83,6 @@ class Ship
   
   update: ->
     @move()
-    @draw()
+    # @draw()
     @takeDamage()
     @shield = Math.max( @shield - 1, 0 )

@@ -29,6 +29,7 @@
 #<< laser
 #<< spinner
 #<< game
+#<< utility
 
 console.log "Game init"
 display = Display.get()
@@ -47,20 +48,6 @@ audio = $('<audio></audio>')
   .appendTo('body')[0]
 
 throw "Loading context failed" unless ctx?
-
-# General functions
-# Many of these are stolen off the internet
-randInt = (min, max) ->
-  Math.floor( Math.random() * (max - min + 1) ) + min
-
-every = (ms, cb) -> setInterval cb, ms
-
-partition = (list, test = (x) -> x) ->
-  pass = []
-  fail = []
-  for e in list
-    (if test e then pass else fail).push e
-  [pass, fail]
 
 # Here for scope
 game = undefined
@@ -215,6 +202,7 @@ gameloop = ->
 
   # Update enemy
   enemy.update() for enemy in game.owners.enemies.units
+  enemy.draw() for enemy in game.owners.enemies.units
 
   # Put powerups in place of dead enemies
   #TODO: make powerup looped over instead of copying code
@@ -235,10 +223,12 @@ gameloop = ->
 
   # Update ship
   ship.update()
+  ship.draw()
 
   # Update lasers, etc.
   for ownerName, owner of game.owners
     laser.update() for laser in owner.lasers
+    laser.draw() for laser in owner.lasers
     owner.lasers = (laser for laser in owner.lasers when 0 < laser.y < canvas.height and not laser.killedSomething)
     bomb.update() for bomb in owner.bombs
     owner.bombs = (bomb for bomb in owner.bombs when bomb.cooldown > 0)

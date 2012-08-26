@@ -15,15 +15,19 @@
 #
 # Copyright 2011, 2012 Jake Stothard
 
-# Many objects are basically treated as boxes
-class Box
-  constructor: (@x, @y) ->
+# General functions
+# Many of these are stolen off the internet
+randInt = (min, max) ->
+  Math.floor( Math.random() * (max - min + 1) ) + min
 
-  boxHit: (other) ->
-    Math.abs( other.x - @x ) < (other.width + @width) >> 1 and Math.abs( other.y - @y ) < (other.height + @height) >> 1
+every = (ms, cb) -> setInterval cb, ms
 
-  offscreen: ->
-    @x < 0 or @x > canvas.width or @y < 0 or @y > canvas.height
+partition = (list, test = (x) -> x) ->
+  pass = []
+  fail = []
+  for e in list
+    (if test e then pass else fail).push e
+  [pass, fail]
 
-  drawAsBox: ->
-    ctx.fillRect( @x - (@width >> 1), @y - (@height >> 1), @width, @height )
+# Useful, no need to calculate millions of times
+halfPi = Math.PI / 2

@@ -20,6 +20,8 @@
 class FighterDeath extends Anima
   constructor: (@x, @y) ->
     super 5
+    @halfWidth = @width >> 1
+    @halfHeight = @height >> 1
 
   width: 20
   height: 20
@@ -29,9 +31,9 @@ class FighterDeath extends Anima
     ctx.beginPath()
 
     expand = @frame * 2
-    ctx.moveTo( @x - @width / 2 - expand, @y - @height / 2 - expand )
-    ctx.lineTo( @x + @width / 2 + expand, @y - @height / 2 - expand )
-    ctx.lineTo( @x, @y + @height / 2 + expand )
+    ctx.moveTo( @x - @halfWidth - expand, @y - @halfHeight - expand )
+    ctx.lineTo( @x + @halfWidth + expand, @y - @halfHeight - expand )
+    ctx.lineTo( @x, @y + @halfHeight + expand )
 
     ctx.closePath()
     ctx.stroke()

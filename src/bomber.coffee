@@ -26,6 +26,8 @@ class Bomber extends EnemyShip
     @turnVel = (Math.random() - 0.5) / 30;
     @health = 1
     @goneOnScreen = false
+    @halfWidth = @width >> 1
+    @halfHeight = @height >> 1
 
   rand: 0.01
   threshold: 30
@@ -35,8 +37,8 @@ class Bomber extends EnemyShip
   impactDamage: 24
 
   move: ->
-    @x += 2 * Math.cos(@angle + Math.PI / 2)
-    @y += 2 * Math.sin(@angle + Math.PI / 2)
+    @x += 2 * Math.cos(@angle + halfPi)
+    @y += 2 * Math.sin(@angle + halfPi)
     @angle += @turnVel
 
   draw: ->
@@ -44,10 +46,10 @@ class Bomber extends EnemyShip
     ctx.translate( @x, @y )
     ctx.rotate( @angle )
     ctx.beginPath()
-    ctx.moveTo( 0, @height / 2 )
-    ctx.lineTo( @width / 2, 0 )
-    ctx.lineTo( 0, - @height / 2 )
-    ctx.lineTo( - @width / 2, 0 )
+    ctx.moveTo( 0, @halfHeight )
+    ctx.lineTo( @halfWidth , 0 )
+    ctx.lineTo( 0, - @halfHeight )
+    ctx.lineTo( - @halfWidth, 0 )
     ctx.closePath()
     ctx.stroke()
     ctx.rotate( -@angle )
@@ -70,7 +72,7 @@ class Bomber extends EnemyShip
     @bomb() if @bombCooldown is 0
     @bombCooldown -= 1
     @move()
-    @draw()
+    # @draw()
     if not @removeOffScreen()
       @takeDamage()
 

@@ -41,19 +41,19 @@ class DisplaySingleton
   drawTitleScreen: ->
     @clearScreen()
     @setTitleFont()
-    @ctx.fillText( "Tempus [Dev]", @canvas.width / 2, @canvas.height / 2 - 12 )
-    @ctx.fillText( "Click to play", @canvas.width / 2, @canvas.height / 2 + 12)
+    @ctx.fillText( "Tempus [Dev]", @canvas.width >> 1, (@canvas.height >> 1) - 12 )
+    @ctx.fillText( "Click to play", @canvas.width >> 1, (@canvas.height >> 1) + 12)
     @setLowerLeftFont()
     @ctx.fillText( "by Jake Stothard", 10, @canvas.height - 10)
 
   drawGameOver: ->
     @clearScreen()
     @setTitleFont()
-    @ctx.fillText( "Game Over", @canvas.width / 2, @canvas.height / 2 - 20 )
+    @ctx.fillText( "Game Over", @canvas.width >> 1, (@canvas.height >> 1) - 20 )
     @ctx.font = "normal 18px Lucidia Console"
-    @ctx.fillText( "Kills - " + game.owners.player.kills, @canvas.width / 2, @canvas.height / 2)
-    @ctx.fillText( "Lasers Fired - " + game.owners.player.lasersFired, @canvas.width / 2, @canvas.height / 2 + 20 )
-    @ctx.fillText( "Bombs Used - " + game.owners.player.bombsFired, @canvas.width / 2, @canvas.height / 2 + 40 )
+    @ctx.fillText( "Kills - " + game.owners.player.kills, @canvas.width >> 1, @canvas.height >> 1)
+    @ctx.fillText( "Lasers Fired - " + game.owners.player.lasersFired, @canvas.width >> 1, (@canvas.height >> 1) + 20 )
+    @ctx.fillText( "Bombs Used - " + game.owners.player.bombsFired, @canvas.width >> 1, (@canvas.height >> 1) + 40 )
 
   drawHealth: ->
     if currentState is gameState.paused
@@ -61,14 +61,14 @@ class DisplaySingleton
     else
       @ctx.strokeStyle = "rgba(0,255,0,".concat( game.timers.dispHealth / 255.0 , ")" )
     @ctx.beginPath()
-    @ctx.arc(@canvas.width / 2, @canvas.height / 2, Math.min(@canvas.width, @canvas.height) / 2 - 20, 0, Math.max(ship.health, 0) * Math.PI * 2 / SHIP_MAX_HEALTH, false)
+    @ctx.arc(@canvas.width >> 1, @canvas.height >> 1, (Math.min(@canvas.width, @canvas.height) >> 1) - 20, 0, Math.max(ship.health, 0) * Math.PI * 2 / SHIP_MAX_HEALTH, false)
     @ctx.stroke()
     if currentState is gameState.paused
       @ctx.strokeStyle = "rgb(0,127,255)"
     else
       @ctx.strokeStyle = "rgba(0,127,255,".concat( game.timers.dispHealth / 255.0 , ")" )
     @ctx.beginPath()
-    @ctx.arc(@canvas.width / 2, @canvas.height / 2, Math.min(@canvas.width, @canvas.height) / 2 - 40, 0, Math.max(ship.shield, 0) * Math.PI * 2 / SHIP_MAX_SHIELD, false)
+    @ctx.arc(@canvas.width >> 1, @canvas.height >> 1, (Math.min(@canvas.width, @canvas.height) >> 1) - 40, 0, Math.max(ship.shield, 0) * Math.PI * 2 / SHIP_MAX_SHIELD, false)
     @ctx.stroke()
 
   drawLives: ->

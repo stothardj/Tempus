@@ -45,3 +45,6 @@ class EnemyShip extends Box
       if @boxHit(shrapnal)
         game.owners.player.kills += 1
         return @health = 0
+
+  update: ->
+  draw: ->

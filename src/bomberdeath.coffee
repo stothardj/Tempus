@@ -20,6 +20,8 @@
 class BomberDeath extends Anima
   constructor: (@x, @y, @angle) ->
     super 5
+    @halfWidth = @width >> 1
+    @halfHeight = @height >> 1
 
   width: 10
   height: 28
@@ -31,10 +33,10 @@ class BomberDeath extends Anima
     ctx.translate( @x, @y )
     ctx.rotate( @angle )
     ctx.beginPath()
-    ctx.moveTo( 0, @height / 2 + expand )
-    ctx.lineTo( @width / 2 + expand, 0 )
-    ctx.lineTo( 0, - @height / 2 - expand )
-    ctx.lineTo( - @width / 2 - expand, 0 )
+    ctx.moveTo( 0, @halfHeight + expand )
+    ctx.lineTo( @halfWidth + expand, 0 )
+    ctx.lineTo( 0, - @halfHeight - expand )
+    ctx.lineTo( - @halfWidth - expand, 0 )
     ctx.closePath()
     ctx.stroke()
     ctx.rotate( -@angle )
