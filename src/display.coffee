@@ -24,13 +24,13 @@ class DisplaySingleton
 
   setTitleFont: ->
     @ctx.fillStyle = "#FFFFFF"
-    @ctx.font = "bold 20px Lucidia Console"
+    @ctx.font = "bold 20px Helvetica"
     @ctx.textAlign = "center"
     @ctx.textBaseline = "middle"
 
   setLowerLeftFont: ->
     @ctx.fillStyle = "#FFFFFF"
-    @ctx.font = "normal 18px Lucidia Console"
+    @ctx.font = "normal 18px Helvetica"
     @ctx.textAlign = "left"
     @ctx.textBaseline = "bottom"
 
@@ -41,7 +41,7 @@ class DisplaySingleton
   drawTitleScreen: ->
     @clearScreen()
     @setTitleFont()
-    @ctx.fillText( "Tempus [Dev]", @canvas.width >> 1, (@canvas.height >> 1) - 12 )
+    @ctx.fillText( "Tempus", @canvas.width >> 1, (@canvas.height >> 1) - 12 )
     @ctx.fillText( "Click to play", @canvas.width >> 1, (@canvas.height >> 1) + 12)
     @setLowerLeftFont()
     @ctx.fillText( "by Jake Stothard", 10, @canvas.height - 10)
@@ -50,7 +50,7 @@ class DisplaySingleton
     @clearScreen()
     @setTitleFont()
     @ctx.fillText( "Game Over", @canvas.width >> 1, (@canvas.height >> 1) - 20 )
-    @ctx.font = "normal 18px Lucidia Console"
+    @ctx.font = "normal 18px Helvetica"
     @ctx.fillText( "Kills - " + game.owners.player.kills, @canvas.width >> 1, @canvas.height >> 1)
     @ctx.fillText( "Lasers Fired - " + game.owners.player.lasersFired, @canvas.width >> 1, (@canvas.height >> 1) + 20 )
     @ctx.fillText( "Bombs Used - " + game.owners.player.bombsFired, @canvas.width >> 1, (@canvas.height >> 1) + 40 )

@@ -284,11 +284,11 @@ gameloop = ->
 
   if ship.heat > SHIP_CRITICAL_TEMP
     ctx.fillStyle = "rgb(".concat( game.timers.colorCycle, ",0,0)")
-    ctx.font = "bold 20px Lucidia Console"
+    ctx.font = "bold 20px Helvetica"
     ctx.fillText( "[ Heat Critical ]", canvas.width / 2, canvas.height - 30)
   else if ship.heat > SHIP_WARNING_TEMP
     ctx.fillStyle = "rgb(".concat( game.timers.colorCycle, ",", game.timers.colorCycle, ",0)");
-    ctx.font = "normal 18px Lucidia Console"
+    ctx.font = "normal 18px Helvetica"
     ctx.fillText( "[ Heat Warning ]", canvas.width / 2, canvas.height - 30)
 
   if game.timers.dispHealth > 0
