@@ -86,6 +86,9 @@ initGame = ->
   ship = new Ship(mouse.x, mouse.y)
   game = new Game()
 
+startTimer = ->
+  timeHandle = every 26, gameloop
+
 pause = ->
   currentState = gameState.paused
   clearInterval( timeHandle )
@@ -96,7 +99,7 @@ pause = ->
 
 unpause = ->
   currentState = gameState.playing
-  timeHandle = every 32, gameloop
+  startTimer()
 
 $(document)
   .keyup( (e) ->
@@ -145,7 +148,7 @@ $("#c")
       when gameState.title
         currentState = gameState.playing
         initGame()
-        timeHandle = every 32, gameloop
+        startTimer()
       when gameState.gameOver
         currentState = gameState.title
         display.drawTitleScreen()
@@ -202,7 +205,6 @@ gameloop = ->
 
   # Update enemy
   enemy.update() for enemy in game.owners.enemies.units
-  enemy.draw() for enemy in game.owners.enemies.units
 
   # Put powerups in place of dead enemies
   for powerupTypeName, powerupType of game.powerups
@@ -221,7 +223,6 @@ gameloop = ->
 
   # Update ship
   ship.update()
-  ship.draw()
 
   # Update lasers, etc.
   for ownerName, owner of game.owners
@@ -268,6 +269,10 @@ gameloop = ->
   ship.bombCooldown -= 1 if ship.bombCooldown > 0
   ship.heat -= 1 if ship.heat > 0
 
+  # Draw white
+  enemy.draw() for enemy in game.owners.enemies.units
+  ship.draw()
+
   # Draw animations
   for anim in game.animations
     anim.drawFrame()
@@ -302,7 +307,7 @@ gameloop = ->
 switch currentState
   when gameState.playing
     initGame()
-    timeHandle = every 32, gameloop
+    startTimer()
   when gameState.title
     display.drawTitleScreen()
 
