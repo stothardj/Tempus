@@ -205,10 +205,8 @@ gameloop = ->
   enemy.draw() for enemy in game.owners.enemies.units
 
   # Put powerups in place of dead enemies
-  #TODO: make powerup looped over instead of copying code
-  game.powerups.healthups = game.powerups.healthups.concat( genpowerup(HealthUp) )
-  game.powerups.shieldups = game.powerups.shieldups.concat( genpowerup(ShieldUp) )
-  game.powerups.laserups = game.powerups.laserups.concat( genpowerup(LaserUp) )
+  for powerupTypeName, powerupType of game.powerups
+    powerupType.instances = powerupType.instances.concat( genpowerup( powerupType.classType ))
 
   # Remove dead enemies
   game.owners.enemies.units = (enemy for enemy in game.owners.enemies.units when not enemy.removed)
@@ -237,8 +235,8 @@ gameloop = ->
 
   # Update powerups
   for powerupTypeName, powerupType of game.powerups
-    powerup.update() for powerup in powerupType
-    game.powerups[powerupTypeName] = (powerup for powerup in powerupType when not powerup.used)
+    powerup.update() for powerup in powerupType.instances
+    game.powerups[powerupTypeName].instances = (powerup for powerup in powerupType.instances when not powerup.used)
 
   # Shoot lasers
   if mouse.leftDown and ship.laserCooldown <= 0

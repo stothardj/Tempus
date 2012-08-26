@@ -16,6 +16,9 @@
 # Copyright 2011, 2012 Jake Stothard
 
 #<< config
+#<< healthup
+#<< shieldup
+#<< laserup
 
 class Game
   constructor: ->
@@ -44,9 +47,15 @@ class Game
       colorCycleDir: 10
 
     @powerups =
-      healthups: []
-      laserups: []
-      shieldups: []
+      healthups:
+        classType: HealthUp
+        instances: []
+      laserups:
+        classType: LaserUp
+        instances: []
+      shieldups:
+        classType: ShieldUp
+        instances: []
 
     @animations = []
 
