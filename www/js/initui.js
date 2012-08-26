@@ -1,5 +1,4 @@
 $(function(){
-    // $('#tabs').tabs();
     $('#popout').click(function (ev) {
 	var url = $(this).attr('href');
 	var name = 'Tempus';
