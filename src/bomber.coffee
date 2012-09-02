@@ -42,7 +42,6 @@ class Bomber extends EnemyShip
     @angle += @turnVel
 
   draw: ->
-    ctx.strokeStyle = "#FFFFFF"
     ctx.translate( @x, @y )
     ctx.rotate( @angle )
     ctx.beginPath()

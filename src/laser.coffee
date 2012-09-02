@@ -22,9 +22,9 @@ class Laser
 
   speed: 20
   height: 16
+  width: 6
 
   draw: ->
-    ctx.strokeStyle = @owner.color;
     ctx.beginPath()
     ctx.moveTo( @x, @y - @halfHeight)
     ctx.lineTo( @x, @y + @halfHeight)

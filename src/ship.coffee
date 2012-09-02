@@ -47,8 +47,7 @@ class Ship extends Box
     ctx.stroke()
 
   draw: ->
-    @drawShield() if @shield > 0
-    ctx.strokeStyle = "#FFFFFF"
+    # ctx.strokeStyle = "#FFFFFF"
     ctx.beginPath()
     ctx.moveTo( @x, @y - @halfHeight )
     ctx.quadraticCurveTo( @x + @halfWidth, @y, @x + @halfWidth, @y + @halfHeight )
@@ -57,6 +56,7 @@ class Ship extends Box
     ctx.quadraticCurveTo( @x - @halfWidth, @y, @x, @y - @halfHeight )
     ctx.closePath()
     ctx.stroke()
+    @drawShield() if @shield > 0
 
   damage: (amount) ->
     game.timers.dispHealth = 255

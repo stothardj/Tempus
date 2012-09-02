@@ -34,7 +34,6 @@ class Fighter extends EnemyShip
   impactDamage: 24
 
   draw: ->
-    ctx.strokeStyle = "#FFFFFF"
     ctx.beginPath()
     ctx.moveTo( @x - @halfWidth, @y - @halfHeight )
     ctx.lineTo( @x + @halfWidth, @y - @halfHeight )

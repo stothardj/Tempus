@@ -227,7 +227,7 @@ gameloop = ->
   # Update lasers, etc.
   for ownerName, owner of game.owners
     laser.update() for laser in owner.lasers
-    laser.draw() for laser in owner.lasers
+    # laser.draw() for laser in owner.lasers
     owner.lasers = (laser for laser in owner.lasers when 0 < laser.y < canvas.height and not laser.killedSomething)
     bomb.update() for bomb in owner.bombs
     owner.bombs = (bomb for bomb in owner.bombs when bomb.cooldown > 0)
@@ -269,9 +269,17 @@ gameloop = ->
   ship.bombCooldown -= 1 if ship.bombCooldown > 0
   ship.heat -= 1 if ship.heat > 0
 
-  # Draw white
+  # Drawing by color for performance
+  # Draw ships
+  ctx.strokeStyle = "#FFFFFF"
   enemy.draw() for enemy in game.owners.enemies.units
-  ship.draw()
+  ship.draw() # If ship has shield it can change the strokeStyle to blue
+
+  # Draw lasers
+  for ownerName, owner of game.owners
+    if owner.lasers.length > 0
+      ctx.strokeStyle = owner.color
+      laser.draw() for laser in owner.lasers
 
   # Draw animations
   for anim in game.animations

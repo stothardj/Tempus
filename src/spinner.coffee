@@ -36,7 +36,6 @@ class Spinner extends EnemyShip
   impactDamage: 24
 
   draw: ->
-    ctx.strokeStyle = "#FFFFFF"
     ctx.translate( @x, @y )
     ctx.rotate( @angle )
     ctx.beginPath()
