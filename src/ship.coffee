@@ -22,16 +22,24 @@
 
 class Ship extends Box
   constructor: (@x, @y) ->
+    @reset(@x, @y)
+    @halfWidth = @width >> 1
+    @eighthWidth = @width >> 3
+    @halfHeight = @height >> 1
+    @fourthHeight = @height >> 2
+
+  # This function resets everything which needs to be reset when you die.
+  # I don't just use the constructor for this because there are currently
+  # multiple references to the ship created and it would require making sure
+  # they are all updated to point to the new ship. This is the cleanest solution
+  # I could come up with
+  reset: (@x, @y) ->
     @laserCooldown = 0
     @bombCooldown = 0
     @heat = 0
     @laserPower = 1
     @health = SHIP_MAX_HEALTH
     @shield = 0
-    @halfWidth = @width >> 1
-    @eighthWidth = @width >> 3
-    @halfHeight = @height >> 1
-    @fourthHeight = @height >> 2
 
   width: 40
   height: 40

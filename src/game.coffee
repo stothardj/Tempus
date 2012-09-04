@@ -19,15 +19,18 @@
 #<< healthup
 #<< shieldup
 #<< laserup
+#<< ship
+#<< display
+#<< globals
 
 class Game
-  constructor: ->
+  constructor: (playerShip) ->
     @owners =
       player:
         lasers: []
         bombs: []
         shrapnals: []
-        units: ship
+        unit: playerShip
         color: GOOD_COLOR
         kills: 0
         lasersFired: 0
@@ -58,5 +61,37 @@ class Game
         instances: []
 
     @animations = []
-
+    
+    @display = Display.get()
     @crashed = false
+
+  # Stop looping if game crashes
+  checkCrashed: ->
+    if @crashed
+      currentState = gameState.crashed
+      clearInterval( timeHandle )
+      return
+    @crashed = true
+
+  # Color cycle for flashing text
+  cycleColorTimers: ->
+    @timers.colorCycle += @timers.colorCycleDir
+    @timers.colorCycle = Math.min(@timers.colorCycle, 255)
+    @timers.colorCycle = Math.max(@timers.colorCycle, 0)
+    @timers.colorCycleDir *= -1 if @timers.colorCycle is 0 or @timers.colorCycle is 255
+
+  # Check life lost
+  checkLifeLost: ->
+    if ship.health <= 0
+      @owners.player.lives -= 1
+      ship.reset(0, @display.canvas.height)
+      @timers.dispLives = 255
+
+  # Check gameover
+  checkGameOver: ->
+    if @owners.player.lives < 0
+      currentState = gameState.gameOver
+      clearInterval( timeHandle )
+      @display.drawGameOver()
+      return true
+    return false

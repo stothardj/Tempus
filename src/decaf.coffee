@@ -28,6 +28,7 @@
 #<< fighter
 #<< laser
 #<< spinner
+#<< globals
 #<< game
 #<< utility
 
@@ -49,33 +50,8 @@ audio = $('<audio></audio>')
 
 throw "Loading context failed" unless ctx?
 
-# Here for scope
-game = undefined
-ship = undefined
-firstTime = true
-musicPlaying = false
-
-mouse =
-  x: 250
-  y: 200
-  leftDown: false
-  rightDown: false
-
-timeHandle = undefined
-
-gameState =
-  title: "Title"
-  gameover: "GameOver"
-  playing: "Playing"
-  paused: "Paused"
-  crashed: "Crashed"
-
-currentState = gameState.title
-
-ctx.strokeStyle = "#FFFFFF"
-ctx.lineWidth = 4
-
 firstInit = ->
+  ctx.lineWidth = LINE_WIDTH
   if $("#enableMusic")[0].checked
     audio.play()
     musicPlaying = true
@@ -175,31 +151,13 @@ genpowerup = (t) ->
 # TODO: Once this is sufficiently OO move this into Game object
 gameloop = ->
 
-  # Stop looping if game crashes
-  if game.crashed
-    currentState = gameState.crashed
-    clearInterval( timeHandle )
-    return
-  game.crashed = true
+  game.checkCrashed()
 
-  # Color cycle for flashing text
-  game.timers.colorCycle += game.timers.colorCycleDir
-  game.timers.colorCycle = Math.min(game.timers.colorCycle, 255)
-  game.timers.colorCycle = Math.max(game.timers.colorCycle, 0)
-  game.timers.colorCycleDir *= -1 if game.timers.colorCycle is 0 or game.timers.colorCycle is 255
+  game.cycleColorTimers()
 
-  # Check life lost
-  if ship.health <= 0
-    game.owners.player.lives -= 1
-    ship = new Ship(0, canvas.height)
-    game.timers.dispLives = 255
+  game.checkLifeLost()
 
-  # Check gameover
-  if game.owners.player.lives < 0
-    currentState = gameState.gameOver
-    clearInterval( timeHandle )
-    display.drawGameOver()
-    return
+  return if game.checkGameOver()
 
   display.clearScreen()
 
@@ -227,7 +185,6 @@ gameloop = ->
   # Update lasers, etc.
   for ownerName, owner of game.owners
     laser.update() for laser in owner.lasers
-    # laser.draw() for laser in owner.lasers
     owner.lasers = (laser for laser in owner.lasers when 0 < laser.y < canvas.height and not laser.hitSomething)
     bomb.update() for bomb in owner.bombs
     owner.bombs = (bomb for bomb in owner.bombs when bomb.cooldown > 0)

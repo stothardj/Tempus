@@ -15,14 +15,29 @@
 #
 # Copyright 2011, 2012 Jake Stothard
 
-GOOD_COLOR = "#0044FF"
-BAD_COLOR = "#FF0000"
+# Globals are evil
+# But they are also very convenient, especially when I started writing this.
+# Now that this is split across multiple files the least I can do is have
+# them in a separate file which is included by all files which use them.
 
-SHIP_MAX_HEALTH = 100
-SHIP_MAX_SHIELD = 4000
-SHIP_CRITICAL_TEMP = 80
-SHIP_WARNING_TEMP = 40
+game = undefined
+ship = undefined
+firstTime = true
+musicPlaying = false
 
-PLAYER_LIVES = 3
+mouse =
+  x: 250
+  y: 200
+  leftDown: false
+  rightDown: false
 
-LINE_WIDTH = 2
+timeHandle = undefined
+
+gameState =
+  title: "Title"
+  gameover: "GameOver"
+  playing: "Playing"
+  paused: "Paused"
+  crashed: "Crashed"
+
+currentState = gameState.title
