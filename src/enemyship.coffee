@@ -34,7 +34,7 @@ class EnemyShip extends Box
       return @health = 0
     for laser in game.owners.player.lasers
       if Math.abs(@x - laser.x) <= @width / 2 + Laser::width / 2 and Math.abs(@y - laser.y + laser.speed / 2) <= (Math.abs(laser.speed) + laser.height) / 2 + @height / 2
-        laser.killedSomething = true
+        laser.hitSomething = true
         game.owners.player.kills += 1
         return @health = 0
     for bomb in game.owners.player.bombs

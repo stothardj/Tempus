@@ -228,7 +228,7 @@ gameloop = ->
   for ownerName, owner of game.owners
     laser.update() for laser in owner.lasers
     # laser.draw() for laser in owner.lasers
-    owner.lasers = (laser for laser in owner.lasers when 0 < laser.y < canvas.height and not laser.killedSomething)
+    owner.lasers = (laser for laser in owner.lasers when 0 < laser.y < canvas.height and not laser.hitSomething)
     bomb.update() for bomb in owner.bombs
     owner.bombs = (bomb for bomb in owner.bombs when bomb.cooldown > 0)
     shrapnal.update() for shrapnal in owner.shrapnals

@@ -17,7 +17,7 @@
 
 class Laser
   constructor: (@x, @y, @speed, @owner) ->
-    @killedSomething = false
+    @hitSomething = false
     @halfHeight = @height >> 1
 
   speed: 20
