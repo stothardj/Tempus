@@ -38,16 +38,8 @@ display = Display.get()
 ctx = display.ctx
 canvas = display.canvas
 
-audio = $('<audio></audio>')
-  .attr({ 'loop' : 'loop'})
-  .append($('<source></source>')
-  .attr({ 'src' : 'media/tonight_full.ogg'})
-  .attr({ 'type': 'audio/ogg' }))
-  .append($('<source></source>')
-  .attr({ 'src' : 'media/tonight_full.mp3'})
-  .attr({ 'type': 'audio/mpeg'}))
-  .appendTo('body')[0]
-
+audio = document.getElementById("audio");
+        
 throw "Loading context failed" unless ctx?
 
 firstInit = ->
