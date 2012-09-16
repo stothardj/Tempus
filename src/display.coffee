@@ -54,6 +54,7 @@ class DisplaySingleton
     @ctx.fillText( "Kills - " + game.owners.player.kills, @canvas.width >> 1, @canvas.height >> 1)
     @ctx.fillText( "Lasers Fired - " + game.owners.player.lasersFired, @canvas.width >> 1, (@canvas.height >> 1) + 20 )
     @ctx.fillText( "Bombs Used - " + game.owners.player.bombsFired, @canvas.width >> 1, (@canvas.height >> 1) + 40 )
+    @ctx.fillText( "Darts Used - " + game.owners.player.dartsFired, @canvas.width >> 1, (@canvas.height >> 1) + 60 )
 
   drawHealth: ->
     if currentState is gameState.paused

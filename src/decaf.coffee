@@ -58,6 +58,7 @@ startTimer = ->
   timeHandle = every 26, gameloop
 
 pause = ->
+  beginPauseTime = new Date().getTime()
   currentState = gameState.paused
   clearInterval( timeHandle )
   display.drawHealth()
@@ -67,6 +68,7 @@ pause = ->
 
 unpause = ->
   currentState = gameState.playing
+  mouse.beginLeftHold += (new Date().getTime() - beginPauseTime)
   startTimer()
 
 $(document)
@@ -95,7 +97,7 @@ $("#c")
     switch (e.which)
       when 1
         mouse.leftDown = true
-        mouse.beginLeftHold = new Date()
+        mouse.beginLeftHold = new Date().getTime()
       when 3
         mouse.rightDown = true
   )
@@ -165,7 +167,7 @@ gameloop = ->
 
   # Shoot lasers
   if mouse.leftDown
-    if new Date() - mouse.beginLeftHold < 1000
+    if new Date().getTime() - mouse.beginLeftHold < 1000
       game.shootLaser() if ship.laserCooldown <= 0
     else
       ship.lockOn = true

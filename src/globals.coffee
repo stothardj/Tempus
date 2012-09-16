@@ -43,3 +43,4 @@ gameState =
 
 currentState = undefined
 
+beginPauseTime = undefined
