@@ -66,7 +66,6 @@ class Fighter extends EnemyShip
     @shoot() if @shootCooldown is 0
     @shootCooldown -= 1
     @move()
-    # @draw()
     if not @removeOffScreen()
       @takeDamage()
 

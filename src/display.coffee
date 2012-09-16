@@ -84,6 +84,20 @@ class DisplaySingleton
       @ctx.closePath()
       @ctx.fill()
 
+  # Draw a target representing a ship being locked onto
+  drawTarget: (x, y) ->
+    @ctx.strokeRect(x - 10, y - 10, 20, 20)
+    @ctx.beginPath()
+    @ctx.moveTo(x - 14, y)
+    @ctx.lineTo(x - 6, y)
+    @ctx.moveTo(x + 6, y)
+    @ctx.lineTo(x + 14, y)
+    @ctx.moveTo(x, y - 14)
+    @ctx.lineTo(x, y - 6)
+    @ctx.moveTo(x, y + 6)
+    @ctx.lineTo(x, y + 14)
+    @ctx.stroke()
+
 class Display
   _instance = undefined
   @get: ->

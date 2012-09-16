@@ -28,6 +28,7 @@
 #<< spinner
 #<< laser
 #<< bomb
+#<< dart
 
 class Game
   constructor: (playerShip) ->
@@ -35,17 +36,20 @@ class Game
       player:
         lasers: []
         bombs: []
-        shrapnals: []
+        darts: []
+        shrapnels: []
         unit: playerShip
         color: GOOD_COLOR
         kills: 0
         lasersFired: 0
         bombsFired: 0
+        dartsFired: 0
         lives: PLAYER_LIVES
       enemies:
         lasers: []
         bombs: []
-        shrapnals: []
+        darts: []
+        shrapnels: []
         units: []
         color: BAD_COLOR
 
@@ -117,9 +121,12 @@ class Game
 
   # Remove dead enemies
   removeDeadEnemies: ->
+    @generatePowerups()
     @owners.enemies.units = (enemy for enemy in @owners.enemies.units when not enemy.removed)
     [ @owners.enemies.units, dead ] = partition( @owners.enemies.units, (enemy) -> enemy.health > 0 )
     @animations = @animations.concat( enemy.getAnimation() for enemy in dead )
+
+  removeFinishedAnimations: ->
     @animations = (anim for anim in @animations when not anim.finished() )
 
   # Generate new enemies
@@ -128,15 +135,17 @@ class Game
       if @owners.player.kills >= t::threshold and Math.random() < t::rand
         @owners.enemies.units.push( new t( randInt(0, canvas.width), -10 ) )
 
-  # Update lasers, bombs, and shrapnel
+  # Update lasers, bombs, shrapnel, and darts
   updateFired: ->
     for ownerName, owner of @owners
       laser.update() for laser in owner.lasers
       owner.lasers = (laser for laser in owner.lasers when 0 < laser.y < canvas.height and not laser.hitSomething)
       bomb.update() for bomb in owner.bombs
       owner.bombs = (bomb for bomb in owner.bombs when bomb.cooldown > 0)
-      shrapnal.update() for shrapnal in owner.shrapnals
-      owner.shrapnals = (shrapnal for shrapnal in owner.shrapnals when shrapnal.cooldown > 0)
+      shrapnel.update() for shrapnel in owner.shrapnels
+      owner.shrapnels = (shrapnel for shrapnel in owner.shrapnels when shrapnel.cooldown > 0)
+      dart.update() for dart in owner.darts
+      owner.darts = (dart for dart in owner.darts when not dart.removed)
 
   # Update powerups
   updatePowerups: ->
@@ -160,7 +169,7 @@ class Game
   # Player shoots bomb
   shootBomb: ->
     @owners.player.bombsFired += 1
-    @owners.player.bombs.push( new Bomb( ship.x, ship.y, -Bomb::speed, 20, @owners.player) ) if currentState is gameState.playing
+    @owners.player.bombs.push( new Bomb( ship.x, ship.y, -Bomb::speed, 20, @owners.player) )
     if ship.heat > SHIP_CRITICAL_TEMP
       ship.bombCooldown = 20
     else if ship.heat > SHIP_WARNING_TEMP
@@ -168,3 +177,8 @@ class Game
     else
       ship.bombCooldown = 5
     ship.heat += 10
+
+  # Player shoots dart
+  shootDart: (target) ->
+    @owners.player.dartsFired += 1
+    @owners.player.darts.push( new Dart( ship.x, ship.y, target, @owners.player) )

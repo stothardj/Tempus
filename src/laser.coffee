@@ -36,4 +36,4 @@ class Laser
 
   update: ->
     @move()
-    # @draw()
+

@@ -15,7 +15,7 @@
 #
 # Copyright 2011, 2012 Jake Stothard
 
-class Shrapnal
+class Shrapnel
   constructor: (@x, @y, @angle, @speed, @owner) ->
     @cooldown = 10
 
@@ -31,10 +31,8 @@ class Shrapnal
     @y += (@speed * Math.sin(@angle))
 
   draw: ->
-    ctx.fillStyle = @owner.color
     @drawAsBox()
 
   update: ->
     @cooldown -= 1
     @move()
-    @draw()

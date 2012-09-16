@@ -15,27 +15,42 @@
 #
 # Copyright 2011, 2012 Jake Stothard
 
-#<< box
 #<< shrapnel
 
-class Bomb extends Box
-  constructor: (@x, @y, @speed, @cooldown, @owner) ->
+# Homing darts - there is no escape
 
-  width: 4
-  height: 4
-  speed: 12
+class Dart
+  constructor: (@x, @y, @target, @owner) ->
+    @removed = false
+    @launchCountDown = 10
+    @explodeCountDown = 30
 
-  move: ->
-    @y += @speed
+  width: 10
+  height: 10
+  
+  draw: ->
+    ctx.beginPath()
+    ctx.moveTo(@x, @y - 5)
+    ctx.lineTo(@x + 5, @y)
+    ctx.lineTo(@x, @y + 5)
+    ctx.lineTo(@x - 5, @y)
+    ctx.closePath()
+    ctx.stroke()
 
   explode: ->
     @owner.shrapnels = @owner.shrapnels.concat( (new Shrapnel(@x, @y, ang * 36 * Math.PI / 180, Shrapnel::speed, @owner) for ang in [0..9]) )
 
-  draw: ->
-    ctx.fillStyle = @owner.color
-    @drawAsBox()
+  move: ->
+    if @launchCountDown > 0 or not @target?
+      @y -= 20
+      @launchCountDown -= 1
+    else
+      @x = (@x * 0.8 + @target.x * 0.2) | 0
+      @y = (@y * 0.8 + @target.y * 0.2) | 0
 
   update: ->
-    @cooldown -= 1
-    @explode() if @cooldown <= 0
     @move()
+    @explodeCountDown -= 1
+    if @explodeCountDown < 0
+      @explode()
+      @removed = true

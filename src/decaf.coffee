@@ -24,7 +24,7 @@
 #<< bomber
 #<< kamikaze
 #<< laserup
-#<< shrapnal
+#<< shrapnel
 #<< fighter
 #<< laser
 #<< spinner
@@ -150,12 +150,10 @@ gameloop = ->
   display.clearScreen()
 
   game.updateEnemies()
-
-  # Generate powerups must go between updating and removing enemies so it
-  # can get the location of killed enemies
-  game.generatePowerups()
   
   game.removeDeadEnemies()
+
+  game.removeFinishedAnimations()
 
   game.generateEnemies()
 
@@ -166,8 +164,17 @@ gameloop = ->
   game.updatePowerups()
 
   # Shoot lasers
-  if mouse.leftDown and ship.laserCooldown <= 0
-    game.shootLaser()
+  if mouse.leftDown
+    if new Date() - mouse.beginLeftHold < 1000
+      game.shootLaser() if ship.laserCooldown <= 0
+    else
+      ship.lockOn = true
+  else
+    if ship.lockOn
+      # Just released darts
+      for enemy in game.owners.enemies.units
+        game.shootDart(enemy) if enemy.locked
+    ship.lockOn = false
 
   # Shoot bombs
   if mouse.rightDown and ship.bombCooldown <= 0
@@ -180,12 +187,21 @@ gameloop = ->
   ctx.strokeStyle = SHIP_COLOR
   ship.draw()
 
-  # Draw lasers
+  # Draw fired
   for ownerName, owner of game.owners
-    if owner.lasers.length > 0
-      ctx.strokeStyle = owner.color
-      laser.draw() for laser in owner.lasers
+    ctx.strokeStyle = owner.color
+    ctx.fillStyle = owner.color
+    laser.draw() for laser in owner.lasers
+    bomb.draw() for bomb in owner.bombs
+    shrapnel.draw() for shrapnel in owner.shrapnels
+    dart.draw() for dart in owner.darts
 
+  # Draw targets on lockedOn enemies
+  ctx.strokeStyle = TARGET_COLOR
+  for enemy in game.owners.enemies.units
+    if enemy.locked
+      display.drawTarget(enemy.x, enemy.y)
+  
   # Draw animations
   for anim in game.animations
     anim.drawFrame()

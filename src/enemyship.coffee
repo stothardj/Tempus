@@ -22,6 +22,7 @@
 class EnemyShip extends Box
   constructor: (@x, @y) ->
     @removed = false
+    @locked = false
 
   getAnimation: ->
     new Anima(0)
@@ -42,10 +43,16 @@ class EnemyShip extends Box
         bomb.cooldown = 0
         game.owners.player.kills += 1
         return @health = 0
-    for shrapnal in game.owners.player.shrapnals
-      if @boxHit(shrapnal)
+    for shrapnel in game.owners.player.shrapnels
+      if @boxHit(shrapnel)
         game.owners.player.kills += 1
         return @health = 0
+    for dart in game.owners.player.darts
+      if @boxHit(dart)
+        game.owners.player.kills += 1
+        dart.removed = true
+        return @health = 0
+
 
   update: ->
   draw: ->

@@ -19,6 +19,11 @@
 
 #<< box
 #<< config
+#<< globals
+
+# Returns true iff x is between a and b
+between = (x, a, b) ->
+  return (a < x < b) || (a > x > b)
 
 class Ship extends Box
   constructor: (@x, @y) ->
@@ -40,6 +45,7 @@ class Ship extends Box
     @laserPower = 1
     @health = SHIP_MAX_HEALTH
     @shield = 0
+    @lockOn = false
 
   width: 40
   height: 40
@@ -74,7 +80,7 @@ class Ship extends Box
     ctx.closePath()
     ctx.stroke()
     @drawShield() if @shield > 0
-    # @drawSight() For locking on, coming soon :P
+    @drawSight() if @lockOn
 
   damage: (amount) ->
     game.timers.dispHealth = 255
@@ -94,18 +100,28 @@ class Ship extends Box
         bomb.cooldown = 0
         @damage(2)
   
-    for shrapnal in game.owners.enemies.shrapnals
-      if @boxHit(shrapnal)
-        shrapnal.cooldown = 0
+    for shrapnel in game.owners.enemies.shrapnels
+      if @boxHit(shrapnel)
+        shrapnel.cooldown = 0
         @damage(2)
 
   cooldown: ->
     @laserCooldown -= 1 if @laserCooldown > 0
     @bombCooldown -= 1 if @bombCooldown > 0
     @heat -= 1 if @heat > 0
+
+  # Not perfect, lenient
+  lockOnEnemies: (prevX, prevY) ->
+    for enemy in game.owners.enemies.units
+      if between(enemy.x, prevX, @x) && (enemy.y < prevY || enemy.y < @y)
+        enemy.locked = true
+    
   
   update: ->
+    prevX = @x
+    prevY = @y
     @move()
+    @lockOnEnemies(prevX, prevY) if @lockOn
     @takeDamage()
     @shield = Math.max( @shield - 1, 0 )
     @cooldown()
