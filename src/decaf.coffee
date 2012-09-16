@@ -90,7 +90,14 @@ $("#c")
   )
 
   .mouseout( (e) ->
-    pause() if currentState is gameState.playing
+    if currentState is gameState.playing
+      autoPauseHandle = setTimeout(pause, 1000) 
+  )
+
+  .mouseenter( (e) ->
+    if autoPauseHandle?
+      clearTimeout( autoPauseHandle )
+      autoPauseHandle = undefined
   )
 
   .mousedown( (e) ->

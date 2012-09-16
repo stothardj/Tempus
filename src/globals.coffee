@@ -33,6 +33,7 @@ mouse =
   beginLeftHold: undefined
 
 timeHandle = undefined
+autoPauseHandle = undefined
 
 gameState =
   title: "Title"

@@ -53,4 +53,5 @@ class Dart
     @explodeCountDown -= 1
     if @explodeCountDown < 0
       @explode()
+      @target.locked = false
       @removed = true
