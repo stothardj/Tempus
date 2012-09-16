@@ -30,6 +30,7 @@ mouse =
   y: 200
   leftDown: false
   rightDown: false
+  beginLeftHold: undefined
 
 timeHandle = undefined
 
@@ -40,4 +41,5 @@ gameState =
   paused: "Paused"
   crashed: "Crashed"
 
-currentState = gameState.title
+currentState = undefined
+

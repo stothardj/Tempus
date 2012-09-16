@@ -92,16 +92,15 @@ $("#c")
   )
 
   .mousedown( (e) ->
-    # console.log e.which
     switch (e.which)
       when 1
         mouse.leftDown = true
+        mouse.beginLeftHold = new Date()
       when 3
         mouse.rightDown = true
   )
 
   .mouseup( (e) ->
-    # console.log e.which
     switch (e.which)
       when 1
         mouse.leftDown = false
@@ -137,9 +136,6 @@ $("#enableMusic")
         musicPlaying = false
   )
 
-genpowerup = (t) ->
-  new t( enemy.x, enemy.y ) for enemy in game.owners.enemies.units when enemy.health <= 0 and Math.random() < t::rand
-
 # TODO: Once this is sufficiently OO move this into Game object
 gameloop = ->
 
@@ -153,76 +149,36 @@ gameloop = ->
 
   display.clearScreen()
 
-  # Update enemy
-  enemy.update() for enemy in game.owners.enemies.units
+  game.updateEnemies()
 
-  # Put powerups in place of dead enemies
-  for powerupTypeName, powerupType of game.powerups
-    powerupType.instances = powerupType.instances.concat( genpowerup( powerupType.classType ))
+  # Generate powerups must go between updating and removing enemies so it
+  # can get the location of killed enemies
+  game.generatePowerups()
+  
+  game.removeDeadEnemies()
 
-  # Remove dead enemies
-  game.owners.enemies.units = (enemy for enemy in game.owners.enemies.units when not enemy.removed)
-  [ game.owners.enemies.units, dead ] = partition( game.owners.enemies.units, (enemy) -> enemy.health > 0 )
-  game.animations = game.animations.concat( enemy.getAnimation() for enemy in dead )
-  game.animations = (anim for anim in game.animations when not anim.finished() )
+  game.generateEnemies()
 
-  # Generate new enemies
-  for t in [Fighter, Kamikaze, Bomber, Spinner]
-    if game.owners.player.kills >= t::threshold and Math.random() < t::rand
-      game.owners.enemies.units.push( new t( randInt(0, canvas.width), -10 ) )
-
-  # Update ship
   ship.update()
 
-  # Update lasers, etc.
-  for ownerName, owner of game.owners
-    laser.update() for laser in owner.lasers
-    owner.lasers = (laser for laser in owner.lasers when 0 < laser.y < canvas.height and not laser.hitSomething)
-    bomb.update() for bomb in owner.bombs
-    owner.bombs = (bomb for bomb in owner.bombs when bomb.cooldown > 0)
-    shrapnal.update() for shrapnal in owner.shrapnals
-    owner.shrapnals = (shrapnal for shrapnal in owner.shrapnals when shrapnal.cooldown > 0)
-
-  # Update powerups
-  for powerupTypeName, powerupType of game.powerups
-    powerup.update() for powerup in powerupType.instances
-    game.powerups[powerupTypeName].instances = (powerup for powerup in powerupType.instances when not powerup.used)
+  game.updateFired()
+  
+  game.updatePowerups()
 
   # Shoot lasers
   if mouse.leftDown and ship.laserCooldown <= 0
-    game.owners.player.lasersFired += ship.laserPower
-    for i in [1..ship.laserPower]
-      game.owners.player.lasers.push( new Laser( ship.x + i * 4 - ship.laserPower * 2, ship.y, -Laser::speed, game.owners.player) )
-    if ship.heat > SHIP_CRITICAL_TEMP
-      ship.laserCooldown = 7
-    else if ship.heat > SHIP_WARNING_TEMP
-      ship.laserCooldown = 5
-    else
-      ship.laserCooldown = 2
-    ship.heat += 7
+    game.shootLaser()
 
   # Shoot bombs
   if mouse.rightDown and ship.bombCooldown <= 0
-    game.owners.player.bombsFired += 1
-    game.owners.player.bombs.push( new Bomb( ship.x, ship.y, -Bomb::speed, 20, game.owners.player) ) if currentState is gameState.playing
-    if ship.heat > SHIP_CRITICAL_TEMP
-      ship.bombCooldown = 20
-    else if ship.heat > SHIP_WARNING_TEMP
-      ship.bombCooldown = 10
-    else
-      ship.bombCooldown = 5
-    ship.heat += 10
-
-  # Cooldown
-  ship.laserCooldown -= 1 if ship.laserCooldown > 0
-  ship.bombCooldown -= 1 if ship.bombCooldown > 0
-  ship.heat -= 1 if ship.heat > 0
+    game.shootBomb()
 
   # Drawing by color for performance
   # Draw ships
-  ctx.strokeStyle = "#FFFFFF"
+  ctx.strokeStyle = ENEMY_SHIP_COLOR
   enemy.draw() for enemy in game.owners.enemies.units
-  ship.draw() # If ship has shield it can change the strokeStyle to blue
+  ctx.strokeStyle = SHIP_COLOR
+  ship.draw()
 
   # Draw lasers
   for ownerName, owner of game.owners
@@ -259,12 +215,11 @@ gameloop = ->
   # Made it to the end, so did not crash this loop
   game.crashed = false
 
-# Can change how game begins based on what you start the state as
-# Allows for auto-play like behavior if you want it
-switch currentState
-  when gameState.playing
-    initGame()
-    startTimer()
-  when gameState.title
-    display.drawTitleScreen()
+if AUTOPLAY
+  currentState = gameState.playing
+  initGame()
+  startTimer()
+else
+  currentState = gameState.title
+  display.drawTitleScreen()
 

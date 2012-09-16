@@ -54,8 +54,17 @@ class Ship extends Box
     ctx.arc(@x, @y, Math.min(@width, @height) , 0, 2 * Math.PI, false)
     ctx.stroke()
 
+  drawSight: ->
+    ctx.strokeStyle = "#FF0000"
+    ctx.lineWidth = SIGHT_WIDTH
+    ctx.beginPath()
+    ctx.moveTo( @x, @y - @halfHeight )
+    ctx.lineTo( @x, 0 )
+    ctx.closePath()
+    ctx.stroke()
+    ctx.lineWidth = SIGHT_WIDTH
+
   draw: ->
-    # ctx.strokeStyle = "#FFFFFF"
     ctx.beginPath()
     ctx.moveTo( @x, @y - @halfHeight )
     ctx.quadraticCurveTo( @x + @halfWidth, @y, @x + @halfWidth, @y + @halfHeight )
@@ -65,6 +74,7 @@ class Ship extends Box
     ctx.closePath()
     ctx.stroke()
     @drawShield() if @shield > 0
+    # @drawSight() For locking on, coming soon :P
 
   damage: (amount) ->
     game.timers.dispHealth = 255
@@ -88,9 +98,14 @@ class Ship extends Box
       if @boxHit(shrapnal)
         shrapnal.cooldown = 0
         @damage(2)
+
+  cooldown: ->
+    @laserCooldown -= 1 if @laserCooldown > 0
+    @bombCooldown -= 1 if @bombCooldown > 0
+    @heat -= 1 if @heat > 0
   
   update: ->
     @move()
-    # @draw()
     @takeDamage()
     @shield = Math.max( @shield - 1, 0 )
+    @cooldown()

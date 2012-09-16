@@ -22,6 +22,12 @@
 #<< ship
 #<< display
 #<< globals
+#<< bomber
+#<< kamikaze
+#<< fighter
+#<< spinner
+#<< laser
+#<< bomb
 
 class Game
   constructor: (playerShip) ->
@@ -95,3 +101,70 @@ class Game
       @display.drawGameOver()
       return true
     return false
+
+  # Update enemies
+  updateEnemies: ->
+    enemy.update() for enemy in @owners.enemies.units
+
+  # For ever dead enemy, possibly generate powerup of type t
+  genPowerup: (t) ->
+    new t( enemy.x, enemy.y ) for enemy in @owners.enemies.units when enemy.health <= 0 and Math.random() < t::rand
+
+  # Put powerups in place of dead enemies
+  generatePowerups: ->
+    for powerupTypeName, powerupType of @powerups
+      powerupType.instances = powerupType.instances.concat( @genPowerup( powerupType.classType ))
+
+  # Remove dead enemies
+  removeDeadEnemies: ->
+    @owners.enemies.units = (enemy for enemy in @owners.enemies.units when not enemy.removed)
+    [ @owners.enemies.units, dead ] = partition( @owners.enemies.units, (enemy) -> enemy.health > 0 )
+    @animations = @animations.concat( enemy.getAnimation() for enemy in dead )
+    @animations = (anim for anim in @animations when not anim.finished() )
+
+  # Generate new enemies
+  generateEnemies: ->
+    for t in [Fighter, Kamikaze, Bomber, Spinner]
+      if @owners.player.kills >= t::threshold and Math.random() < t::rand
+        @owners.enemies.units.push( new t( randInt(0, canvas.width), -10 ) )
+
+  # Update lasers, bombs, and shrapnel
+  updateFired: ->
+    for ownerName, owner of @owners
+      laser.update() for laser in owner.lasers
+      owner.lasers = (laser for laser in owner.lasers when 0 < laser.y < canvas.height and not laser.hitSomething)
+      bomb.update() for bomb in owner.bombs
+      owner.bombs = (bomb for bomb in owner.bombs when bomb.cooldown > 0)
+      shrapnal.update() for shrapnal in owner.shrapnals
+      owner.shrapnals = (shrapnal for shrapnal in owner.shrapnals when shrapnal.cooldown > 0)
+
+  # Update powerups
+  updatePowerups: ->
+    for powerupTypeName, powerupType of @powerups
+      powerup.update() for powerup in powerupType.instances
+      @powerups[powerupTypeName].instances = (powerup for powerup in powerupType.instances when not powerup.used)
+
+  # Player shoots laser
+  shootLaser: ->
+    @owners.player.lasersFired += ship.laserPower
+    for i in [1..ship.laserPower]
+      @owners.player.lasers.push( new Laser( ship.x + i * 4 - ship.laserPower * 2, ship.y, -Laser::speed, @owners.player) )
+    if ship.heat > SHIP_CRITICAL_TEMP
+      ship.laserCooldown = 7
+    else if ship.heat > SHIP_WARNING_TEMP
+      ship.laserCooldown = 5
+    else
+      ship.laserCooldown = 2
+    ship.heat += 7
+
+  # Player shoots bomb
+  shootBomb: ->
+    @owners.player.bombsFired += 1
+    @owners.player.bombs.push( new Bomb( ship.x, ship.y, -Bomb::speed, 20, @owners.player) ) if currentState is gameState.playing
+    if ship.heat > SHIP_CRITICAL_TEMP
+      ship.bombCooldown = 20
+    else if ship.heat > SHIP_WARNING_TEMP
+      ship.bombCooldown = 10
+    else
+      ship.bombCooldown = 5
+    ship.heat += 10
