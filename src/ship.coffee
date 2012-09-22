@@ -68,7 +68,7 @@ class Ship extends Box
     ctx.lineTo( @x, 0 )
     ctx.closePath()
     ctx.stroke()
-    ctx.lineWidth = SIGHT_WIDTH
+    ctx.lineWidth = LINE_WIDTH
 
   draw: ->
     ctx.beginPath()
