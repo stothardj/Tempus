@@ -1,2 +1,36 @@
-	<p>The ship follows the mouse. Left click to fire a laser. Right click to fire a bomb. Ammo is unlimited but overheating decreases the fire rate.</p>
-	<p>Just try to live as you can, there's no objective yet.</p>
+<h2>Objective</h2>
+<p>Get the highest score you can.</p>
+
+<h2>Controls</h2>
+<p>The ship follows the mouse. Left click to fire a laser. Right click to fire a bomb. Holding left click will begin locking on, and then releasing it will fire homing-darts. Ammo is unlimited but overheating decreases the fire rate.</p>
+
+<h2>Enemies</h2>
+
+<table>
+  <tr>
+    <th>Fighter</th>
+    <th>Kamikaze</th>
+    <th>Bomber</th>
+    <th>Spinner</th>
+  </tr>
+  <tr>
+    <td><img src="images/fighter.png" /></td>
+    <td><img src="images/kamikaze.png" /></td>
+    <td><img src="images/bomber.png" /></td>
+    <td><img src="images/spinner.png" /></td>
+  </tr>
+</table>
+
+<hr>
+
+<dl class="dl-horizontal">
+  <dt>Fighter <small>(1 point)</small></dt>
+  <dd>The most basic unit, these aren't the brightest pilots. Move towards you and shoot! Move towards you and shoot! Barely a step up from space invaders intelligence.</dd>
+  <dt>Kamikaze <small>(2 points)</small></dt>
+  <dd>These pilots have nothing to lose. Strapped into a ship without weapons, all they can do is slowly drift forwards until they spot an enemy to run into.</dd>
+  <dt>Bomber <small>(5 points)</small></dt>
+  <dd>Why aim when you have explosives? Bombers meander across the battlefield dropping bombs and hoping they hit something.</dd>
+  <dt>Spinner <small>(10 points)</small></dt>
+  <dd>Aerodynamics mean nothing in space, but that doesn't make these spinning ships any less ridiculous to look at.</dd>
+
+</dl>
