@@ -23,6 +23,7 @@ class EnemyShip extends Box
   constructor: (@x, @y) ->
     @removed = false
     @locked = false
+    @scoreValue = 0
 
   getAnimation: ->
     new Anima(0)
@@ -50,6 +51,7 @@ class EnemyShip extends Box
     for dart in game.owners.player.darts
       if @boxHit(dart)
         game.owners.player.kills += 1
+        dart.target.locked = false
         dart.removed = true
         return @health = 0
 

@@ -27,6 +27,7 @@ class Spinner extends EnemyShip
     @health = 1
     @halfWidth = @width >> 1
     @halfHeight = @height >> 1
+    @scoreValue = 10
 
   rand: 0.005
   threshold: 45

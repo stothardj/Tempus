@@ -28,6 +28,7 @@ class Bomber extends EnemyShip
     @goneOnScreen = false
     @halfWidth = @width >> 1
     @halfHeight = @height >> 1
+    @scoreValue = 5
 
   rand: 0.01
   threshold: 30

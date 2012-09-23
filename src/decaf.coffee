@@ -126,8 +126,11 @@ $("#c")
         initGame()
         startTimer()
       when gameState.gameOver
-        currentState = gameState.title
-        display.drawTitleScreen()
+        # Force half-second wait on game over screen so frantic shooting
+        # does not cause you to miss seeing your score
+        if new Date().getTime() - timeOfGameOver > 500
+          currentState = gameState.title
+          display.drawTitleScreen()
   )
 
   .bind("contextmenu", (e) ->

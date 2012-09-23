@@ -34,6 +34,7 @@ mouse =
 
 timeHandle = undefined
 autoPauseHandle = undefined
+timeOfGameOver = undefined
 
 gameState =
   title: "Title"

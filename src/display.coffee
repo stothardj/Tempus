@@ -51,10 +51,11 @@ class DisplaySingleton
     @setTitleFont()
     @ctx.fillText( "Game Over", @canvas.width >> 1, (@canvas.height >> 1) - 20 )
     @ctx.font = "normal 18px Helvetica"
-    @ctx.fillText( "Kills - " + game.owners.player.kills, @canvas.width >> 1, @canvas.height >> 1)
-    @ctx.fillText( "Lasers Fired - " + game.owners.player.lasersFired, @canvas.width >> 1, (@canvas.height >> 1) + 20 )
-    @ctx.fillText( "Bombs Used - " + game.owners.player.bombsFired, @canvas.width >> 1, (@canvas.height >> 1) + 40 )
-    @ctx.fillText( "Darts Used - " + game.owners.player.dartsFired, @canvas.width >> 1, (@canvas.height >> 1) + 60 )
+    @ctx.fillText( "Score - " + game.owners.player.score, @canvas.width >> 1, @canvas.height >> 1)
+    @ctx.fillText( "Kills - " + game.owners.player.kills, @canvas.width >> 1, (@canvas.height >> 1) + 20)
+    @ctx.fillText( "Lasers Fired - " + game.owners.player.lasersFired, @canvas.width >> 1, (@canvas.height >> 1) + 40 )
+    @ctx.fillText( "Bombs Used - " + game.owners.player.bombsFired, @canvas.width >> 1, (@canvas.height >> 1) + 60 )
+    @ctx.fillText( "Darts Used - " + game.owners.player.dartsFired, @canvas.width >> 1, (@canvas.height >> 1) + 80 )
 
   drawHealth: ->
     if currentState is gameState.paused

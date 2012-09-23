@@ -25,7 +25,8 @@ class Fighter extends EnemyShip
     @health = 1
     @halfWidth = @width >> 1
     @halfHeight = @height >> 1
-
+    @scoreValue = 1
+    
   rand: 0.02
   threshold: 0
   width: 20

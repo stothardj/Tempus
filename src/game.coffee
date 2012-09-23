@@ -40,6 +40,7 @@ class Game
         shrapnels: []
         unit: playerShip
         color: GOOD_COLOR
+        score: 0
         kills: 0
         lasersFired: 0
         bombsFired: 0
@@ -102,6 +103,7 @@ class Game
     if @owners.player.lives < 0
       currentState = gameState.gameOver
       clearInterval( timeHandle )
+      timeOfGameOver = new Date().getTime()
       @display.drawGameOver()
       return true
     return false
@@ -124,6 +126,7 @@ class Game
     @generatePowerups()
     @owners.enemies.units = (enemy for enemy in @owners.enemies.units when not enemy.removed)
     [ @owners.enemies.units, dead ] = partition( @owners.enemies.units, (enemy) -> enemy.health > 0 )
+    @owners.player.score += dead.reduce ( (accum, x) -> accum + x.scoreValue ), 0
     @animations = @animations.concat( enemy.getAnimation() for enemy in dead )
 
   removeFinishedAnimations: ->

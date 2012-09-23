@@ -27,6 +27,7 @@ class Kamikaze extends EnemyShip
     @halfWidth = @width >> 1
     @halfHeight = @height >> 1
     @fifthHeight = (@height / 5) | 0
+    @scoreValue = 2
 
   rand: 0.015
   threshold: 15
