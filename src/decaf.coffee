@@ -39,7 +39,6 @@ ctx = display.ctx
 canvas = display.canvas
 
 audio = document.getElementById("audio");
-        
 throw "Loading context failed" unless ctx?
 
 firstInit = ->
@@ -64,7 +63,7 @@ pause = ->
   display.drawHealth()
   display.drawLives()
   display.setTitleFont()
-  ctx.fillText( "[Paused]", canvas.width / 2, canvas.height / 2)
+  ctx.fillText( "[Paused]", canvas.width >> 1, canvas.height >> 1)
 
 unpause = ->
   currentState = gameState.playing
@@ -91,7 +90,7 @@ $("#c")
 
   .mouseout( (e) ->
     if currentState is gameState.playing
-      autoPauseHandle = setTimeout(pause, 1000) 
+      autoPauseHandle = setTimeout(pause, 1000)
   )
 
   .mouseenter( (e) ->
@@ -162,7 +161,7 @@ gameloop = ->
   display.clearScreen()
 
   game.updateEnemies()
-  
+
   game.removeDeadEnemies()
 
   game.removeFinishedAnimations()
@@ -172,7 +171,7 @@ gameloop = ->
   ship.update()
 
   game.updateFired()
-  
+
   game.updatePowerups()
 
   # Shoot lasers
@@ -213,7 +212,7 @@ gameloop = ->
   for enemy in game.owners.enemies.units
     if enemy.locked
       display.drawTarget(enemy.x, enemy.y)
-  
+
   # Draw animations
   for anim in game.animations
     anim.drawFrame()
@@ -250,4 +249,3 @@ if AUTOPLAY
 else
   currentState = gameState.title
   display.drawTitleScreen()
-
