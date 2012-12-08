@@ -1,8 +1,9 @@
 # Tempus
 
-This is a very simple space shooter written in coffeescript. It uses an html5 canvas for drawing and html5 audio tags for the audio. There currently is no permanent host for this, but you can host it if you like it.
+This is a very simple space shooter written in coffeescript. It uses an html5 canvas for drawing and html5 audio tags for the audio.
+I am currently hosting this at https://s3.amazonaws.com/tempus-game/index.html
 
-## Running
+## Running locally
 
 1. Clone this git repo
 2. Download the "Tonight" audio from http://www.lukhash.com/ and put it in www/audio as tonight_full.mp3 and tonight_full.ogg
